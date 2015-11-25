@@ -17,11 +17,16 @@ LIBSLAS     = $(EXTLIB) $(LIBLAS_INSTALL)/lib/liblas_c.so $(LIBLAS_INSTALL)/lib/
 LIBSPROJ    = $(EXTLIB) $(PROJ_INSTALL)/lib/libproj.a
 #$(SZIP_INSTALL)/lib/libsz.a
 
-all: h5_crtdat \
+all: file_util \
+	h5_crtdat \
 	h5_rdwt \
 	h5_crtatt \
 	h5_writechunk \
-    readLas
+    readLas 
+
+
+file_util: file_util.c
+	$(CC) $(CFLAGS) -o $@ file_util.c $(INCLUDE) $(LIBSLAS) $(LIB)
 
 h5_crtdat: h5_crtdat.c
 	$(CC) $(CFLAGS) -o $@ h5_crtdat.c $(INCLUDE) $(LIBSHDF) $(LIB)
@@ -38,12 +43,14 @@ h5_writechunk: h5_writechunk.c
 readLas: readLas.c
 	$(CC) $(CFLAGS) -o $@ readLas.c $(INCLUDE) $(LIBSLAS) $(LIBSPROJ) $(LIB)
 
+
 clean: 
 	rm -f *.h5 *.o \
+		file_util \
 		h5_crtdat \
 		h5_rdwt \
 		h5_crtatt \
 		h5_writechunk \
-		readLas
+		readLas 
 
 .SUFFIXES:.o.c
