@@ -6,7 +6,7 @@ PROJ_INSTALL=/gpfs_scratch/ncasler/proj
 #SZIP_INSTALL = /sw/EasyBuild/software/Szip/2.1-gmpolf-2015
 EXTLIB      = -L$(HDF_INSTALL)/lib -L$(MPI_INSTALL)/lib -L$(LIBLAS_INSTALL)/lib -L$(PROJ_INSTALL)/lib
 CC          = mpicc
-CFLAGS      =
+CFLAGS      = -g
 LIB         =  -lz -lm -lrt -lmpich -lpthread -ldl -llas -llas_c -lproj
 
 INCLUDE     = -I$(HDF_INSTALL)/include -I$(MPI_INSTALL)/include -I$(LIBLAS_INSTALL)/include -I$(PROJ_INSTALL)/include
@@ -28,6 +28,7 @@ all: file_util \
 file_util: file_util.c
 	$(CC) $(CFLAGS) -o $@ file_util.c $(INCLUDE) $(LIBSLAS) $(LIB)
 
+
 h5_crtdat: h5_crtdat.c
 	$(CC) $(CFLAGS) -o $@ h5_crtdat.c $(INCLUDE) $(LIBSHDF) $(LIB)
 
@@ -41,7 +42,7 @@ h5_writechunk: h5_writechunk.c
 	$(CC) $(CFLAGS) -o $@ h5_writechunk.c $(INCLUDE) $(LIBSHDF) $(LIB)
 
 readLas: readLas.c
-	$(CC) $(CFLAGS) -o $@ readLas.c $(INCLUDE) $(LIBSLAS) $(LIBSPROJ) $(LIB)
+	$(CC) $(CFLAGS) -o $@ readLas.c common.c point.c $(INCLUDE) $(LIBSHDF) $(LIBSLAS) $(LIBSPROJ) $(LIB)
 
 
 clean: 
@@ -51,6 +52,7 @@ clean:
 		h5_rdwt \
 		h5_crtatt \
 		h5_writechunk \
-		readLas 
+		readLas \
+		common
 
 .SUFFIXES:.o.c

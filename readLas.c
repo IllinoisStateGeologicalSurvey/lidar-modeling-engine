@@ -10,9 +10,11 @@
 #include <string.h>
 #include <math.h>
 
+
 #include <liblas/capi/liblas.h>
 #include <proj_api.h>
-
+#include "common.h"
+#include "point.h"
 //LASPointSummary* SummarizePoints(LASReaderH reader);
 //void print_point_summary(FILE *file, LASPointSummary* summary LASHeaderH header);
 //void print_point(FILE *file, LASPointH point);
@@ -22,15 +24,6 @@
 #define LAS_FORMAT_11 1
 #define LAS_FORMAT_12 2
 
-struct Point {
-    double x; /** Coordinate values **/
-    double y;
-    double z;
-    int    i; /* intensity */
-    int    rn; /* return number */
-    int    rt; /* total returns */
-    int    c; /* classification */
-};
 
 /** TO DO: Write projection code using past code
             Implement MPI based las partitioner
@@ -52,7 +45,7 @@ void ptime(const char *const msg)
     fprintf(stderr, "cumulative CPU time thru %s = %f\n", msg, t);
 }
 
-
+/**
 projPJ loadProj(const char* proj4string)
 {
     projPJ pj;
@@ -92,7 +85,7 @@ int project(projPJ pj_src, projPJ pj_wgs, double x, double y, double z)
     pj_transform(pj_src, pj_wgs, 1, 1, &x, &y, &z);
     return 0;
 }
-
+**/
 
 
 
@@ -107,9 +100,9 @@ int main (int argc, char* argv[])
 
     LASReaderH reader = NULL;
     LASHeaderH header = NULL;
-    LASPointH p = NULL;
+    //LASPointH p = NULL;
     //double x, y, z;
-    projPJ pj_src, pj_wgs;
+    //projPJ pj_src, pj_wgs;
 
 
     for (i = 1; i < argc; i++) {
@@ -173,64 +166,93 @@ int main (int argc, char* argv[])
         ptime("start.");
         fprintf(stderr, "first pass reading %d points ...\n", LASHeader_GetPointRecordsCount(header));
     }
-
     int pntCount = LASHeader_GetPointRecordsCount(header);
+    Point* points;
+    points = malloc(sizeof(Point) * pntCount);
+    // TO DO:Need to check the clean up in readBlock to make sure there is no leak 
+    readBlock(reader, 0, pntCount, points);
+/**
+    int pntCount = LASHeader_GetPointRecordsCount(header);
+    // Allocating point set to hold the las data 
+    struct Point* points;
+    points = malloc(sizeof(Point) * pntCount);
+    // Allocating arrays for coordinates (makes projection faster in Proj4 if 
+      each coordinate can be consumed as a 1-dimensional array 
+
     double *x,*y,*z;
     x = malloc(sizeof(double) * pntCount);
     y = malloc(sizeof(double) * pntCount);
     z = malloc(sizeof(double) * pntCount);
     
-
     fprintf(stderr, "first pass reading %d points ...\n", pntCount);
     printf("Checking Source projection:\n");
-    pj_src = getProj(header);
+    pj_src = getLASProj(header);
     pj_wgs = loadProj("+proj=longlat +ellps=WGS84 +datum=WGS84 +vunits=m +no_defs");
 
-    /*p = LASReader_GetNextPoint(reader);
-    if (!p) {
-        if (LASError_GetLastErrorNum())
-            LASError_Print("Not able to fetch a point. LASReader is invalid");
-        else
-            LASError_Print("File does not contain any points to read.");
-        exit(1);
-    }*/
-    /** Should refactor this to allow for mpi integration, offset and end can be used to separate processes**/
-    int poff = 0;
+   int poff = 0;
     i = 0;
+    
     p = LASReader_GetPointAt(reader, i);
+    LASColorH color;
     while ((poff + i) < (pntCount +1)) {
-        x[i] = LASPoint_GetX(p) * LASHeader_GetScaleX(header) + LASHeader_GetOffsetX(header);
-        y[i] = LASPoint_GetY(p) * LASHeader_GetScaleY(header) + LASHeader_GetOffsetY(header);
-        z[i] = LASPoint_GetZ(p) * LASHeader_GetScaleZ(header) + LASHeader_GetOffsetZ(header);
+        
+        //x[i] = LASPoint_GetX(p) * LASHeader_GetScaleX(header) + LASHeader_GetOffsetX(header);
+        //y[i] = LASPoint_GetY(p) * LASHeader_GetScaleY(header) + LASHeader_GetOffsetY(header);
+        //z[i] = LASPoint_GetZ(p) * LASHeader_GetScaleZ(header) + LASHeader_GetOffsetZ(header);
+        x[i] = LASPoint_GetX(p);
+        y[i] = LASPoint_GetY(p);
+        z[i] = LASPoint_GetZ(p);
+        points[i].i = LASPoint_GetIntensity(p);
+        points[i].retns[0] = LASPoint_GetReturnNumber(p);
+        points[i].retns[1] = LASPoint_GetNumberOfReturns(p);
+        points[i].clss = LASPoint_GetClassification(p);
+        color  = LASPoint_GetColor(p);
+        points[i].rgb[0] = LASColor_GetRed(color);
+        points[i].rgb[1] = LASColor_GetGreen(color);
+        points[i].rgb[2] = LASColor_GetBlue(color);
+        //points[i] = Point_new(coords, 
+        //x[i] = LASPoint_GetX(p) * LASHeader_GetScaleX(header) + LASHeader_GetOffsetX(header);
+        //y[i] = LASPoint_GetY(p) * LASHeader_GetScaleY(header) + LASHeader_GetOffsetY(header);
+        //z[i] = LASPoint_GetZ(p) * LASHeader_GetScaleZ(header) + LASHeader_GetOffsetZ(header);
         p = LASReader_GetNextPoint(reader);
         //fprintf(stderr,"Loading point %d: %9.6f, %9.6f, %9.6f\n",i, x[i], y[i], z[i]);
         i++;
     }
 
     printf("%9.6f, %9.6f, %9.6f\n", x[0], y[0], z[0]);
+    
     printf("Projecting Point\n");
     
     //project(pj_src, pj_wgs, x, y, z);
+    //pj_transform(pj_src, pj_wgs, pntCount, 1, &x[0], &y[0], &z[0]);
     pj_transform(pj_src, pj_wgs, pntCount, 1, &x[0], &y[0], &z[0]);
     for (i = 0; i < pntCount; i++) {
-        x[i] *= RAD_TO_DEG;
-        y[i] *= RAD_TO_DEG;
+        //x[i] *= RAD_TO_DEG;
+        //y[i] *= RAD_TO_DEG;
+        Point_SetCoords(&points[i], x[i] * RAD_TO_DEG, y[i] * RAD_TO_DEG, z[i]);
     }
-    printf("%9.6f, %9.6f, %9.6f\n", x[0], y[0], z[0]);
+    Point_print(&points[0]);
+    //printf("%9.6f, %9.6f, %9.6f\n", x[0], y[0], z[0]);
     printf("Successfully opened the %s\n", file_name_in);
 
 
-    /* Clean up */
+    // Clean up 
     pj_free(pj_src);
     pj_free(pj_wgs);
-    free(x);
-    free(y);
-    free(z);
+    
+    //free(x);
+    //free(y);
+    //free(z);
+    Point_destroy(points);
     LASReader_Destroy(reader);
     reader = NULL;
     LASHeader_Destroy(header);
     header = NULL;
-
+*/
+    printf("Cleaning up\n");
+    LASReader_Destroy(reader);
+    reader = NULL;
+    Point_destroy(points);
     if (verbose) ptime("done.");
 
     

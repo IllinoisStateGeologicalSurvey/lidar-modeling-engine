@@ -44,7 +44,7 @@ void dump_entry (struct dirent *entry)
     fprintf(stdout, "%s is %s\n" , entry->d_name, type);
 }
 
-char * listFiles(char dirPath[], int depth)
+int listFiles(char dirPath[], int depth)
 {
     DIR *dir;
     struct dirent *entry;
