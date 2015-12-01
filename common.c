@@ -87,14 +87,14 @@ int createDataset(char* file, char* dataset, hsize_t dims[2])
     chunk_dims[1] = 3;
 
     /* create the dataspace for the dataset */
-    H5Screate_simple(rank, dims, max_dims);
+   dataspace_id =  H5Screate_simple(rank, dims, max_dims);
 
     /* Set the chunking definitions for dataset */
     plist_id = H5Pcreate(H5P_DATASET_CREATE);
     H5Pset_chunk(plist_id, rank, chunk_dims);
 
 
-    dataset_id = H5Dcreate(file_id, dataset, H5T_NATIVE_FLOAT, dataspace_id,
+    dataset_id = H5Dcreate(file_id, dataset, H5T_NATIVE_DOUBLE, dataspace_id,
             H5P_DEFAULT, plist_id, H5P_DEFAULT);
 
     /* End access to property list id */
@@ -180,6 +180,7 @@ int readBlock(LASReaderH reader, int offset, int count, Point* points)
     free(z);
     LASHeader_Destroy(header);
     header = NULL;
+    LASColor_Destroy(color);
 
     return 0;
 }
@@ -188,7 +189,7 @@ int readBlock(LASReaderH reader, int offset, int count, Point* points)
         
 
 /** Write block of data to the dataset using offset and block dimensions **/
-int writeBlock(char* file, char* dataset, hsize_t offset[2], hsize_t block[2], float* data) 
+int writeBlock(char* file, char* dataset, hsize_t offset[2], hsize_t block[2], double* data) 
 {
     hid_t   file_id, dset_id, fspace_id, memspace_id, plist_id;
     herr_t status;
@@ -198,7 +199,8 @@ int writeBlock(char* file, char* dataset, hsize_t offset[2], hsize_t block[2], f
 
 
     plist_id = H5Pcreate(H5P_FILE_ACCESS);
-    file_id = H5Fopen(file, H5F_ACC_RDWR, plist_id);
+    file_id = H5Fopen(file, H5F_ACC_RDWR | H5F_ACC_DEBUG , plist_id);
+    plist_id = H5Pcreate(H5P_DATASET_ACCESS);
     dset_id = H5Dopen(file_id, dataset, plist_id);
 
     fspace_id = H5Dget_space(dset_id);
@@ -210,14 +212,15 @@ int writeBlock(char* file, char* dataset, hsize_t offset[2], hsize_t block[2], f
     plist_id = H5Pcreate(H5P_DATASET_XFER);
     H5Pset_dxpl_mpio(plist_id, H5FD_MPIO_COLLECTIVE);
 
-    status = H5Dwrite(dset_id, H5T_NATIVE_FLOAT, memspace_id, fspace_id, plist_id, data);
+    status = H5Dwrite(dset_id, H5T_NATIVE_DOUBLE, memspace_id, fspace_id, plist_id, data);
 
     status = H5Dclose(dset_id);
     status = H5Sclose(fspace_id);
     status = H5Sclose(memspace_id);
     status = H5Pclose(plist_id);
     status = H5Fclose(file_id);
-
+    
+    return 0;
 }
 
 

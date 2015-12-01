@@ -23,6 +23,6 @@ int createDataset(char* file, char* dataset, hsize_t dims[2]);
 
 int readBlock(LASReaderH reader, int offset, int count, Point* points);
 
-int writeBlock(char* file, char* dataset, hsize_t offset[2], hsize_t block[2], float* data);
+int writeBlock(char* file, char* dataset, hsize_t offset[2], hsize_t block[2], double* data);
 
 #endif

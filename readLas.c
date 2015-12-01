@@ -171,6 +171,11 @@ int main (int argc, char* argv[])
     points = malloc(sizeof(Point) * pntCount);
     // TO DO:Need to check the clean up in readBlock to make sure there is no leak 
     readBlock(reader, 0, pntCount, points);
+    
+    hsize_t offset[] = {0, 0};
+    hsize_t block[] = {pntCount, 3};
+    createDataset("test.h5", "/pts", block);
+    writeBlock("test.h5", "/pts", offset, block, points->coords);
 /**
     int pntCount = LASHeader_GetPointRecordsCount(header);
     // Allocating point set to hold the las data 

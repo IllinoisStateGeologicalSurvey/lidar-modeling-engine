@@ -58,5 +58,5 @@ void Point_print(struct Point *p)
     printf("X:%9.6f, Y:%9.6f, Z: %9.6f\n", p->coords[0], p->coords[1], p->coords[2]);
     printf("Intensity: %d\n", p->i);
     printf("Return: %d of %d\n", p->retns[0], p->retns[1]);
-    printf("Class: %s\n", p->clss);
+    printf("Class: %hhu\n", p->clss);
 };
