@@ -9,12 +9,13 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
-
+#include "mpi.h"
 
 #include <liblas/capi/liblas.h>
 #include <proj_api.h>
 #include "common.h"
 #include "point.h"
+#include "file_util.h"
 //LASPointSummary* SummarizePoints(LASReaderH reader);
 //void print_point_summary(FILE *file, LASPointSummary* summary LASHeaderH header);
 //void print_point(FILE *file, LASPointH point);
@@ -94,17 +95,24 @@ int project(projPJ pj_src, projPJ pj_wgs, double x, double y, double z)
 
 int main (int argc, char* argv[])
 {
-    int i;
+    int i,j;
     int verbose = FALSE;
     char* file_name_in = 0;
 
+    int fileCount;
     LASReaderH reader = NULL;
     LASHeaderH header = NULL;
-    //LASPointH p = NULL;
-    //double x, y, z;
-    //projPJ pj_src, pj_wgs;
+    
+    int mpi_size, mpi_rank;
+    MPI_Comm comm = MPI_COMM_WORLD;
+    MPI_Info info = MPI_INFO_NULL;
 
+    /* Initialize MPI */
+    MPI_Init(&argc, &argv);
+    MPI_Comm_size(comm, &mpi_size);
+    MPI_Comm_rank(comm, &mpi_rank);
 
+    /* Check number of processors */
     for (i = 1; i < argc; i++) {
         if (    strcmp(argv[i],"-h") == 0 ||
                 strcmp(argv[i],"--help") == 0
@@ -140,7 +148,9 @@ int main (int argc, char* argv[])
             exit(1);
         }
     }
-
+    /* Will need to support multiple input files */
+    //fileCount = countLAS(file_name_in);
+    printf("File count is %d\n", fileCount);
     if (file_name_in)
     {
         reader = LASReader_Create(file_name_in);
@@ -167,15 +177,34 @@ int main (int argc, char* argv[])
         fprintf(stderr, "first pass reading %d points ...\n", LASHeader_GetPointRecordsCount(header));
     }
     int pntCount = LASHeader_GetPointRecordsCount(header);
+    int block_len = floor(pntCount / mpi_size);
+    int remainder = pntCount % mpi_size;
+    if (remainder) {
+        printf("Block size is %d and Remainder is %d\n", block_len, remainder);
+    }
     Point* points;
     points = malloc(sizeof(Point) * pntCount);
+    //float (*coords)[pntCount][3];
+    //coords = malloc(sizeof(float) * 3 * pntCount);
+
     // TO DO:Need to check the clean up in readBlock to make sure there is no leak 
     readBlock(reader, 0, pntCount, points);
-    
+
+    /**
+    for (i=0; i<pntCount; i++) {
+        for (j=0; j<3; j++) {
+            (*coords)[i][j] = (float)points[i].coords[j];
+        }
+        //coords[i][0] = (float)points[i].coords[0];
+        //coords[i][1] = (float)points[i].coords[1];
+        //coords[i][2] = (float)points[i].coords[2];
+    }**/
+   
+    /** CAN WE MAKE THIS A 1-D array **/
     hsize_t offset[] = {0, 0};
-    hsize_t block[] = {pntCount, 3};
+    hsize_t block[] = {pntCount, 1};
     createDataset("test.h5", "/pts", block);
-    writeBlock("test.h5", "/pts", offset, block, points->coords);
+    writeBlock("test.h5", "/pts", offset, block, points, comm, info);
 /**
     int pntCount = LASHeader_GetPointRecordsCount(header);
     // Allocating point set to hold the las data 
@@ -260,6 +289,7 @@ int main (int argc, char* argv[])
     Point_destroy(points);
     if (verbose) ptime("done.");
 
+    MPI_Finalize();
     
     return 0;
 }

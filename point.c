@@ -6,20 +6,20 @@
 
 void Point_SetCoords(Point* p, double x, double y, double z)
 {
-    p->coords[0] = x;
-    p->coords[1] = y;
-    p->coords[2] = z;
+    p->coords.x = x;
+    p->coords.y = y;
+    p->coords.z = z;
 }
 
 void Point_SetReturns(Point* p, int returnNum, int returnCnt) {
-    p->retns[0] = returnNum;
-    p->retns[1] = returnCnt;
+    p->retns.rNum = returnNum;
+    p->retns.rTot = returnCnt;
 }
 
 void Point_SetColor(Point* p, int r, int g, int b) {
-    p->rgb[0] = r;
-    p->rgb[1] = g;
-    p->rgb[2] = b;
+    p->color.r = r;
+    p->color.g = g;
+    p->color.b = b;
 }
 
 void Point_SetIntensity(Point* p, int intens) {
@@ -33,16 +33,16 @@ Point* Point_new(double coords[3], int i, short retns[2], unsigned char clss, sh
 {
     Point* p = malloc(sizeof(Point));
     assert(p != NULL);
-    p->coords[0] = coords[0];
-    p->coords[1] = coords[1];
-    p->coords[2] = coords[2];
+    p->coords.x = coords[0];
+    p->coords.y = coords[1];
+    p->coords.z = coords[2];
     p->i = i;
-    p->retns[0] = retns[0];
-    p->retns[1] = retns[1];
+    p->retns.rNum = retns[0];
+    p->retns.rTot = retns[1];
     p->clss = clss;
-    p->rgb[0] = rgb[0];
-    p->rgb[1] = rgb[1];
-    p->rgb[2] = rgb[2];
+    p->color.r = rgb[0];
+    p->color.g = rgb[1];
+    p->color.b = rgb[2];
 
     return p;
 }
@@ -55,8 +55,8 @@ void Point_destroy(struct Point *p)
 
 void Point_print(struct Point *p)
 {
-    printf("X:%9.6f, Y:%9.6f, Z: %9.6f\n", p->coords[0], p->coords[1], p->coords[2]);
+    printf("X:%9.6f, Y:%9.6f, Z: %9.6f\n", p->coords.x, p->coords.y, p->coords.z);
     printf("Intensity: %d\n", p->i);
-    printf("Return: %d of %d\n", p->retns[0], p->retns[1]);
+    printf("Return: %d of %d\n", p->retns.rNum, p->retns.rTot);
     printf("Class: %hhu\n", p->clss);
 };

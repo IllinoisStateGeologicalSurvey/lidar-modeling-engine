@@ -94,7 +94,37 @@ int listFiles(char dirPath[], int depth)
     return 0;
 }
 
+int countLAS(char dirPath[])
+{
+    DIR *dir;
+    struct dirent *entry;
+    char * ext;
 
+    char buf[PATH_MAX+1];
+    int i = 0;
+    if ((dir = opendir(dirPath)) ==  NULL)
+    {
+        fprintf(stderr, "Error: Failed to open input directory\n");
+        exit(1);
+    }
+    chdir(dirPath);
+    while ((entry = readdir(dir)) != NULL)
+    {
+        if ((ext = strrchr(entry->d_name, '.')) != NULL)
+        {
+            if (strcmp(ext, ".las") == 0)
+            {
+                i++;
+                //realpath(entry->d_name, buf);
+                // Append this to list
+            }
+        }
+    }
+    return i;
+}
+
+
+/*
 int main(int argc, char* argv[]) 
 {
     char dirname[30];
@@ -109,5 +139,5 @@ int main(int argc, char* argv[])
     listFiles(dirname, 2);
     return 0;
 }
-
+*/
 #endif

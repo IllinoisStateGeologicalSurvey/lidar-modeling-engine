@@ -40,6 +40,70 @@ projPJ getLASProj(LASHeaderH header)
 
     return pj;
 }
+    
+hid_t CoordType_create(herr_t status) {
+    /** Create the coordinate data type **/
+    hid_t coordtype;
+    coordtype = H5Tcreate(H5T_COMPOUND, sizeof(coord_t));
+    status = H5Tinsert(coordtype, "x", HOFFSET (coord_t, x), H5T_NATIVE_FLOAT);
+    status = H5Tinsert(coordtype, "y", HOFFSET (coord_t, y), H5T_NATIVE_FLOAT);
+    status = H5Tinsert(coordtype, "z", HOFFSET (coord_t, z), H5T_NATIVE_FLOAT);
+    return coordtype;
+}
+
+void CoordType_destroy(hid_t coordtype, herr_t status) {
+    status = H5Tclose(coordtype);
+
+}
+hid_t ReturnType_create(herr_t status) { 
+    /** Create the return data type **/
+    hid_t returntype;
+    returntype = H5Tcreate(H5T_COMPOUND, sizeof(coord_t));
+    status = H5Tinsert(returntype, "rNum", HOFFSET (return_t, rNum), H5T_NATIVE_SHORT);
+    status = H5Tinsert(returntype, "rTot", HOFFSET (return_t, rTot), H5T_NATIVE_SHORT);
+    return returntype;
+}
+
+void ReturnType_destroy(hid_t returntype, herr_t status) {
+    status = H5Tclose(returntype);
+}
+
+hid_t ColorType_create(herr_t status) {
+    hid_t colortype;
+    colortype = H5Tcreate(H5T_COMPOUND, sizeof(color_t));
+    status = H5Tinsert(colortype, "red", HOFFSET (color_t, r), H5T_NATIVE_SHORT);
+    status = H5Tinsert(colortype, "green", HOFFSET (color_t, g), H5T_NATIVE_SHORT);
+    status = H5Tinsert(colortype, "blue", HOFFSET (color_t, b), H5T_NATIVE_SHORT);
+    return colortype;
+}
+
+void ColorType_destroy(hid_t colortype, herr_t status) {
+    status = H5Tclose(colortype);
+}
+
+hid_t PointType_create(herr_t status) {
+    hid_t coordtype, returntype, colortype, pointtype;
+    coordtype = CoordType_create(status);
+    returntype = ReturnType_create(status);
+    colortype = ColorType_create(status);
+    pointtype = H5Tcreate(H5T_COMPOUND, sizeof(Point));
+    status = H5Tinsert(pointtype, "coords", HOFFSET(Point, coords), coordtype);
+    status = H5Tinsert(pointtype, "intensity", HOFFSET(Point, i), H5T_NATIVE_INT);
+    status = H5Tinsert(pointtype, "returns", HOFFSET(Point, retns), returntype);
+    status = H5Tinsert(pointtype, "class", HOFFSET(Point, clss), H5T_NATIVE_UCHAR);
+    status = H5Tinsert(pointtype, "color", HOFFSET(Point, color), colortype);
+    
+    status = H5Tclose(coordtype);
+    status = H5Tclose(returntype);
+    status = H5Tclose(colortype);
+    return pointtype;
+}
+
+void PointType_destroy(hid_t pointtype, herr_t status) {
+    status = H5Tclose(pointtype);
+}
+
+
 
 int getPointCount(LASHeaderH header)
 {
@@ -65,7 +129,7 @@ int project(projPJ pj_src, projPJ pj_dst, double x, double y, double z)
 
 int createDataset(char* file, char* dataset, hsize_t dims[2]) 
 {
-    hid_t   file_id, dataset_id, dataspace_id, plist_id; /*identifiers */
+    hid_t   file_id, dataset_id, dataspace_id, plist_id, colortype, returntype, coordtype, pointtype; /*identifiers */
     
     hsize_t max_dims[2];
     hsize_t chunk_dims[2];
@@ -77,6 +141,37 @@ int createDataset(char* file, char* dataset, hsize_t dims[2])
     /* Create a new file using the default properties  This will create the file if
        it doesn't already exist */
     file_id = H5Fcreate(file, H5F_ACC_TRUNC, H5P_DEFAULT, plist_id);
+    
+    /** Create the coordinate data type /
+    coordtype = H5Tcreate(H5T_COMPOUND, sizeof(coord_t));
+    status = H5Tinsert(coordtype, "x", HOFFSET (coord_t, x), H5T_NATIVE_FLOAT);
+    status = H5Tinsert(coordtype, "y", HOFFSET (coord_t, y), H5T_NATIVE_FLOAT);
+    status = H5Tinsert(coordtype, "z", HOFFSET (coord_t, z), H5T_NATIVE_FLOAT);
+    **/
+    coordtype = CoordType_create(status);
+
+    /** Create the return data type /
+    returntype = H5Tcreate(H5T_COMPOUND, sizeof(coord_t));
+    status = H5Tinsert(returntype, "rNum", HOFFSET (return_t, rNum), H5T_NATIVE_SHORT);
+    status = H5Tinsert(returntype, "rTot", HOFFSET (return_t, rTot), H5T_NATIVE_SHORT);
+    **/
+    returntype = ReturnType_create(status);
+
+    /**colortype = H5Tcreate(H5T_COMPOUND, sizeof(color_t));
+    status = H5Tinsert(colortype, "red", HOFFSET (color_t, r), H5T_NATIVE_SHORT);
+    status = H5Tinsert(colortype, "green", HOFFSET (color_t, g), H5T_NATIVE_SHORT);
+    status = H5Tinsert(colortype, "blue", HOFFSET (color_t, b), H5T_NATIVE_SHORT);
+    **/
+    colortype = ColorType_create(status);
+
+    /**pointtype = H5Tcreate(H5T_COMPOUND, sizeof(Point));
+    status = H5Tinsert(pointtype, "coords", HOFFSET(Point, coords), coordtype);
+    status = H5Tinsert(pointtype, "intensity", HOFFSET(Point, i), H5T_NATIVE_INT);
+    status = H5Tinsert(pointtype, "returns", HOFFSET(Point, retns), returntype);
+    status = H5Tinsert(pointtype, "class", HOFFSET(Point, clss), H5T_NATIVE_UCHAR);
+    status = H5Tinsert(pointtype, "color", HOFFSET(Point, rgb), colortype);
+    **/
+    pointtype = PointType_create(status);
 
     /* Set the max dimensions and chunking for the dataset */
     //NOTE: Should change this to be dynamic in future 
@@ -84,7 +179,7 @@ int createDataset(char* file, char* dataset, hsize_t dims[2])
     max_dims[1] = H5S_UNLIMITED;
 
     chunk_dims[0] = 500000;
-    chunk_dims[1] = 3;
+    chunk_dims[1] = 1;
 
     /* create the dataspace for the dataset */
    dataspace_id =  H5Screate_simple(rank, dims, max_dims);
@@ -94,7 +189,7 @@ int createDataset(char* file, char* dataset, hsize_t dims[2])
     H5Pset_chunk(plist_id, rank, chunk_dims);
 
 
-    dataset_id = H5Dcreate(file_id, dataset, H5T_NATIVE_DOUBLE, dataspace_id,
+    dataset_id = H5Dcreate(file_id, dataset, pointtype, dataspace_id,
             H5P_DEFAULT, plist_id, H5P_DEFAULT);
 
     /* End access to property list id */
@@ -106,6 +201,15 @@ int createDataset(char* file, char* dataset, hsize_t dims[2])
     /* Terminate access to the dataspace */
     status = H5Sclose(dataspace_id);
 
+    /* Close Data type references */
+    CoordType_destroy(coordtype, status);
+    ReturnType_destroy(returntype, status);
+    ColorType_destroy(colortype, status);
+    PointType_destroy(pointtype, status);
+    /**status = H5Tclose(coordtype);
+    status = H5Tclose(returntype);
+    status = H5Tclose(colortype);
+    status = H5Tclose(pointtype);**/
     /* Close the file */
     status = H5Fclose(file_id);
 
@@ -168,7 +272,7 @@ int readBlock(LASReaderH reader, int offset, int count, Point* points)
     // Projecting points is faster if they are done at the same time, using an array and count
     pj_transform(pj_src, pj_wgs, count, 1, &x[0], &y[0], &z[0]);
     for (i = 0; i < count; i++) {
-        Point_SetCoords(&points[i], x[i] * RAD_TO_DEG, y[i] * RAD_TO_DEG, z[i]);
+        Point_SetCoords(&points[i], ((float)x[i] * RAD_TO_DEG), ((float)y[i] * RAD_TO_DEG), (float)z[i]);
     }
     Point_print(&points[0]);
 
@@ -189,9 +293,9 @@ int readBlock(LASReaderH reader, int offset, int count, Point* points)
         
 
 /** Write block of data to the dataset using offset and block dimensions **/
-int writeBlock(char* file, char* dataset, hsize_t offset[2], hsize_t block[2], double* data) 
+int writeBlock(char* file, char* dataset, hsize_t offset[2], hsize_t block[2], Point* points, MPI_Comm comm, MPI_Info info) 
 {
-    hid_t   file_id, dset_id, fspace_id, memspace_id, plist_id;
+    hid_t   file_id, dset_id, fspace_id, pointtype, memspace_id, plist_id;
     herr_t status;
     hsize_t rank = 2;
     hsize_t stride[] = {1, 1};
@@ -199,6 +303,7 @@ int writeBlock(char* file, char* dataset, hsize_t offset[2], hsize_t block[2], d
 
 
     plist_id = H5Pcreate(H5P_FILE_ACCESS);
+    H5Pset_fapl_mpio(plist_id, comm, info);
     file_id = H5Fopen(file, H5F_ACC_RDWR | H5F_ACC_DEBUG , plist_id);
     plist_id = H5Pcreate(H5P_DATASET_ACCESS);
     dset_id = H5Dopen(file_id, dataset, plist_id);
@@ -207,17 +312,20 @@ int writeBlock(char* file, char* dataset, hsize_t offset[2], hsize_t block[2], d
     
     memspace_id = H5Screate_simple(rank, block, NULL);
     
+    pointtype = PointType_create(status);
+
     status = H5Sselect_hyperslab(fspace_id, H5S_SELECT_SET, offset, stride, count, block);
 
     plist_id = H5Pcreate(H5P_DATASET_XFER);
     H5Pset_dxpl_mpio(plist_id, H5FD_MPIO_COLLECTIVE);
 
-    status = H5Dwrite(dset_id, H5T_NATIVE_DOUBLE, memspace_id, fspace_id, plist_id, data);
+    status = H5Dwrite(dset_id, pointtype, memspace_id, fspace_id, plist_id, points);
 
     status = H5Dclose(dset_id);
     status = H5Sclose(fspace_id);
     status = H5Sclose(memspace_id);
     status = H5Pclose(plist_id);
+    PointType_destroy(pointtype, status);
     status = H5Fclose(file_id);
     
     return 0;
