@@ -58,7 +58,7 @@ void CoordType_destroy(hid_t coordtype, herr_t status) {
 hid_t ReturnType_create(herr_t status) { 
     /** Create the return data type **/
     hid_t returntype;
-    returntype = H5Tcreate(H5T_COMPOUND, sizeof(coord_t));
+    returntype = H5Tcreate(H5T_COMPOUND, sizeof(return_t));
     status = H5Tinsert(returntype, "rNum", HOFFSET (return_t, rNum), H5T_NATIVE_SHORT);
     status = H5Tinsert(returntype, "rTot", HOFFSET (return_t, rTot), H5T_NATIVE_SHORT);
     return returntype;
@@ -86,19 +86,31 @@ hid_t PointType_create(herr_t status) {
     coordtype = CoordType_create(status);
     returntype = ReturnType_create(status);
     colortype = ColorType_create(status);
+    printf("Coord has size %d\n", sizeof(coord_t));
+    printf("Intensity has size %d\n", sizeof(int));
+    printf("Returns have size %d\n", sizeof(return_t));
+
+    printf("Point has size %d\n", sizeof(Point));
     pointtype = H5Tcreate(H5T_COMPOUND, sizeof(Point));
     status = H5Tinsert(pointtype, "coords", HOFFSET(Point, coords), coordtype);
     status = H5Tinsert(pointtype, "intensity", HOFFSET(Point, i), H5T_NATIVE_INT);
     status = H5Tinsert(pointtype, "returns", HOFFSET(Point, retns), returntype);
     status = H5Tinsert(pointtype, "class", HOFFSET(Point, clss), H5T_NATIVE_UCHAR);
     status = H5Tinsert(pointtype, "color", HOFFSET(Point, color), colortype);
-    
+    //printf("Point Type created with size, %d\n", H5T_get_size(pointtype)); 
     status = H5Tclose(coordtype);
     status = H5Tclose(returntype);
     status = H5Tclose(colortype);
     return pointtype;
 }
 
+int MPI_PointType_create(MPI_Datatype *pointtype) {
+    int point_address, coord_address, intens_address, return_address, class_address, color_address;
+    int point_offset, coord_offset, intens_offset, return_offset, class_offset, color_offset;
+
+    /** TODO: Create MPI_Derived_Type to pass points back and forth **/
+}
+    
 void PointType_destroy(hid_t pointtype, herr_t status) {
     status = H5Tclose(pointtype);
 }
@@ -172,7 +184,8 @@ int createDataset(char* file, char* dataset, hsize_t dims[2])
     status = H5Tinsert(pointtype, "color", HOFFSET(Point, rgb), colortype);
     **/
     pointtype = PointType_create(status);
-
+    //printf("Point Size is %d\n", sizeof(Point));
+    //printf("PointType Size is %d\n",H5T_get_size(pointtype));
     /* Set the max dimensions and chunking for the dataset */
     //NOTE: Should change this to be dynamic in future 
     max_dims[0] = H5S_UNLIMITED;
@@ -223,6 +236,8 @@ int readBlock(LASReaderH reader, int offset, int count, Point* points)
     LASHeaderH header = NULL;
     LASColorH color = NULL;
     projPJ pj_src, pj_wgs;
+    hid_t pointtype, coordtype, returntype, colortype;
+    herr_t status;
     header = LASReader_GetHeader(reader);
     /* Check that the point count is not larger than file */
     if ((offset + count) > LASHeader_GetPointRecordsCount(header)) {
@@ -274,6 +289,17 @@ int readBlock(LASReaderH reader, int offset, int count, Point* points)
     for (i = 0; i < count; i++) {
         Point_SetCoords(&points[i], ((float)x[i] * RAD_TO_DEG), ((float)y[i] * RAD_TO_DEG), (float)z[i]);
     }
+    coordtype = CoordType_create(status);
+    returntype = ReturnType_create(status);
+    colortype = ColorType_create(status);
+    pointtype = PointType_create(status);
+    /*
+    pointtype = H5Tcreate(H5T_COMPOUND, sizeof(Point));
+    status = H5Tinsert(pointtype, "coords", HOFFSET(Point, coords), coordtype);
+    status = H5Tinsert(pointtype, "intensity", HOFFSET(Point, i), H5T_NATIVE_INT);
+    status = H5Tinsert(pointtype, "returns", HOFFSET(Point, retns), returntype);
+    status = H5Tinsert(pointtype, "class", HOFFSET(Point, clss), H5T_NATIVE_UCHAR);
+    status = H5Tinsert(pointtype, "color", HOFFSET(Point, color), colortype);*/
     Point_print(&points[0]);
 
     /* Clean up */
@@ -282,6 +308,10 @@ int readBlock(LASReaderH reader, int offset, int count, Point* points)
     free(x);
     free(y);
     free(z);
+    CoordType_destroy(coordtype, status);
+    ReturnType_destroy(returntype, status);
+    ColorType_destroy(colortype, status);
+    PointType_destroy(pointtype, status);
     LASHeader_Destroy(header);
     header = NULL;
     LASColor_Destroy(color);
