@@ -6,6 +6,7 @@
 #include "hdf5.h"
 #include "common.h"
 #include "point.h"
+#include "hilbert.h"
 #include <time.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -104,10 +105,23 @@ hid_t PointType_create(herr_t status) {
     return pointtype;
 }
 
-int MPI_PointType_create(MPI_Datatype *pointtype) {
-    int point_address, coord_address, intens_address, return_address, class_address, color_address;
-    int point_offset, coord_offset, intens_offset, return_offset, class_offset, color_offset;
+int MPI_PointType_create(MPI_Datatype *pointtype, Point* point) {
+    MPI_Aint point_address, coord_address, intens_address, return_address, class_address, color_address;
+    int coord_offset, intens_offset, return_offset, class_offset, color_offset;
 
+    MPI_Get_address(&point, &point_address);
+    MPI_Get_address(&point->coords, &coord_address);
+    MPI_Get_address(&point->i, &intens_address);
+    MPI_Get_address(&point->retns, &return_address);
+    MPI_Get_address(&point->clss, &class_address);
+    MPI_Get_address(&point->color, &color_address);
+
+    coord_offset = coord_address - point_address;
+    intens_offset = intens_address - point_address;
+    return_offset = return_address - point_address;
+    class_offset = class_address - point_address;
+    color_offset = color_address - point_address;
+    printf("Offsets are [%d, %d, %d, %d, %d]\n", coord_offset, intens_offset, return_offset, class_offset, color_offset);
     /** TODO: Create MPI_Derived_Type to pass points back and forth **/
 }
     

@@ -140,6 +140,11 @@ int main (int argc, char* argv[])
     }   
 
     Point* sub_points = malloc(sizeof(Point) * block_len);
+
+    Point* point;
+    point = malloc(sizeof(Point) * pntCount);
+    MPI_Datatype* mpi_pointtype;
+    MPI_PointType_create(mpi_pointtype, point);
     MPI_Scatter(points, block_len, MPI_FLOAT, sub_points, block_len, MPI_FLOAT, 0, MPI_COMM_WORLD);
     hsize_t offset[] = {0, 0};
     offset[0] = mpi_rank * block_len;
@@ -159,7 +164,11 @@ int main (int argc, char* argv[])
     LASReader_Destroy(reader);
     reader = NULL;
     Point_destroy(sub_points);
-    Point_destroy(points);
+    Point_destroy(point);
+    //free(mpi_pointtype);
+    if (mpi_rank == 0) {
+        Point_destroy(points);
+    }
     if (verbose) ptime("done.");
 
     MPI_Finalize();
