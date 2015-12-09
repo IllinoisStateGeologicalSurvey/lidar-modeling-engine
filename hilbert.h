@@ -1,6 +1,11 @@
 #ifndef HILBERT_H
 #define HILBERT_H
 
+#include <stdint.h>
+#include <stdlib.h>
+#include <math.h>
+#include <stdio.h>
+
 
 typedef struct {
     uint32_t  hcode[3];
@@ -8,7 +13,8 @@ typedef struct {
 
 typedef Hcode Hpoint;
 
-const uint32_t g_mask[3] = {4, 2, 1};
+extern const uint32_t g_mask[3];
+//[3] = {4, 2, 1};
 
 uint32_t calc_P(int i, Hcode h);
 

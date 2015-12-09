@@ -52,6 +52,7 @@
 //typedef Hcode Hpoint;
 
 //const uint32_t g_mask[] = {4, 2, 1};
+const uint32_t g_mask[3] = {4, 2, 1};
 
 /*==============================================================*/
 /*                          calc_P                              */
@@ -291,30 +292,47 @@ void printBits(size_t const size, void const * const  ptr)
     puts("");
 }
 // TODO: MAKE THE SCALE CONVERSION WORK FOR FLOAT ARRAY
-void scaleCoords(float *coords, Hpoint* pt) {
+void scaleCoords(double *coords, Hpoint* pt) {
     //uint32_t latOff = 90.0f, lonOff = 180.0f, altOff = 12300.0f;
-    uint32_t offsets[3] = {90.0f, 180.0f, 12300.0f};
-    printf("Input coordinates: %4.12f, %4.12f\n", coords[0], coords[1]);
+    double offsets[3] = {180.0, 90.0, 12300.0};
+    printf("UINTMAX: %lf\n", UINT_MAX);
+    printf("Input coordinates: %lf, %lf, %lf\n", coords[0], coords[1], coords[2]);
     int i;
     uint32_t scales[3];
 
     for (i = 0; i < 3; i++) {
+        
         printf("Scaling coord %d\n", i);
-        scales[i] = floor(UINT_MAX / (2 * offsets[i]));
-        printf("Scale %d is: %u\n", i, scales[i]); 
-        pt->hcode[i] = (uint32_t)floor((coords[i] + offsets[i]) * scales[i]);
-        printf("Coord %d has value %u\n", i, pt->hcode[i]);
+        double range = 2.0 * offsets[i];
+        double max = (double)UINT_MAX;
+        double scale = max / range;
+        double outCoord = scale * coords[i];
+        printf("%lf / %lf = %lf\n", max, range, scale);
+        printf("Out: %lf\n", outCoord);
+        scales[i] = floor(max / range);
+        //printf("Scale %d is: %u, offset: %f\n", i, scales[i], offsets[i]); 
+
+
+        printf("Offset coord[%d] is %f\n", i, (coords[i] + offsets[i]));
+        pt->hcode[i] = (uint32_t)((coords[i] + offsets[i]) * scales[i]);
+        printf("Coord %d has value %lu\n", i, pt->hcode[i]);
     }    
 
 }
 
-
+unsigned createMask(unsigned start, unsigned stop)
+{
+    unsigned mask;
+    mask = ((1 << stop) - 1) << start;
+    return mask;
+}
+/**
 int main(int argc, char** argv[])
 {
-    /** Offsetting the coordinates to have rang 0-UINTMAX
+    / Offsetting the coordinates to have rang 0-UINTMAX
       Longitude given positive offset of 180 and scaled by (UINTMAX/360)
       Latitude given positive offset of 90 and scaled by (UINTMAX/180)
-      Altitude given positive offset of 12,300m(lowest point on earth - Kola Bore Hole) and scaled by (UINTMAX/24,600) **/
+      Altitude given positive offset of 12,300m(lowest point on earth - Kola Bore Hole) and scaled by (UINTMAX/24,600) 
     //uint32_t latOff = 90, lonOff = 180, altOff = 12300;
     //Test coordinate transform
     float *coords;
@@ -360,8 +378,15 @@ int main(int argc, char** argv[])
     Hcode idx = H_encode(*pt);
     Hcode idx2 = H_encode(*pt2);
     //printBits(sizeof(uint32_t), &coord_Scale[2]);
-    printBits(sizeof(Hcode), &idx);
-    printBits(sizeof(Hcode), &idx2);
+    //printBits(sizeof(Hcode), &idx);
+    //printBits(sizeof(Hcode), &idx2);
+    printf("idx[0] is %u", &idx.hcode[0]);
+    printBits(sizeof(uint32_t), &idx.hcode[0]);
+    printf("idx[1] is %u", &idx.hcode[1]);
+    printBits(sizeof(uint32_t), &idx.hcode[1]);
+    //uint64_t bigMask = createMask(0, 63);
+    //uint64_t result = bigMask & idx;
+    //printBits(sizeof(uint64_t), &result);
     free(pt);
     free(pt2);
     free(coords);
@@ -369,5 +394,5 @@ int main(int argc, char** argv[])
     return 0;
 
 }
-
+**/
 #endif

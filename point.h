@@ -5,7 +5,10 @@
 #include <stdlib.h>
 #include <math.h>
 
-
+typedef struct idx_t {
+    uint64_t bigIdx;
+    uint32_t smIdx;
+}
 
 typedef struct coord_t {
     float x;
@@ -25,6 +28,7 @@ typedef struct color_t {
 } color_t;
 
 typedef struct Point {
+    idx_t   idx;
     coord_t coords;
     int     i; // Intensity
     return_t retns; // Returns [return #, return count]
