@@ -34,7 +34,7 @@
 #include <stdint.h>
 #include <math.h>
 #include <hilbert.h>
-#define DIM 3
+#define DIM 2
 
 //#if DIM == 4 const uint32_t g_mask[] = {8, 4, 2, 1}; #endif
 //#if DIM == 5 const uint32_t g_mask[] = {16, 8, 4, 2, 1}; #endif
@@ -43,7 +43,7 @@
 
 //typedef uint32_t    uint32_t;
 
-#define ORDER   32
+//#define ORDER   32
 
 //typedef struct {
 //    uint32_t   hcode[DIM];
@@ -52,8 +52,8 @@
 //typedef Hcode Hpoint;
 
 //const uint32_t g_mask[] = {4, 2, 1};
-const uint32_t g_mask[3] = {4, 2, 1};
-
+//const uint32_t g_mask[3] = {4, 2, 1};
+const uint32_t g_mask[2] = {2, 1};
 /*==============================================================*/
 /*                          calc_P                              */
 /*==============================================================*/
@@ -291,6 +291,7 @@ void printBits(size_t const size, void const * const  ptr)
     }
     puts("");
 }
+/**
 // TODO: MAKE THE SCALE CONVERSION WORK FOR FLOAT ARRAY
 void scaleCoords(double *coords, Hpoint* pt) {
     //uint32_t latOff = 90.0f, lonOff = 180.0f, altOff = 12300.0f;
@@ -318,7 +319,7 @@ void scaleCoords(double *coords, Hpoint* pt) {
         printf("Coord %d has value %lu\n", i, pt->hcode[i]);
     }    
 
-}
+}**/
 
 unsigned createMask(unsigned start, unsigned stop)
 {

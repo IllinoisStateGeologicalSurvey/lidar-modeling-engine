@@ -6,14 +6,17 @@
 #include <math.h>
 #include <stdio.h>
 
+#define DIM 2
+#define ORDER 32
 
 typedef struct {
-    uint32_t  hcode[3];
+    uint32_t  hcode[DIM];
 } Hcode;
 
 typedef Hcode Hpoint;
 
-extern const uint32_t g_mask[3];
+
+extern const uint32_t g_mask[DIM];
 //[3] = {4, 2, 1};
 
 uint32_t calc_P(int i, Hcode h);
