@@ -14,5 +14,6 @@ int listFiles(char dirPath[], int depth);
 
 int countLAS(char dirPath[]);
 
+int buildArray(char dirPath[], char* outPaths[], size_t size);
 
 #endif

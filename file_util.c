@@ -44,6 +44,86 @@ void dump_entry (struct dirent *entry)
     fprintf(stdout, "%s is %s\n" , entry->d_name, type);
 }
 
+int buildArray( char  dirPath[], char* outPaths[], size_t size) {
+    // make sure size >= 2
+    DIR *dir;
+    struct dirent *entry;
+    struct stat statbuf;
+    char * ext;
+    size_t counter = 0;
+    char buf[PATH_MAX + 1];
+    int i = 0;
+    char *ptr;
+    char fullPath[PATH_MAX + 1];
+    char fname[PATH_MAX + 1];
+    printf("Reading files from %s\n", dirPath);
+    ptr = realpath(dirPath, fullPath); 
+    printf("CHecking files from %s\n", fullPath);
+    if ((dir = opendir(fullPath)) == NULL)
+    {
+        fprintf(stderr, "Error: Failed to open input directory: %s\n", dirPath);
+        exit(1);
+    }
+    chdir(fullPath);
+    printf("Looking for %i files in %s\n", size, fullPath);
+    while (((entry = readdir(dir)) != NULL) && (counter < size))
+    {
+        lstat(entry->d_name, &statbuf);
+        if (S_ISDIR(statbuf.st_mode)) {
+            /* Found a directory, but ignore links to parent directory */
+            if (strcmp(".", entry->d_name) == 0 ||
+                strcmp("..", entry->d_name) == 0)
+                continue;
+
+            /** Recurse at a new level */
+            //TODO: Make the number of files or depth controllable
+            //listFiles(entry->d_name, depth+4);
+        }
+        else
+        {
+            if (S_ISREG(statbuf.st_mode)) {
+                printf("Regular file found at %s\n", entry->d_name);
+                {
+                    /* We have a regular file, check the extension */
+                    if ((ext = strrchr(entry->d_name, '.')) != NULL)
+                    {
+                        printf("Extension is %s\n", ext);
+                        if (strcmp(ext, ".las") == 0)
+                        {
+                            // Append the path to the filename
+                            memset(fname, 0, sizeof(fname));
+                            strcat(fname, fullPath);
+                            strcat(fname, "/");
+                            strcat(fname, entry->d_name);
+                            printf("Fname: %s\n", fname);
+                            /* TODO: Figure out why real path spits null strings here
+                            char *res = realpath(fname, buf);
+                            if (res) {
+                                printf("Buffer is: %s\n", counter, buf);
+                            } else {
+                                perror("realpath");
+                                exit(1);
+                            }*/
+                            //** TODO: Figure out how to write to string array **/
+                            strcpy(outPaths[counter], fname);
+                            printf("Copied to path list.\n");
+                            counter++;
+                        }
+                        else
+                        { 
+                            continue;
+                        }
+                    }
+                }
+
+            }
+        }
+    }
+    chdir("..");
+        //dump_entry(entry);
+    closedir(dir);
+    return 0;
+}
 int listFiles(char dirPath[], int depth)
 {
     DIR *dir;
