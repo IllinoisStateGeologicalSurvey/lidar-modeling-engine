@@ -8,6 +8,8 @@
 #include <dirent.h>
 #include <sys/stat.h>
 #include <limits.h>
+#include <liblas/capi/liblas.h>
+#include "file_util.h"
 
 void dump_entry (struct dirent *entry)
 {
@@ -201,6 +203,28 @@ int countLAS(char dirPath[])
         }
     }
     return i;
+}
+
+
+/** Task Type **/
+int taskType_Create(task_t* task, char fname[], size_t start, size_t count)
+{
+    strcpy(task->fname, fname);
+    task->start = start;
+    task->reader =  LASReader_Create(fname);
+    task->header = LASReader_GetHeader(task->reader);
+
+    task->count = LASHeader_GetPointRecordsCount(task->header);
+    
+}
+
+void taskType_Print(task_t *task)
+{
+    fprintf(stdout, "File: %s, Start: %i, Count: %i\n", task->fname, task->start, task->count);
+}
+
+void taskType_Destroy(task_t *task) {
+    free(task);
 }
 
 

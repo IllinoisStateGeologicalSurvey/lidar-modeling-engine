@@ -337,8 +337,6 @@ int readBlock(LASReaderH reader, int offset, int count, Point* points)
 }
 
 
-        
-
 /** Write block of data to the dataset using offset and block dimensions **/
 int writeBlock(char* file, char* dataset, hsize_t offset[2], hsize_t block[2], Point* points, MPI_Comm comm, MPI_Info info) 
 {

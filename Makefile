@@ -24,7 +24,7 @@ all: h5_crtdat \
 	testFileUtils
 
 testFileUtils: file-test.c
-	$(CC) $(CFLAGS) -o $@ file-test.c file_util.c $(EXTINCLUDE) $(EXTLIB) $(LIB)
+	$(CC) $(CFLAGS) -o $@ file-test.c file_util.c $(EXTINCLUDE) $(EXTLIB) $(LIBSHDF) $(LIBSLAS) $(LIB)
 
 h5_crtdat: h5_crtdat.c
 	$(CC) $(CFLAGS) -o $@ h5_crtdat.c $(EXTINCLUDE) $(LIBSHDF) $(LIB)

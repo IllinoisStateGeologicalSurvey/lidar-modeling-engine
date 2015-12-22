@@ -11,6 +11,7 @@
 #include <proj_api.h>
 #include "point.h"
 
+
 projPJ loadProj(const char* proj4string);
 
 projPJ getLASProj(LASHeaderH header);
