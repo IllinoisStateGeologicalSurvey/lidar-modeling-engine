@@ -32,6 +32,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdint.h>
+#include <inttypes.h>
 #include <math.h>
 #include <hilbert.h>
 #define DIM 2
@@ -53,7 +54,7 @@
 
 //const uint32_t g_mask[] = {4, 2, 1};
 //const uint32_t g_mask[3] = {4, 2, 1};
-const uint32_t g_mask[2] = {2, 1};
+const uint32_t g_mask[] = {2, 1};
 /*==============================================================*/
 /*                          calc_P                              */
 /*==============================================================*/
@@ -291,6 +292,15 @@ void printBits(size_t const size, void const * const  ptr)
     }
     puts("");
 }
+
+int combineIndices(uint64_t *outIdx, uint32_t high, uint32_t low) {
+    uint64_t idx = (uint64_t) high << 32;
+    //printBits(sizeof(uint64_t), &idx);
+    *outIdx = idx | low;
+    //printf("%"PRIu64"\n", outIdx);
+    //printBits(sizeof(uint64_t), outIdx);
+    return 0;
+}
 /**
 // TODO: MAKE THE SCALE CONVERSION WORK FOR FLOAT ARRAY
 void scaleCoords(double *coords, Hpoint* pt) {
@@ -327,73 +337,4 @@ unsigned createMask(unsigned start, unsigned stop)
     mask = ((1 << stop) - 1) << start;
     return mask;
 }
-/**
-int main(int argc, char** argv[])
-{
-    / Offsetting the coordinates to have rang 0-UINTMAX
-      Longitude given positive offset of 180 and scaled by (UINTMAX/360)
-      Latitude given positive offset of 90 and scaled by (UINTMAX/180)
-      Altitude given positive offset of 12,300m(lowest point on earth - Kola Bore Hole) and scaled by (UINTMAX/24,600) 
-    //uint32_t latOff = 90, lonOff = 180, altOff = 12300;
-    //Test coordinate transform
-    float *coords;
-    coords = malloc(sizeof(float) * 3);
-    coords[0] = -88.224893f;
-    coords[1] = 40.114805f;
-    coords[2] = 3500.0f;
-
-    float* coord2;
-    coord2 = malloc(sizeof(float) * 3);
-    coord2[0] = 70.56355f;
-    coord2[1] = -50.236534f;
-    coord2[2] = 2000.0f;
-    //printf("Input coordinates: %4.12f, %4.12f\n", coords[0], coords[1]);
-    
-    //coords[0] += 90;
-    //coords[1] += 180;
-
-    //uint32_t latscale = UINT_MAX / (2 * latOff);
-    //uint32_t lonscale = UINT_MAX / (2 * lonOff);
-    //uint32_t altscale = UINT_MAX / (2 * altOff);
-    
-    //uint32_t  max = UINT_MAX;
-
-    //uint32_t coord_Scale[3];
-    //coord_Scale[0] = (coords[0] + latOff) * latscale;
-    //coord_Scale[1] = (coords[1] + lonOff) * lonscale;
-    //coord_Scale[2] = (coords[2] + altOff) * altscale;
-
-    Hpoint *pt;
-    pt = malloc(sizeof(Hpoint));
-    Hpoint *pt2;
-    pt2 = malloc(sizeof(Hpoint));
-    scaleCoords(coords, pt);
-    scaleCoords(coord2, pt2);
-    //pt.hcode[0] = coord_Scale[0];
-    //pt.hcode[1] = coord_Scale[1];
-    //pt.hcode[2] = coord_Scale[2];
-    printf("%u is long max\n", UINT_MAX);
-    //printf("%u is long dif\n", coord_Scale[1]);
-    //printf("%u is lat dif\n", coord_Scale[0]);
-    //printf("%u is alt dif\n", coord_Scale[2]);
-    Hcode idx = H_encode(*pt);
-    Hcode idx2 = H_encode(*pt2);
-    //printBits(sizeof(uint32_t), &coord_Scale[2]);
-    //printBits(sizeof(Hcode), &idx);
-    //printBits(sizeof(Hcode), &idx2);
-    printf("idx[0] is %u", &idx.hcode[0]);
-    printBits(sizeof(uint32_t), &idx.hcode[0]);
-    printf("idx[1] is %u", &idx.hcode[1]);
-    printBits(sizeof(uint32_t), &idx.hcode[1]);
-    //uint64_t bigMask = createMask(0, 63);
-    //uint64_t result = bigMask & idx;
-    //printBits(sizeof(uint64_t), &result);
-    free(pt);
-    free(pt2);
-    free(coords);
-    free(coord2);
-    return 0;
-
-}
-**/
 #endif

@@ -42,25 +42,13 @@ projPJ getLASProj(LASHeaderH header)
     return pj;
 }
 
-hid_t IdxType_create(herr_t status) {
-    hid_t idxtype;
-    idxtype = H5Tcreate(H5T_COMPUND, sizeof(idx_t));
-    status = H5Tinsert(idxtype, "big", HOFFSET(idx_t, bigIdx), H5T_NATIVE_B64);
-    status = H5Tinsert(idxtype, "sm", HOFFSET(idx_t, smIdx), H5T_NATIVE_B32);
-    return idxtype;
-}
-
-void IdxType_destroy(hid_t idxtype, herr_t status) {
-    status = H5Tclose(idxtype);
-}
-
 hid_t CoordType_create(herr_t status) {
     /** Create the coordinate data type **/
     hid_t coordtype;
     coordtype = H5Tcreate(H5T_COMPOUND, sizeof(coord_t));
-    status = H5Tinsert(coordtype, "x", HOFFSET (coord_t, x), H5T_NATIVE_FLOAT);
-    status = H5Tinsert(coordtype, "y", HOFFSET (coord_t, y), H5T_NATIVE_FLOAT);
-    status = H5Tinsert(coordtype, "z", HOFFSET (coord_t, z), H5T_NATIVE_FLOAT);
+    status = H5Tinsert(coordtype, "x", HOFFSET (coord_t, x), H5T_NATIVE_UINT32);
+    status = H5Tinsert(coordtype, "y", HOFFSET (coord_t, y), H5T_NATIVE_UINT32);
+    status = H5Tinsert(coordtype, "z", HOFFSET (coord_t, z), H5T_NATIVE_UINT32);
     return coordtype;
 }
 
@@ -97,8 +85,7 @@ void ColorType_destroy(hid_t colortype, herr_t status) {
 }
 
 hid_t PointType_create(herr_t status) {
-    hid_t idxtype, coordtype, returntype, colortype, pointtype;
-    idxtype = IdxType_create(status);
+    hid_t coordtype, returntype, colortype, pointtype;
     coordtype = CoordType_create(status);
     returntype = ReturnType_create(status);
     colortype = ColorType_create(status);
@@ -108,14 +95,13 @@ hid_t PointType_create(herr_t status) {
 
     printf("Point has size %d\n", sizeof(Point));
     pointtype = H5Tcreate(H5T_COMPOUND, sizeof(Point));
-    status = H5Tinsert(pointtype, "idx", HOFFSET(Point, idx), idx_t);
+    status = H5Tinsert(pointtype, "idx", HOFFSET(Point, idx), H5T_STD_U64BE);
     status = H5Tinsert(pointtype, "coords", HOFFSET(Point, coords), coordtype);
     status = H5Tinsert(pointtype, "intensity", HOFFSET(Point, i), H5T_NATIVE_INT);
     status = H5Tinsert(pointtype, "returns", HOFFSET(Point, retns), returntype);
     status = H5Tinsert(pointtype, "class", HOFFSET(Point, clss), H5T_NATIVE_UCHAR);
     status = H5Tinsert(pointtype, "color", HOFFSET(Point, color), colortype);
     //printf("Point Type created with size, %d\n", H5T_get_size(pointtype)); 
-    status = H5Tclose(idxtype);
     status = H5Tclose(coordtype);
     status = H5Tclose(returntype);
     status = H5Tclose(colortype);
@@ -174,7 +160,7 @@ int project(projPJ pj_src, projPJ pj_dst, double x, double y, double z)
 
 int createDataset(char* file, char* dataset, hsize_t dims[2]) 
 {
-    hid_t   file_id, dataset_id, dataspace_id, plist_id, colortype, returntype, coordtype, idxtype, pointtype; /*identifiers */
+    hid_t   file_id, dataset_id, dataspace_id, plist_id, colortype, returntype, coordtype,  pointtype; /*identifiers */
     
     hsize_t max_dims[2];
     hsize_t chunk_dims[2];
@@ -187,7 +173,7 @@ int createDataset(char* file, char* dataset, hsize_t dims[2])
        it doesn't already exist */
     file_id = H5Fcreate(file, H5F_ACC_TRUNC, H5P_DEFAULT, plist_id);
     
-    idxtype = IdxType_create(status);
+    //idxtype = IdxType_create(status);
 
     coordtype = CoordType_create(status);
 
@@ -231,7 +217,7 @@ int createDataset(char* file, char* dataset, hsize_t dims[2])
     status = H5Sclose(dataspace_id);
 
     /* Close Data type references */
-    IdxType_destroy(idxtype, status);
+    //IdxType_destroy(idxtype, status);
     CoordType_destroy(coordtype, status);
     ReturnType_destroy(returntype, status);
     ColorType_destroy(colortype, status);
@@ -303,8 +289,19 @@ int readBlock(LASReaderH reader, int offset, int count, Point* points)
     printf("Projecting Points\n");
     // Projecting points is faster if they are done at the same time, using an array and count
     pj_transform(pj_src, pj_wgs, count, 1, &x[0], &y[0], &z[0]);
+    
+    /** Scale And Offset Coordinates **/
+    coord_dbl_t* rawCoords = malloc(sizeof(coord_dbl_t));
+    coord_t* cc = malloc(sizeof(coord_t));
     for (i = 0; i < count; i++) {
-        Point_SetCoords(&points[i], ((float)x[i] * RAD_TO_DEG), ((float)y[i] * RAD_TO_DEG), (float)z[i]);
+        Coord_Set(rawCoords, (x[i] * RAD_TO_DEG), (y[i] * RAD_TO_DEG), (z[i] * RAD_TO_DEG));
+        
+        Coord_Encode(cc, rawCoords);
+        //printf("Coords are: %f, %f, %f\n", rawCoords->x, rawCoords->y, rawCoords->z);
+        Point_SetCoords(&points[i], cc);
+        //printf("Encoded points are: [%u, %u, %u]\n", &points[i].coords.x, &points[i].coords.y, &points[i].coords.z);
+        Point_IndexCoords(&points[i]);
+        //Point_SetCoords(&points[i], ((double)x[i] * RAD_TO_DEG), ((double)y[i] * RAD_TO_DEG), (double)z[i]);
     }
     coordtype = CoordType_create(status);
     returntype = ReturnType_create(status);
@@ -320,11 +317,14 @@ int readBlock(LASReaderH reader, int offset, int count, Point* points)
     Point_print(&points[0]);
 
     /* Clean up */
+    free(rawCoords);
+    free(cc);
     pj_free(pj_src);
-    pj_free(pj_wgs);
+    pj_free(pj_wgs); 
     free(x);
     free(y);
     free(z);
+    
     CoordType_destroy(coordtype, status);
     ReturnType_destroy(returntype, status);
     ColorType_destroy(colortype, status);
