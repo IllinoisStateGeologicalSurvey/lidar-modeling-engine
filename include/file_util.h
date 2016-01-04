@@ -9,15 +9,13 @@
 #include <limits.h>
 #include <liblas/capi/liblas.h>
 typedef struct task_t{
-    LASReaderH reader;
-    LASHeaderH header;
-    size_t start;
-    size_t count;
+    size_t offset;
+    size_t size;
     char fname[PATH_MAX + 1];
 } task_t;
 
 
-int taskType_Create(task_t *task, char fname[], size_t start, size_t count);
+int taskType_Create(task_t *task, char fname[], size_t start, size_t size);
 
 void taskType_Print(task_t *task);
 
@@ -29,6 +27,6 @@ int listFiles(char dirPath[], int depth);
 
 int countLAS(char dirPath[]);
 
-int buildArray(char dirPath[], char* outPaths[], size_t size);
+int buildArray(char dirPath[], char outPaths[], size_t size);
 
 #endif

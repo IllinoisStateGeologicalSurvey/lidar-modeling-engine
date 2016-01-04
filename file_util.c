@@ -46,7 +46,7 @@ void dump_entry (struct dirent *entry)
     fprintf(stdout, "%s is %s\n" , entry->d_name, type);
 }
 
-int buildArray( char  dirPath[], char* outPaths[], size_t size) {
+int buildArray( char  dirPath[], char outPaths[], size_t size) {
     // make sure size >= 2
     DIR *dir;
     struct dirent *entry;
@@ -107,7 +107,7 @@ int buildArray( char  dirPath[], char* outPaths[], size_t size) {
                                 exit(1);
                             }*/
                             //** TODO: Figure out how to write to string array **/
-                            strcpy(outPaths[counter], fname);
+                            strncpy(&outPaths[counter * (PATH_MAX + 1)], fname, PATH_MAX + 1);
                             printf("Copied to path list.\n");
                             counter++;
                         }
@@ -207,20 +207,22 @@ int countLAS(char dirPath[])
 
 
 /** Task Type **/
-int taskType_Create(task_t* task, char fname[], size_t start, size_t count)
+int taskType_Create(task_t* task, char fname[], size_t offset, size_t size)
 {
     strcpy(task->fname, fname);
-    task->start = start;
-    task->reader =  LASReader_Create(fname);
-    task->header = LASReader_GetHeader(task->reader);
+    task->offset = offset;
+    LASReaderH reader =  LASReader_Create(fname);
+    LASHeaderH header = LASReader_GetHeader(reader);
 
-    task->count = LASHeader_GetPointRecordsCount(task->header);
+    task->size = LASHeader_GetPointRecordsCount(header);
+    free(reader);
+    free(header);
     
 }
 
 void taskType_Print(task_t *task)
 {
-    fprintf(stdout, "File: %s, Start: %i, Count: %i\n", task->fname, task->start, task->count);
+    fprintf(stdout, "File: %s, Start: %i, Count: %i\n", task->fname, task->offset, task->size);
 }
 
 void taskType_Destroy(task_t *task) {

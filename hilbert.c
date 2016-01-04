@@ -331,6 +331,13 @@ void scaleCoords(double *coords, Hpoint* pt) {
 
 }**/
 
+
+int less_than(uint64_t a, uint64_t b) {
+    uint64_t tmp = a ^ b;
+    tmp &= -tmp;
+    return tmp > a || tmp & a;
+}
+
 unsigned createMask(unsigned start, unsigned stop)
 {
     unsigned mask;
