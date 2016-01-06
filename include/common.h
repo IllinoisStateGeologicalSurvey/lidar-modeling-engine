@@ -22,6 +22,8 @@ int project(projPJ pj_src, projPJ pj_dst, double x, double y, double z);
 
 int createDataset(char* file, char* dataset, hsize_t dims[2]);
 
+//int createHeaderDataset(char* file, char* dataset, hsize_t dims[2]);
+
 int readBlock(LASReaderH reader, int offset, int count, Point* points);
 
 int writeBlock(char* file, char* dataset, hsize_t offset[2], hsize_t block[2], Point* points, MPI_Comm comm, MPI_Info info);
@@ -44,5 +46,6 @@ hid_t PointType_create(herr_t status);
 void PointType_destroy(hid_t pointtype, herr_t status);
 
 int MPI_PointType_create(MPI_Datatype *pointtype, Point* point);
+
 
 #endif

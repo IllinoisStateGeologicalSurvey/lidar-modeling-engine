@@ -7,6 +7,7 @@
 #include "common.h"
 #include "point.h"
 #include "hilbert.h"
+#include "header.h"
 #include <time.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -232,6 +233,7 @@ int createDataset(char* file, char* dataset, hsize_t dims[2])
     return 0;
 }
 
+    
 int readBlock(LASReaderH reader, int offset, int count, Point* points)
 {
     int i; // counter

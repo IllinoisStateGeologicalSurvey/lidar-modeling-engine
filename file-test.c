@@ -8,6 +8,7 @@
 #include <mpi.h>
 #include "file_util.h"
 #include "common.h"
+#include "header.h"
 
 int main(int argc, char* argv[])
 {
@@ -44,6 +45,15 @@ int main(int argc, char* argv[])
         block++;
     }
 
+    /* Root process creates dataset */
+    hsize_t  dims[2];
+    dims[0] = 1000;
+    dims[1] = 1;
+    char* filename = "test.h5";
+    if (mpi_rank == 0) {
+        createHeaderDataset(filename, "/headers", dims);
+        printf("created HDF dataset at %s\n", filename);
+    }
     // Add a task array to read point information
     task_t tasks[size];
     char* outPaths;
@@ -73,21 +83,27 @@ int main(int argc, char* argv[])
     printf("Creating tasks\n");
     /** TODO: Make processes read points **/
 //    hsize_t offset[] = {0, 0};
-    for (i = 0; i < block; i++){
+    header_t *headers;
+    headers = malloc(sizeof(header_t) * block);
+    hsize_t offset[] = {(mpi_rank * block), 0};
 
-        /* Create the file reading tasks */
+/*    for (i = 0; i < block; i++){
+
+        // Create the file reading tasks 
         //printf("Proc: %d, Path %i: %s\n", mpi_rank, i, outPaths[i*(PATH_MAX + 1)]);
         sleep(1);
         char* path;
         path = malloc(sizeof(char) * (PATH_MAX + 1));
         strncpy(path, &sub_paths[i * (PATH_MAX + 1)], (PATH_MAX + 1)); 
         printf("FilePath: %s\n", path);
-        taskType_Create(&tasks[i], path, 0, 1);
+        
+        //taskType_Create(&tasks[i], path, 0, 1);
         printf("Task %d created in process %d\n", i, mpi_rank);
 
         totPoints = totPoints + tasks[i].size;
         //printf("Point count %d\n", totPoints);
-    }
+    }*/
+    readHeaderBlock(sub_paths, 0, block, headers);
     /*for (i = 0; i < size; i++) 
     {
         taskType_Print(&tasks[i]);

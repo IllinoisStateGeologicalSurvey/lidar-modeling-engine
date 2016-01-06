@@ -47,6 +47,8 @@ typedef struct Point {
     unsigned char   clss; // Classification
     color_t color;  // Color [r,g,b]
 } Point;
+/** TODO: Find a suitable max length for proj4 strings **/
+
 
 double Scale_init(double offset, double max);
 void Point_SetIndex(Point* p, idx_t* idx);
