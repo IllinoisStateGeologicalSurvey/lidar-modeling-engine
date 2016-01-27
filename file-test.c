@@ -38,24 +38,33 @@ int main(int argc, char* argv[])
     size = atoi(argv[2]);
     /** Mpi task division **/
     
-    int block = floor(size / mpi_size);
+    int blockDef = floor(size / mpi_size);
+
     int remainder = size % mpi_size;
     if (remainder) {
-        printf("Block size is %d and Remainder is %d\n", block, remainder);
-        block++;
+        printf("Block size is %d and Remainder is %d\n", blockDef, remainder);
+        blockDef++;
     }
+    hsize_t block = blockDef;
 
     /* Root process creates dataset */
-    hsize_t  dims[2];
-    dims[0] = 1000;
-    dims[1] = 1;
+    hsize_t  dims;
+    dims = 1000;
+    
+    char* pathBuf = malloc(sizeof(char) * (PATH_MAX+1)); /** Create a char buffer to hold the working path **/
+    int pathLen; /** Counter that returns the index of the end of the path(helpful for concatenation  **/
+    pathLen = getWorkingDir(pathBuf); 
+    
+    printf("Working Path is: %s\n", pathBuf);
+    strcpy(&pathBuf[pathLen], "/test.h5\0");
+    printf("File path is: %s\n", pathBuf);
     char* filename = "test.h5";
     if (mpi_rank == 0) {
-        createHeaderDataset(filename, "/headers", dims);
-        printf("created HDF dataset at %s\n", filename);
+        createHeaderDataset(pathBuf, "/headers", &dims);
+        printf("created HDF dataset at %s\n", pathBuf);
     }
     // Add a task array to read point information
-    task_t tasks[size];
+    //task_t tasks[size];
     char* outPaths;
     //printf("PathMax is: %llu\n", PATH_MAX);
     
@@ -72,21 +81,16 @@ int main(int argc, char* argv[])
    // }
     char* sub_paths = malloc(sizeof(char) * (block *  (PATH_MAX + 1)));
 
-    //for (i = 0; i < block; ++i) {
-    //    sub_paths[i] = malloc(PATH_MAX + 1);
-    //}
-    //fprintf(stdout, "Reading %i files from directory %s with block size: %i\n", size, dirname, block);
     printf("Process: %d reading points\n", mpi_rank);
     /** Scatter the filepaths to be read **/
     printf("Scattering paths\n");
     MPI_Scatter(outPaths, block * (PATH_MAX + 1), MPI_CHAR, sub_paths, block * (PATH_MAX + 1), MPI_CHAR, 0, MPI_COMM_WORLD);
     printf("Creating tasks\n");
     /** TODO: Make processes read points **/
-//    hsize_t offset[] = {0, 0};
     header_t *headers;
     headers = malloc(sizeof(header_t) * block);
-    hsize_t offset[] = {(mpi_rank * block), 0};
-
+    hsize_t offset = (mpi_rank * block);
+    printf("Allocated header memory\n");
 /*    for (i = 0; i < block; i++){
 
         // Create the file reading tasks 
@@ -103,7 +107,13 @@ int main(int argc, char* argv[])
         totPoints = totPoints + tasks[i].size;
         //printf("Point count %d\n", totPoints);
     }*/
-    readHeaderBlock(sub_paths, 0, block, headers);
+    /** Read the path values from the files in parallel, necessary due to speed of statting las files  **/
+    readHeaderBlock(sub_paths, 0, &block, headers);
+    
+    printf("Loaded Header data, writing to file %s, dataset: %s\n", pathBuf, "/headers");
+    /** Write the header data to the HDF dataset **/
+    printf("Process %d has %zu offset\n", mpi_rank, offset);
+    writeHeaderBlock(pathBuf, "/headers", &offset, &block, headers, comm, info);
     /*for (i = 0; i < size; i++) 
     {
         taskType_Print(&tasks[i]);
@@ -116,8 +126,11 @@ int main(int argc, char* argv[])
     //        free(outPaths[i]);
     //    }
     //TODO: Write the tasks to HDF dataset 
-        free(outPaths);
-
+    printf("Freeing memory\n");
+    free(outPaths);
+    free(sub_paths);
+    free(headers);
+    free(pathBuf);
     //} else {
    //     for (i =0; i < block; i++) {
    //         free(sub_paths[i]);
@@ -126,7 +139,7 @@ int main(int argc, char* argv[])
     //}
     printf("%llu Files, %llu Points\n", size, totPoints);
     //free(outPaths);
-    printf("Process %d done.", mpi_rank);
+    printf("Process %d done.\n", mpi_rank);
     MPI_Finalize();
     return 0;
 }

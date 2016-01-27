@@ -19,13 +19,13 @@ typedef struct bound_t {
 } bound_t;
 
 typedef struct header_t {
-    uint64_t pnt_count;
+    uint32_t pnt_count;
     bound_t bounds;
     char path[PATH_MAX+1];
     proj_t proj;
 } header_t;
 
-int createHeaderDataset(char* file, char* dataset, hsize_t dims[2]);
+int createHeaderDataset(char* file, char* dataset, hsize_t* dims);
 
 hid_t ProjType_create(herr_t status);
 
