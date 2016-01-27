@@ -74,6 +74,7 @@ hid_t HeaderType_create(herr_t status) {
     boundtype = BoundType_create(status);
     projtype = ProjType_create(status);
     headertype = H5Tcreate(H5T_COMPOUND, sizeof(header_t));
+    status = H5Tinsert(headertype, "id", HOFFSET(header_t, id), H5T_NATIVE_UINT);
     status = H5Tinsert(headertype, "bounds", HOFFSET(header_t, bounds), boundtype);
     status = H5Tinsert(headertype, "name", HOFFSET(header_t, path), projtype);
     status = H5Tinsert(headertype, "proj", HOFFSET(header_t, proj), projtype);
@@ -180,7 +181,9 @@ int readHeaderBlock(char paths[], int offset, hsize_t* block, header_t* headers)
             LASError_Print("Could not fetch header");
             exit(1);
         }
-        srs = LASHeader_GetSRS(header);
+        //srs = LASHeader_GetSRS(header);
+        /* Set the id for the header */
+        header[i].id = offset + i;
         /* Get the point count */
         int pntCount = LASHeader_GetPointRecordsCount(header);
         /* Get the projection definition */
@@ -238,15 +241,6 @@ int writeHeaderBlock(char* file, char* dataset, hsize_t* offset, hsize_t* block,
     H5Pset_dxpl_mpio(plist_id, H5FD_MPIO_COLLECTIVE);
     /** CHECKING THE DATA **/
     int i;
-//    int* placeHolders; 
-//    placeHolders=malloc(sizeof(uint32_t) * *block);
-//    for (i = 0; i < *block; i++)
-//   {
-//        printf("[%d] %s, %di\n", mpi_rank,headers[i].path, headers[i].pnt_count);
-//        placeHolders[i] = mpi_rank;
-//    };
-    /** TODO: THIS IS WRITING NULL DATA, make sure it is writing to the right area **/
-    /**status = H5Dwrite(dset_id, H5T_NATIVE_INT, memspace_id, fspace_id, plist_id, placeHolders);**/
     status = H5Dwrite(dset_id, headertype, memspace_id, fspace_id, plist_id, headers);
 
     status = H5Dclose(dset_id);
@@ -255,7 +249,6 @@ int writeHeaderBlock(char* file, char* dataset, hsize_t* offset, hsize_t* block,
     status = H5Pclose(plist_id);
     HeaderType_destroy(headertype, status);
     status = H5Fclose(file_id);
-    //free(placeHolders);
     return 0;
 }
 

@@ -19,6 +19,7 @@ typedef struct bound_t {
 } bound_t;
 
 typedef struct header_t {
+    uint32_t id;
     uint32_t pnt_count;
     bound_t bounds;
     char path[PATH_MAX+1];

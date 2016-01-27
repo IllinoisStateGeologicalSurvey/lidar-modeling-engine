@@ -260,7 +260,6 @@ int readBlock(LASReaderH reader, int offset, int count, Point* points)
 
     //struct Point* points;
     //points = malloc(sizeof(Point) * count);
-    //printf("%d points allocated in memory\n", count);
     // Run GetPointAt outside loop as it is considerably slower than getNextPoint
     for (i = 0; i < count; i++)  {
         //printf("Point:%d\n", i);
@@ -276,11 +275,9 @@ int readBlock(LASReaderH reader, int offset, int count, Point* points)
         x[i] = LASPoint_GetX(p);
         y[i] = LASPoint_GetY(p);
         z[i] = LASPoint_GetZ(p);
-        //points[i].i = LASPoint_GetIntensity(p);
         Point_SetIntensity(&points[i], LASPoint_GetIntensity(p));
         
         Point_SetReturns(&points[i], LASPoint_GetReturnNumber(p), LASPoint_GetNumberOfReturns(p));
-        //printf("Class is %hhu\n", LASPoint_GetClassification(p));
         //points[i].clss = LASPoint_GetClassification(p);
         Point_SetClassification(&points[i], LASPoint_GetClassification(p));
         color = LASPoint_GetColor(p);
@@ -309,13 +306,7 @@ int readBlock(LASReaderH reader, int offset, int count, Point* points)
     returntype = ReturnType_create(status);
     colortype = ColorType_create(status);
     pointtype = PointType_create(status);
-    /*
-    pointtype = H5Tcreate(H5T_COMPOUND, sizeof(Point));
-    status = H5Tinsert(pointtype, "coords", HOFFSET(Point, coords), coordtype);
-    status = H5Tinsert(pointtype, "intensity", HOFFSET(Point, i), H5T_NATIVE_INT);
-    status = H5Tinsert(pointtype, "returns", HOFFSET(Point, retns), returntype);
-    status = H5Tinsert(pointtype, "class", HOFFSET(Point, clss), H5T_NATIVE_UCHAR);
-    status = H5Tinsert(pointtype, "color", HOFFSET(Point, color), colortype);*/
+    
     Point_print(&points[0]);
 
     /* Clean up */

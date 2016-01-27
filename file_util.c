@@ -241,20 +241,19 @@ int getWorkingDir(char pathBuf[])
     len = strlen(pathBuf);
     return len;
 }
-/*
-int main(int argc, char* argv[]) 
-{
-    char dirname[30];
-    if (argc < 1) 
-    {
-        fprintf(stderr, "Usage: file_util <directory>\n");
-        exit(1);
-    }
 
-    strcpy(dirname, argv[1]);
-    fprintf(stdout, "Reading directory %s\n", dirname);
-    listFiles(dirname, 2);
-    return 0;
+int fileExists(char* filename) {
+    if (access(filename, R_OK) != -1) {
+        // File exists
+        return 0;
+    } else if (access(filename, F_OK) != -1) {
+        fprintf(stderr, "PERMISSION ERROR: Cannot read file %s\n", filename);
+        return 1;
+    } else {
+        fprintf(stderr, "FILE ERROR: File not found: %s\n", filename);
+        return 1;
+    }
 }
-*/
+
+
 #endif
