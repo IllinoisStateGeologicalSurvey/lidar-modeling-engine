@@ -1,0 +1,8 @@
+/bin
+/bin/*
+
+/log
+/log/*
+
+#Ignore hdf5 files
+*.h5

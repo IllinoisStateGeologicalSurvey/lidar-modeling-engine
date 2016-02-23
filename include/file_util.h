@@ -29,4 +29,8 @@ int countLAS(char dirPath[]);
 
 int buildArray(char dirPath[], char outPaths[], size_t size);
 
+int getWorkingDir(char* pathBuf);
+
+int fileExists(char* filename);
+
 #endif

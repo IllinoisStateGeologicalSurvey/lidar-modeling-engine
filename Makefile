@@ -4,50 +4,66 @@ MPI_INSTALL = /sw/EasyBuild/software/MPICH/3.1.4-GCC-4.9.2-binutils-2.25
 LIBLAS_INSTALL = /gpfs_scratch/ncasler/liblas
 PROJ_INSTALL=/gpfs_scratch/ncasler/proj
 #SZIP_INSTALL = /sw/EasyBuild/software/Szip/2.1-gmpolf-2015
-EXTLIB      = -L$(HDF_INSTALL)/lib -L$(MPI_INSTALL)/lib -L$(LIBLAS_INSTALL)/lib -L$(PROJ_INSTALL)/lib
-CC          = mpicc
-CFLAGS      = -g
-LIB         =  -lz -lm -lrt -lmpich -lpthread -ldl -llas -llas_c -lproj
+EXTLIB		= -L$(HDF_INSTALL)/lib -L$(MPI_INSTALL)/lib -L$(LIBLAS_INSTALL)/lib -L$(PROJ_INSTALL)/lib
+CC			= mpicc
+CFLAGS		= -g -Wall
+LIB			=  -lz -lm -lrt -lmpich -lpthread -ldl -llas -llas_c -lproj
 
-INCLUDE     = -I./include 
-EXTINCLUDE  = $(INCLUDE) -I$(MPI_INSTALL)/include -I$(HDF_INSTALL)/include -I$(LIBLAS_INSTALL)/include -I$(PROJ_INSTALL)/include
+SOURCEDIR	= src
+BUILDDIR	= bin
+OBJDIR		= obj
+TESTDIR		= test
+INCLUDE		= -I./include 
+EXTINCLUDE	= $(INCLUDE) -I$(MPI_INSTALL)/include -I$(HDF_INSTALL)/include -I$(LIBLAS_INSTALL)/include -I$(PROJ_INSTALL)/include
 #-I$(SZIP_INSTALL)/include
 
-LIBSHDF     = $(EXTLIB) $(HDF_INSTALL)/lib/libhdf5.a $(MPI_INSTALL)/lib/libmpi.a 
-LIBSLAS     = $(EXTLIB) $(LIBLAS_INSTALL)/lib/liblas_c.so $(LIBLAS_INSTALL)/lib/liblas_c.so.3
-LIBSPROJ    = $(EXTLIB) $(PROJ_INSTALL)/lib/libproj.a
+LIBSHDF		=  $(HDF_INSTALL)/lib/libhdf5.a $(MPI_INSTALL)/lib/libmpi.a 
+LIBSLAS		=  $(LIBLAS_INSTALL)/lib/liblas_c.so $(LIBLAS_INSTALL)/lib/liblas_c.so.3
+LIBSPROJ	=  $(PROJ_INSTALL)/lib/libproj.a
 #$(SZIP_INSTALL)/lib/libsz.a
+EXTLIBS		= $(LIBSHDF) $(LIBSLAS) $(LIBSPROJ) $(EXTLIB) $(LIB)
 
-all: h5_crtdat \
-	h5_writechunk \
-	readLas \
-	testFileUtils
+SOURCES		  := $(wildcard $(SOURCEDIR)/*.c)
+OBJECTS		  := $(subst $(SOURCEDIR),$(BUILDDIR),$(SOURCES:%.c=%.o))
 
-testFileUtils: file-test.c
-	$(CC) $(CFLAGS) -o $@ file-test.c header.c common.c point.c hilbert.c file_util.c $(EXTINCLUDE) $(LIBSHDF) $(LIBSLAS) $(LIBSPROJ) $(LIB)
 
-h5_crtdat: h5_crtdat.c
-	$(CC) $(CFLAGS) -o $@ h5_crtdat.c $(EXTINCLUDE) $(LIBSHDF) $(LIB)
+# TARGETS
+#compile: $(OBJECTS)
 
-h5_rdwt: h5_rdwt.c
-	$(CC) $(CFLAGS) -o $@ h5_rdwt.c $(EXTINCLUDE) $(LIBSHDF) $(LIB)
+# MAIN Target 
+#$(EXEC): $(OBJECTS)
+#	$(CC) $(CFLAGS) $(LDFLAGS) $(EXTINCLUDE) $(EXTLIBS) $< -o $@
 
-h5_crtatt: h5_crtatt.c
-	$(CC) $(CFLAGS) -o $@ h5_crtatt.c $(EXTINCLUDE) $(LIBSHDF) $(LIB)
+#$(BINARY): $(OBJECTS)
+#	$(CC) $(CFLAGS) $(LDFLAGS) $(EXTINCLUDE) $(EXTLIBS) -o $(BINARY)
 
-h5_writechunk: h5_writechunk.c
-	$(CC) $(CFLAGS) -o $@ h5_writechunk.c $(EXTINCLUDE) $(LIBSHDF) $(LIB)
+#$(BUILDDIR)/%.o: %.c
+#	$(CC) $(CFLAGS) $(LDFLAGS) $(EXTINCLUDE) $(EXTLIBS) -c $< -o $@
 
-readLas: readLas.c
-	$(CC) $(CFLAGS) -o $@ readLas.c common.c point.c hilbert.c file_util.c $(EXTINCLUDE) $(LIBSHDF) $(LIBSLAS) $(LIBSPROJ) $(LIB)
+#test: $(SRCS)
 
+all: $(BUILDDIR)/testFileUtils \
+	$(BUILDDIR)/readLas \
+	$(BUILDDIR)/headerRead \
+	$(BUILDDIR)/testRange
+	
+
+$(BUILDDIR)/testFileUtils: $(TESTDIR)/file-test.c
+	$(CC) $(CFLAGS) -o $@ $(TESTDIR)/file-test.c $(SOURCES) $(EXTINCLUDE) $(EXTLIBS)
+
+$(BUILDDIR)/readLas: $(TESTDIR)/readLas.c
+	$(CC) $(CFLAGS) -o $@ $(TESTDIR)/readLas.c $(SOURCES) $(EXTINCLUDE) $(EXTLIBS)
+
+$(BUILDDIR)/headerRead: $(TESTDIR)/headerRead.c
+	$(CC) $(CFLAGS) -o $@  $(TESTDIR)/headerRead.c $(SOURCES) $(EXTINCLUDE) $(EXTLIBS)
+
+$(BUILDDIR)/testRange: $(TESTDIR)/range-test.c
+	$(CC) $(CFLAGS) -o $@ $(TESTDIR)/range-test.c $(SOURCES) $(EXTINCLUDE) $(EXTLIBS)
 
 clean: 
-	rm -f *.h5 *.o \
-		h5_crtdat \
-		h5_writechunk \
-		readLas \
-		common \
-		testFileUtils
+	rm -f bin/* \
+	log/* \
+	*.h5 \
+	*.o 
 
-.SUFFIXES:.o.c
+#.SUFFIXES:.o.c

@@ -1,11 +1,16 @@
 #ifndef POINT_H
 #define POINT_H
 
+#include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
+#include <mpi.h>
+#include <hdf5.h>
 #include <assert.h>
 #include <stdlib.h>
 #include <math.h>
 #include <inttypes.h>
-
+#include <liblas/capi/liblas.h>
 const double offsets[3];
 const double scales[3];
 /*
@@ -76,7 +81,29 @@ Point* Point_new(idx_t *idx, double coords[3], int i, short retns[2], unsigned c
 
 void Point_destroy(struct Point *p);
 
+hid_t CoordType_create(herr_t* status);
+
+void CoordType_destroy(hid_t coordtype, herr_t* status);
+
+hid_t ReturnType_create(herr_t* status);
+
+void ReturnType_destroy(hid_t returntype, herr_t* status);
+
+hid_t ColorType_create(herr_t* status);
+
+void ColorType_destroy(hid_t colortype, herr_t* status);
+
+hid_t PointType_create(herr_t* status);
+
+void PointType_destroy(hid_t pointtype, herr_t* status);
+
+int MPI_PointType_create(MPI_Datatype* mpi_pointtype);
+
 void Point_print(struct Point *p);
 
+
+int LASPoint_read(LASPointH* lasPnt, Point* pnt, double* x, double* y, double* z);
+
+int LASPoint_project(LASHeaderH* header, hsize_t* count, double* x, double* y, double* z, Point* pnts, int mpi_rank);
 
 #endif

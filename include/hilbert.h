@@ -31,6 +31,8 @@ Hpoint H_decode (Hcode H);
 
 Hcode H_encode(Hpoint pt);
 
+int combineIndices(uint64_t* idxfull, uint32_t high, uint32_t low);
+
 void printBits(size_t const size, void const * const ptr);
 
 
