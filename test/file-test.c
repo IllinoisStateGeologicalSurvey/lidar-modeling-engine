@@ -136,9 +136,9 @@ int main(int argc, char* argv[])
 			TODO: BREAK OUT THE TASK DIVISION TO SEPARATE 
 			FUNCTION
     ****************************************************/
-    if (mpi_rank == 0) { 
+    //if (mpi_rank == 0) { 
 		buildArray(dirname, outPaths, size);
-    }
+    //}
     int blockOffs[mpi_size];
     int blockSizes[mpi_size];
     divide_tasks(file_count, mpi_size, &blockOffs[0], &blockSizes[0]);
@@ -151,24 +151,30 @@ int main(int argc, char* argv[])
     /** Scatter the filepaths to be read **/
     printf("Scattering paths\n");
     //TODO: Fix this send/receive -> it is blocking itself
+    MPI_Barrier(comm);
     if (mpi_rank == 0) {
     	int blockCounter;
     	// Send the data to the other processes
 		for (i = 1; i < mpi_size; i++) {
-			blockCounter = blockOffs[mpi_rank];
-			printf("Sending paths to %i\n", i);
-			mpi_err = MPI_Send(&outPaths[blockCounter], (blockSizes[mpi_rank] * PATH_LEN), MPI_CHAR, mpi_rank, 1, MPI_COMM_WORLD);
+			blockCounter = blockOffs[i];
+			printf("Sending %i paths starting from idx: %i to %i\n", blockSizes[i], blockCounter, i);
+			mpi_err = MPI_Send(&outPaths[blockCounter], (blockSizes[i] * PATH_LEN), MPI_CHAR, i, 1, comm);
+			//mpi_err = MPI_Send(&blockCounter, 1, MPI_INT, i, 1, comm);
 			MPI_check_error(mpi_err);
+			printf("Sent %i paths starting from idx: %i to %i\n", blockSizes[i], blockCounter, i);
 		}
 
 		//for (i = 0; i < blockSizes[0]; i++) {
 			
 		//	sub_paths[i] = outPaths[(blockOffs[0] + i)];
 		//}
-	}
-	if (mpi_rank > 0) {
+	} else {
 		printf("[%i] Receiving %i paths\n", mpi_rank, blockSizes[mpi_rank]);
-		mpi_err = MPI_Recv(&sub_paths, (blockSizes[mpi_rank] * PATH_LEN), MPI_CHAR, 0, 1, MPI_COMM_WORLD, &status);
+		int mpi_test;
+		//mpi_err = MPI_Recv(&mpi_test, 1, MPI_INT, 0, 1, comm, &status);
+		mpi_err = MPI_Recv(&sub_paths[0], (blockSizes[mpi_rank] * PATH_LEN), MPI_CHAR, 0, 1, MPI_COMM_WORLD, &status);
+		//printf("[%i] Received test message %i\n", mpi_rank, mpi_test);
+		printf("[%i] Received %i paths\n", mpi_rank, blockSizes[mpi_rank]);
     //mpi_err = MPI_Scatter(outPaths, block * (PATH_MAX), MPI_CHAR, sub_paths, block * (PATH_MAX), MPI_CHAR, 0, MPI_COMM_WORLD);
 		MPI_check_error(mpi_err);
 	}
