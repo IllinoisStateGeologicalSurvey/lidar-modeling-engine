@@ -13,6 +13,8 @@
 #include <liblas/capi/liblas.h>
 #include "file_util.h"
 
+//#define PATH_LEN=4096
+
 void dump_entry (struct dirent *entry)
 {
     char type[200];
@@ -55,14 +57,14 @@ int buildArray( char  dirPath[], char outPaths[], size_t size) {
     struct stat statbuf;
     char * ext;
     size_t counter = 0;
-    //char buf[PATH_MAX + 1];
+    //char buf[PATH_LEN + 1];
     //int i = 0;
     //char *ptr;
-    char fullPath[PATH_MAX + 1];
-    char fname[PATH_MAX + 1];
+    char fullPath[PATH_LEN];
+    char fname[PATH_LEN];
     printf("Reading files from %s\n", dirPath);
     //char *ptr = realpath(dirPath, fullPath); 
-    printf("Checking files from %s\n", fullPath);
+    printf("Checking files from %s\n", dirPath);
     if ((dir = opendir(dirPath)) == NULL)
     {
         fprintf(stderr, "Error: Failed to open input directory: %s, ERROR: %s\n", dirPath, strerror(errno));
@@ -99,7 +101,7 @@ int buildArray( char  dirPath[], char outPaths[], size_t size) {
                             strcat(fname, dirPath);
                             strcat(fname, "/");
                             strcat(fname, entry->d_name);
-                            //printf("Fname: %s\n", fname);
+                            printf("Fname: %s\n", fname);
                             /* TODO: Figure out why real path spits null strings here
                             char *res = realpath(fname, buf);
                             if (res) {
@@ -109,7 +111,7 @@ int buildArray( char  dirPath[], char outPaths[], size_t size) {
                                 exit(1);
                             }*/
                             //** TODO: Figure out how to write to string array **/
-                            strncpy(&outPaths[counter * (PATH_MAX + 1)], fname, PATH_MAX + 1);
+                            strncpy(&outPaths[counter * (PATH_LEN)], fname, PATH_LEN);
                             //printf("Copied to path list.\n");
                             counter++;
                         }
@@ -135,7 +137,7 @@ int listFiles(char dirPath[], int depth)
     struct stat statbuf;
     char  * ext;
     
-    char buf[PATH_MAX + 1];
+    char buf[PATH_LEN];
     //int i = 0;
     if ((dir = opendir(dirPath)) == NULL)
     {
@@ -184,7 +186,7 @@ int countLAS(char dirPath[])
     struct dirent *entry;
     char * ext;
 
-    //char buf[PATH_MAX+1];
+    //char buf[PATH_LEN+1];
     int i = 0;
     if ((dir = opendir(dirPath)) ==  NULL)
     {
@@ -234,7 +236,7 @@ void taskType_Destroy(task_t *task) {
 int getWorkingDir(char* pathBuf)
 {
     char szTmp[32];
-    size_t len=PATH_MAX+1;
+    size_t len=PATH_LEN;
     sprintf(szTmp, "/proc/%d/exe", getpid());
     char pathTmp[len];
     MIN(readlink(szTmp,pathTmp,len),len -1);

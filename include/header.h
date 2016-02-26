@@ -11,9 +11,10 @@
 #include <mpi.h>
 #include <liblas/capi/liblas.h>
 #include <proj_api.h>
+#include "file_util.h"
 
 typedef struct proj_t {
-    char proj4[PATH_MAX + 1];
+    char proj4[4096];
 } proj_t;
 
 typedef struct bound_t {
@@ -25,7 +26,7 @@ typedef struct header_t {
     uint32_t id;
     uint32_t pnt_count;
     bound_t bounds;
-    char path[PATH_MAX+1];
+    char path[4096];
     proj_t proj;
 } header_t;
 

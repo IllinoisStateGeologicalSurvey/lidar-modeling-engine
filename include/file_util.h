@@ -8,10 +8,13 @@
 #include <dirent.h>
 #include <limits.h>
 #include <liblas/capi/liblas.h>
+
+#define PATH_LEN 4096
+
 typedef struct task_t{
     size_t offset;
     size_t size;
-    char fname[PATH_MAX + 1];
+    char fname[PATH_LEN];
 } task_t;
 
 

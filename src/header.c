@@ -2,6 +2,7 @@
 #include <hdf5.h>
 #include "header.h"
 #include "point.h"
+#include "file_util.h"
 #include <time.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -14,7 +15,7 @@
 
 int Proj_Set(LASHeaderH header, proj_t* proj) {
     LASSRSH srs = LASHeader_GetSRS(header);
-    strncpy(proj->proj4, LASSRS_GetProj4(srs), (PATH_MAX + 1));
+    strncpy(proj->proj4, LASSRS_GetProj4(srs), PATH_LEN);
     return 0;
 }
 
@@ -74,7 +75,7 @@ void Header_free(header_t* headers, int n) {
 hid_t ProjType_create(herr_t* status) {
     hid_t projtype;
     projtype = H5Tcopy(H5T_C_S1);
-    *status = H5Tset_size(projtype, PATH_MAX+1);
+    *status = H5Tset_size(projtype, PATH_LEN);
     return projtype;
 }
 
@@ -139,7 +140,7 @@ int MPI_BoundType_create(MPI_Datatype *mpi_boundtype) {
 
 int MPI_ProjType_create(MPI_Datatype *mpi_projtype) {
     int nitems=1;
-    int blocklength = PATH_MAX+1;
+    int blocklength = PATH_LEN;
     int mpi_err, mpi_err_class, resultlen;
     char err_buffer[MPI_MAX_ERROR_STRING];
     MPI_Datatype type = MPI_CHAR;
@@ -159,7 +160,7 @@ int MPI_ProjType_create(MPI_Datatype *mpi_projtype) {
 
 int MPI_HeaderType_create(MPI_Datatype *mpi_headertype) {
     int nitems=5;
-    int strLen = PATH_MAX+1;
+    int strLen = PATH_LEN;
     header_t header;
     //int blocklengths[5] = { 1, 1, 1, strLen, 1};
     int blocklengths[5] = {1, 1, 6, strLen, strLen};
@@ -278,7 +279,7 @@ int createHeaderDataset(char* file, char* dataset, hsize_t* dims)
 int readHeaderBlock(char paths[], int offset, hsize_t* block, header_t* headers, int mpi_rank)
 {
     int i; // counter
-    int strlen = PATH_MAX + 1;
+    int strlen = PATH_LEN;
     char* fpath;
     printf("Allocating memory for string\n");
     fpath = malloc(sizeof(char) * strlen);

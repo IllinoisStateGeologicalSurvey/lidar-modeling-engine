@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <mpi.h>
 #include <sys/time.h>
 #include "util.h"
 
@@ -56,5 +57,51 @@ int get_block(int mpi_rank, int np, int pntCount, int pntLength, int *offsetx, i
 
 
 }
+
+void MPI_check_error(int mpi_err) {
+	int mpi_err_class, resultlen;
+	char err_buffer[MPI_MAX_ERROR_STRING];
+	if (mpi_err != MPI_SUCCESS) {
+		MPI_Error_class(mpi_err, &mpi_err_class);
+		if (mpi_err_class == MPI_ERR_COUNT) {
+			fprintf(stderr, "Invalid count used in MPI call\n");
+		}
+		MPI_Error_string(mpi_err, err_buffer, &resultlen);
+		fprintf(stderr, err_buffer);
+		MPI_Finalize();
+	}
+}
+
+int divide_tasks(int count, int mpi_size, int* offsets, int* blocks) {
+	int i = 0;
+	int remainder = 0;
+	int blockDef = 0;
+	int leftOver = 0;
+	blockDef = floor(count/mpi_size);
+	remainder = count % mpi_size;
+	printf("Remainder is %i\n", remainder);
+	if (remainder > 0) {
+		blockDef++;
+		printf("Block template is %i\n", blockDef);
+		for (i = 0; i < mpi_size; i++) {
+			leftOver = i - remainder;
+			if (leftOver >= 0) {
+				offsets[i] = (i * blockDef) - (leftOver);
+				blocks[i] = blockDef - 1;
+			} else {
+				offsets[i] = i * blockDef;
+				blocks[i] = blockDef;
+			}
+			printf("[%i] Block offset: %i, size: %i, leftOver: %i\n", i, offsets[i], blocks[i], leftOver);
+		}
+	} else {
+		for (i = 0; i < mpi_size; i++) {
+			offsets[i] = i * blockDef;
+			blocks[i] = blockDef;
+		}
+	}
+	return remainder;
+}
+
 
 #endif

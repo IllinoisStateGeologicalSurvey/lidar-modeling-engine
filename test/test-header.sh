@@ -31,7 +31,7 @@ date
 echo "---------------------------------------------------------------------"
 echo ""
 
-mpirun -np 10 "${BINDIR}/headerRead" -i "${H5NAME}" -t 100 2>&1 | tee ${LOGDIR}/header.log
+mpirun -np 20 "${BINDIR}/headerRead" -i "${H5NAME}" -t 100 2>&1 | tee ${LOGDIR}/header.log
 echo "" 
 date
 echo ""
