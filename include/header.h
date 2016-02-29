@@ -56,9 +56,9 @@ int MPI_ProjType_create(MPI_Datatype* mpi_projtype);
 
 int MPI_HeaderType_create(MPI_Datatype* mpi_headertype);
 
-int readHeaderBlock(char paths[], int offset, hsize_t* block, header_t* headers, int mpi_rank);
+int readHeaderBlock(char paths[], int offset, hsize_t* block, header_t* headers, MPI_Comm comm, int mpi_rank);
 
-int writeHeaderBlock(char* file, char* dataset, hsize_t* offset, hsize_t* block, header_t* headers, MPI_Comm comm, MPI_Info info);
+int writeHeaderBlock(hid_t file_id, char* dataset, hsize_t* offset, hsize_t* block, header_t* headers, MPI_Comm comm, MPI_Info info);
 
 
 #endif

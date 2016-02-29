@@ -13,9 +13,36 @@
 #include <liblas/capi/liblas.h>
 #include <proj_api.h>
 
+//size_t strlen(const char *str) {
+//	const char *s;
+//	for (s = str; *s; ++s);
+//	return(s - str);
+//}
+
 int Proj_Set(LASHeaderH header, proj_t* proj) {
-    LASSRSH srs = LASHeader_GetSRS(header);
-    strncpy(proj->proj4, LASSRS_GetProj4(srs), PATH_LEN);
+    printf("Proj_Set called\n");
+    LASSRSH srs = NULL;
+	srs = LASHeader_GetSRS(header);
+	char* proj4_text = NULL;
+    if (!srs) {
+    	printf("Failed to read Reference System\n");
+    }
+	size_t projLen = sizeof(LASSRS_GetProj4(srs)) + 1;
+	
+    proj4_text = (char *) malloc(projLen * sizeof(char));
+    proj4_text = LASSRS_GetProj4(srs);
+	printf("Projection is %s \n", proj4_text);
+    printf("SRS has length %zd\n", projLen);
+    printf("Projection received\n");
+	//strcpy(&proj->proj4[0], proj4_text);
+	strncpy(&proj->proj4[0], proj4_text, PATH_LEN);
+	
+	printf("Cleaning up\n");
+	//LASString_Free(proj4_text);
+	free(proj4_text);
+	if (srs != NULL) {
+		LASSRS_Destroy(srs);
+	}
     return 0;
 }
 
@@ -35,6 +62,8 @@ int Bound_Set(LASHeaderH header, bound_t* bounds) {
     Coord_Encode(&bounds->high, ur);
     //printf("LL.x is %"PRIu32"\n", &bounds.low.x);
     //bounds->low = low;
+    free(ur);
+    free(ll);
     //bounds->high = high;
     return 0;
 }
@@ -276,72 +305,90 @@ int createHeaderDataset(char* file, char* dataset, hsize_t* dims)
 }
 
 
-int readHeaderBlock(char paths[], int offset, hsize_t* block, header_t* headers, int mpi_rank)
+int readHeaderBlock(char paths[], int offset, hsize_t* block, header_t* headers, MPI_Comm comm, int mpi_rank)
 {
     int i; // counter
-    int strlen = PATH_LEN;
-    char* fpath;
-    printf("Allocating memory for string\n");
-    fpath = malloc(sizeof(char) * strlen);
-    
-    //char* projStr;
-    //projStr = malloc(sizeof(char) * strlen);
+    int strLen = PATH_LEN;
+    //char* fpath;
+	//printf("[%i] Allocating memory for string\n", mpi_rank);
+    //fpath = malloc(sizeof(char) * strLen);
+    printf("[%i] Have %lu paths to read\n", mpi_rank, sizeof(&paths)/PATH_LEN);
+    char fpath[strLen];
+
     LASReaderH reader = NULL;
     LASHeaderH header = NULL;
     int blockInt = *block;
-    //LASSRSH srs = NULL;
-    //coord_dbl_t ll, ur; // min/max
-    //coord_t low, high;
-    //bound_t bounds;
-    //herr_t status;
-    //hid_t headertype;
-    fprintf(stderr, "Reading %zu files\n", (size_t)blockInt);
+    int pntCount;//herr_t status;
+    fprintf(stderr, "[%i] Reading %zu files\n", mpi_rank, (size_t)blockInt);
     for (i = 0; i < (blockInt); i++) {
         /* Set reader and header null to allow for error checking */
-        reader = NULL;
-        header = NULL;
-
-        strncpy(fpath, &paths[(strlen) * i], strlen);
-        //printf("Opening file %s\n", fpath);
-        reader = LASReader_Create(fpath);
+		printf("[%i] Reading file %i/%i: %s \n", mpi_rank, i, blockInt,  &paths[(strLen) * i]);
+		memset(&fpath[0], 0, strLen);
+        strncpy(&fpath[0], &paths[(strLen) * i], strLen);
+        printf("[%i] Opening LASReader %s\n", mpi_rank, &fpath[0]);
+        reader = LASReader_Create(&fpath[0]);
+        printf("Checking if reader was created\n");
         if (!reader) {
             LASError_Print("Count not open file to read");
-            exit(1);
+            continue;
+            //MPI_Finalize();
+            //exit(1);
         }
+        printf("[%i] Opening LASHeader\n", mpi_rank);
         header = LASReader_GetHeader(reader);
         if (!header) {
             LASError_Print("Could not fetch header");
-            exit(1);
+            continue;
+            //MPI_Finalize();
+            //exit(1);
         }
-        //srs = LASHeader_GetSRS(header);
         /* Set the id for the header */
-		//fprintf(stderr, "[%i]Index is: %i of %i, headerId is: %i\n", mpi_rank, i, blockInt, (int)offset + i);
+        
 		// TODO: Make this universally unique
         headers[i].id = (int)(offset + i);
+        printf("[%i] Header id for idx: %i is %i\n", mpi_rank, i, headers[i].id);
         /* Get the point count */
-        int pntCount = LASHeader_GetPointRecordsCount(header);
-        /* Get the projection definition */
-        //strncpy(projStr, LASSRS_GetProj4(srs), strlen);
-        /* Get the boundary values */
-        Bound_Set(header, &headers[i].bounds);
-        Proj_Set(header, &headers[i].proj);
-        //printf("MINx: %"PRIu32", MAXx: %"PRIu32"\n", headers[i].bounds.low.x, headers[i].bounds.high.x);
-        strncpy(headers[i].path, fpath, strlen);
-        //headers[i].path = fpath;
-        //printf("Header %d has %d points\n", i, pntCount);
-        //headers[i].bounds = bounds;
+        pntCount = LASHeader_GetPointRecordsCount(header);
         headers[i].pnt_count = pntCount;
-    }
-    free(fpath);
+        printf("[%i] Point count for idx: %i is %i\n", mpi_rank, i, pntCount);
+        /* Get the projection definition */
+        /* Get the boundary values */
+        
+        Bound_Set(header, &headers[i].bounds);
+        printf("[%i] Bounds set for idx: %i \n", mpi_rank, i);
+        Proj_Set(header, &headers[i].proj);
+        printf("[%i] Projection set for idx: %i \n", mpi_rank, i);
+        //printf("MINx: %"PRIu32", MAXx: %"PRIu32"\n", headers[i].bounds.low.x, headers[i].bounds.high.x);
+        strncpy(headers[i].path, &fpath[0], strLen);
+        printf("[%i] Filepath set for idx: %i\n", mpi_rank, i);
+		if (header != NULL) {
+			LASHeader_Destroy(header);
+			header = NULL;
+			printf("[%i] Header cleaned\n", mpi_rank);
+		}
+		if (reader != NULL) {
+			LASReader_Destroy(reader);
+			reader = NULL;
+			printf("[%i] Reader cleaned\n", mpi_rank);
+		}
+		
 
+    }
+    //free(fpath);
+//	if (header != NULL) {
+//		LASHeader_Destroy(header);
+//	}
+//	if (reader != NULL) {
+//		LASReader_Destroy(reader);
+//	}
     return 0;
 }
 
 
 //int writeHeaderBlock(char* file, char* dataset, hsize_t offset[2], hsize_t block[2], header_t* headers, MPI_Comm comm, MPI_Info info) 
-int writeHeaderBlock(char* file, char* dataset, hsize_t* offset, hsize_t* block, header_t* headers, MPI_Comm comm, MPI_Info info)
+int writeHeaderBlock(hid_t file_id, char* dataset, hsize_t* offset, hsize_t* block, header_t* headers, MPI_Comm comm, MPI_Info info)
 {
-    hid_t file_id, dset_id, fspace_id, headertype, memspace_id, plist_id;
+    hid_t dset_id, fspace_id, headertype, memspace_id, plist_id;
     herr_t status;
     int rank = 1;
     hsize_t stride = 1;
@@ -349,14 +396,14 @@ int writeHeaderBlock(char* file, char* dataset, hsize_t* offset, hsize_t* block,
     int mpi_rank;
     MPI_Comm_rank(comm, &mpi_rank);
     /** SANITY TEST ON HEADER: MAKE SURE IT HAS A POINTCOUNT VALUE and a PaTH **/
-    //printf("Header Path: %s, Point count:%d\n", headers[0].path, headers[0].pnt_count);
-    plist_id = H5Pcreate(H5P_FILE_ACCESS);
+    printf("[%i] Beginning write: Path: %s, Point count:%d\n", mpi_rank, headers[0].path, headers[0].pnt_count);
+    //plist_id = H5Pcreate(H5P_FILE_ACCESS);
     /** Set parallel reading property flag **/
-    H5Pset_fapl_mpio(plist_id, comm, info);
-    //printf("Opening file for reading\n");
+    //H5Pset_fapl_mpio(plist_id, comm, info);
+    printf("[%i]Opening file for reading\n", mpi_rank);
     /** Open file for reading **/
-    file_id = H5Fopen(file, H5F_ACC_RDWR | H5F_ACC_DEBUG, plist_id);
-    //printf("File opened, opening Dataset.\n");
+    //file_id = H5Fopen(file, H5F_ACC_RDWR | H5F_ACC_DEBUG, plist_id);
+    printf("[%i] File opened, opening Dataset.\n", mpi_rank);
     /** Open Dataset **/
     plist_id = H5Pcreate(H5P_DATASET_ACCESS);
     
@@ -367,7 +414,7 @@ int writeHeaderBlock(char* file, char* dataset, hsize_t* offset, hsize_t* block,
     memspace_id = H5Screate_simple(rank, block, NULL);
 
     headertype = HeaderType_create(&status);
-    //printf("[%i] Selecting offset: %i, stride: %i, count: %i, block: %i\n", mpi_rank, (int)*offset, (int)stride, (int)count, (int)*block);
+    printf("[%i] Selecting offset: %i, stride: %i, count: %i, block: %i\n", mpi_rank, (int)*offset, (int)stride, (int)count, (int)*block);
     status = H5Sselect_hyperslab(fspace_id, H5S_SELECT_SET, offset, &stride, &count, block);
     
     /** Set flag for parallel writing **/
@@ -375,14 +422,15 @@ int writeHeaderBlock(char* file, char* dataset, hsize_t* offset, hsize_t* block,
     H5Pset_dxpl_mpio(plist_id, H5FD_MPIO_COLLECTIVE);
     /** CHECKING THE DATA **/
     //int i;
+    printf("[%i] Writing dataset\n", mpi_rank);
     status = H5Dwrite(dset_id, headertype, memspace_id, fspace_id, plist_id, headers);
-
+	printf("[%i] Cleaning up\n", mpi_rank);
     status = H5Dclose(dset_id);
     status = H5Sclose(fspace_id);
     status = H5Sclose(memspace_id);
     status = H5Pclose(plist_id);
     HeaderType_destroy(headertype, &status);
-    status = H5Fclose(file_id);
+    //status = H5Fclose(file_id);
     return 0;
 }
 

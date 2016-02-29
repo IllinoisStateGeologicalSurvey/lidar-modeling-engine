@@ -59,9 +59,10 @@ int buildArray( char  dirPath[], char outPaths[], size_t size) {
     size_t counter = 0;
     //char buf[PATH_LEN + 1];
     //int i = 0;
-    //char *ptr;
-    char fullPath[PATH_LEN];
+    //char *fptr;
+    //char fullPath[PATH_LEN];
     char fname[PATH_LEN];
+    //fptr = fname;
     printf("Reading files from %s\n", dirPath);
     //char *ptr = realpath(dirPath, fullPath); 
     printf("Checking files from %s\n", dirPath);
@@ -99,9 +100,10 @@ int buildArray( char  dirPath[], char outPaths[], size_t size) {
                             // Append the path to the filename
                             memset(fname, 0, sizeof(fname));
                             strcat(fname, dirPath);
-                            strcat(fname, "/");
+                            //strcat(fname, "/");
                             strcat(fname, entry->d_name);
-                            printf("Fname: %s\n", fname);
+                            //strcat(fname, '\0');
+                            //printf("Fname: %s\n", fname);
                             /* TODO: Figure out why real path spits null strings here
                             char *res = realpath(fname, buf);
                             if (res) {
@@ -112,7 +114,7 @@ int buildArray( char  dirPath[], char outPaths[], size_t size) {
                             }*/
                             //** TODO: Figure out how to write to string array **/
                             strncpy(&outPaths[counter * (PATH_LEN)], fname, PATH_LEN);
-                            //printf("Copied to path list.\n");
+                            printf("Copied to path list %s.\n", &outPaths[counter * PATH_LEN]);
                             counter++;
                         }
                         else

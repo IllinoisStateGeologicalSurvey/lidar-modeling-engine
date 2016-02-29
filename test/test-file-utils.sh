@@ -17,7 +17,7 @@ H5NAME="${BASEDIR}/test.h5"
 # This script will read 1000 las files from a directory
 echo "Starting File Utility Test"
 
-mpirun -n 4 ${BINDIR}/testFileUtils -i "${LASBASE}/adams/las_classified/" -t 2000 -f "${H5NAME}" 2>&1 | tee ${LOGDIR}/fileUtil.log
+mpirun -n 4 ${BINDIR}/testFileUtils -i "${LASBASE}/dupage/las/" -t 100 -f "${H5NAME}" 2>&1 | tee ${LOGDIR}/fileUtil.log
 
 echo "Ending File Utility Test"
 

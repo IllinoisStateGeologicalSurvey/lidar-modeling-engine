@@ -75,6 +75,7 @@ int main(int argc, char* argv[])
 {
     char dirname[PATH_LEN];
     char h5_file[PATH_LEN];
+    hid_t file_id, plist_id;
     size_t size;
     int i;
     int verbose;
@@ -91,15 +92,9 @@ int main(int argc, char* argv[])
     MPI_Errhandler_set(MPI_COMM_WORLD, MPI_ERRORS_RETURN); /* Return info about errors*/
     printf("[%d] Starting  %d processes\n", mpi_rank, mpi_size);
     /* Check supplied arguments */
-    //if (argc < 2)
-    //{
-    //    fprintf(stderr,  "Usage: fileTest <directory> <# of files>\n");
-    //    exit(1);
-    //}
 	parseArgs(argc, argv, &dirname[0], &size, &h5_file[0], &verbose);
-	//realpath(argv[1], dirname);
-    //strcpy(dirname, argv[1]);
     printf("Dirname: %s\n", dirname);
+    
     int file_count = countLAS(dirname);
     size = (size_t)file_count;
     hsize_t dims = size;
@@ -109,36 +104,15 @@ int main(int argc, char* argv[])
 	
     /* Root process creates dataset */
     
-    //char* pathBuf = malloc(sizeof(char) * (PATH_MAX+1)); /** Create a char buffer to hold the working path **/
-    //char pathBuf[PATH_MAX+1];
-    //int pathLen; /** Counter that returns the index of the end of the path(helpful for concatenation  **/
-    //pathLen = getWorkingDir(pathBuf); 
-    
-    //printf("Working Path is: %s\n", pathBuf);
-    //strcpy(&pathBuf[pathLen], "/test.h5\0");
-    //printf("File path is: %s\n", pathBuf);
-    //char* filename = "test.h5";
     if (mpi_rank == 0) {
         createHeaderDataset(h5_file, "/headers", &dims);
         printf("created HDF dataset at %s\n", h5_file);
     }
-    // Add a task array to read point information
-    //task_t tasks[size];
-    //printf("PathMax is: %llu\n", PATH_MAX);
     
-  //  if (mpi_rank == 0) {
-  	char* outPaths = malloc(sizeof(char) * (file_count * (PATH_LEN)));
-    /** Initialize the filepath array **/
-        //for (i = 0; i < size; ++i) {
-        //    outPaths[i] = malloc(PATH_MAX + 1);
-       // }
     /***************************************************
 			TODO: BREAK OUT THE TASK DIVISION TO SEPARATE 
 			FUNCTION
     ****************************************************/
-    //if (mpi_rank == 0) { 
-		buildArray(dirname, outPaths, size);
-    //}
     int blockOffs[mpi_size];
     int blockSizes[mpi_size];
     divide_tasks(file_count, mpi_size, &blockOffs[0], &blockSizes[0]);
@@ -153,21 +127,24 @@ int main(int argc, char* argv[])
     //TODO: Fix this send/receive -> it is blocking itself
     MPI_Barrier(comm);
     if (mpi_rank == 0) {
+		char* outPaths = malloc(sizeof(char) * (file_count * (PATH_LEN)));
+		buildArray(dirname, outPaths, size);
     	int blockCounter;
     	// Send the data to the other processes
 		for (i = 1; i < mpi_size; i++) {
 			blockCounter = blockOffs[i];
-			printf("Sending %i paths starting from idx: %i to %i\n", blockSizes[i], blockCounter, i);
-			mpi_err = MPI_Send(&outPaths[blockCounter], (blockSizes[i] * PATH_LEN), MPI_CHAR, i, 1, comm);
+			printf("Sending %i paths starting from idx: %i %s to %i\n", blockSizes[i], blockCounter, &outPaths[blockCounter * PATH_LEN], i);
+			mpi_err = MPI_Send(&outPaths[blockCounter * PATH_LEN], (blockSizes[i] * PATH_LEN), MPI_CHAR, i, 1, comm);
 			//mpi_err = MPI_Send(&blockCounter, 1, MPI_INT, i, 1, comm);
 			MPI_check_error(mpi_err);
 			printf("Sent %i paths starting from idx: %i to %i\n", blockSizes[i], blockCounter, i);
 		}
 
-		//for (i = 0; i < blockSizes[0]; i++) {
+		for (i = 0; i < blockSizes[0]; i++) {
 			
-		//	sub_paths[i] = outPaths[(blockOffs[0] + i)];
-		//}
+			sub_paths[i] = outPaths[(blockOffs[0] + i)];
+		}
+		free(outPaths);
 	} else {
 		printf("[%i] Receiving %i paths\n", mpi_rank, blockSizes[mpi_rank]);
 		int mpi_test;
@@ -175,66 +152,41 @@ int main(int argc, char* argv[])
 		mpi_err = MPI_Recv(&sub_paths[0], (blockSizes[mpi_rank] * PATH_LEN), MPI_CHAR, 0, 1, MPI_COMM_WORLD, &status);
 		//printf("[%i] Received test message %i\n", mpi_rank, mpi_test);
 		printf("[%i] Received %i paths\n", mpi_rank, blockSizes[mpi_rank]);
-    //mpi_err = MPI_Scatter(outPaths, block * (PATH_MAX), MPI_CHAR, sub_paths, block * (PATH_MAX), MPI_CHAR, 0, MPI_COMM_WORLD);
+		printf("[%i] Path check: %s\n", mpi_rank, sub_paths);
 		MPI_check_error(mpi_err);
 	}
-    printf("Creating tasks\n");
+    printf("[%i] Creating tasks\n", mpi_rank);
     /** TODO: Make processes read points **/
     header_t *headers;
     headers = malloc(sizeof(header_t) * blockSizes[mpi_rank]);
-    printf("Allocated header memory\n");
-/*    for (i = 0; i < block; i++){
-
-        // Create the file reading tasks 
-        //printf("Proc: %d, Path %i: %s\n", mpi_rank, i, outPaths[i*(PATH_MAX + 1)]);
-        sleep(1);
-        char* path;
-        path = malloc(sizeof(char) * (PATH_MAX + 1));
-        strncpy(path, &sub_paths[i * (PATH_MAX + 1)], (PATH_MAX + 1)); 
-        printf("FilePath: %s\n", path);
-        
-        //taskType_Create(&tasks[i], path, 0, 1);
-        printf("Task %d created in process %d\n", i, mpi_rank);
-
-        totPoints = totPoints + tasks[i].size;
-        //printf("Point count %d\n", totPoints);
-    }*/
+    printf("[%i] Allocated memory for %i headers\n", mpi_rank, blockSizes[mpi_rank]);
+    
     /** Read the path values from the files in parallel, necessary due to speed of statting las files  **/
     hsize_t hOff = (hsize_t)blockOffs[mpi_rank];
     hsize_t hBlock = (hsize_t)blockSizes[mpi_rank];
-	if (mpi_rank == 0) {
-		readHeaderBlock(outPaths, 0, &hBlock, headers, mpi_rank);
-	} else {
-		readHeaderBlock(sub_paths, 0, &hBlock, headers, mpi_rank);
-	}
-    
+	// TODO: This is exiting when 3/4 done, need to debug
+	readHeaderBlock(sub_paths, 0, &hBlock, headers, comm, mpi_rank);
+
+    printf("[%i] Headers Read, Writing...\n", mpi_rank); 
     //printf("Loaded Header data, writing to file %s, dataset: %s\n", h5_file, "/headers");
     /** Write the header data to the HDF dataset **/
     printf("[%d] Offset is %zu\n", mpi_rank, (size_t)blockOffs[mpi_rank]);
-    writeHeaderBlock(h5_file, "/headers", &hOff, &hBlock, headers, comm, info);
-    /*for (i = 0; i < size; i++) 
-    {
-        taskType_Print(&tasks[i]);
-        totPoints = totPoints + tasks[i].count;
-        free(outPaths[i]);
-        //taskType_Destroy(&tasks[i]);
-    }*/
-    //if (mpi_rank == 0) {
-    //    for (i = 0; i < size; i++) {
-    //        free(outPaths[i]);
-    //    }
-    //TODO: Write the tasks to HDF dataset 
+    MPI_Barrier(comm);
+	plist_id = H5Pcreate(H5P_FILE_ACCESS);
+	H5Pset_fapl_mpio(plist_id, comm, info);
+	
+	file_id = H5Fopen(h5_file, H5F_ACC_RDWR | H5F_ACC_DEBUG, plist_id);
+
+    writeHeaderBlock(file_id, "/headers", &hOff, &hBlock, headers, comm, info);
+    
+	MPI_Barrier(comm);
     printf("Freeing memory\n");
-    free(outPaths);
+	H5Pclose(plist_id);
+	H5Fclose(file_id);
+    //TODO: Write the tasks to HDF dataset 
     free(sub_paths);
     free(headers);
-   // free(pathBuf);
-    //} else {
-   //     for (i =0; i < block; i++) {
-   //         free(sub_paths[i]);
-   //     }
-   //     free(sub_paths);
-    //}
+    
     printf("%zu Files, %zu Points\n", size, totPoints);
     //free(outPaths);
     printf("Process %d done.\n", mpi_rank);
