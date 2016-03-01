@@ -43,7 +43,7 @@ hsize_t Headers_count(hid_t file_id) {
 	return nVals;
 
 }
-
+/** This function will read all of the headers from a given HDF file **/
 int Headers_read(header_t* headers, hid_t file_id) {
 	hid_t dset_id, fspace_id, plist_id, headertype;
 	herr_t status;
@@ -67,6 +67,7 @@ int Headers_read(header_t* headers, hid_t file_id) {
 	
 	return 0;
 }
+/** This will read a hyperslab of headers from an HDF file **/
 int HeaderSet_read(int start, int numHeaders, header_t* headers, char* filename)
 {
     hid_t file_id, dset_id, fspace_id, plist_id, headertype;
@@ -355,7 +356,6 @@ int LASFile_read(LASReaderH reader, hsize_t* offset, hsize_t* count, Point* poin
 
     return 0;
 }
-
 /** HDF5 Utility to check for any unclosed property lists */
 int checkOrphans(hid_t file_id, int mpi_rank) {
 	size_t norphans = H5Fget_obj_count(file_id, H5F_OBJ_ALL);

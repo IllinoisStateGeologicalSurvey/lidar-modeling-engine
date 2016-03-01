@@ -20,7 +20,7 @@
 //}
 
 int Proj_Set(LASHeaderH header, proj_t* proj) {
-    printf("Proj_Set called\n");
+    //printf("Proj_Set called\n");
     LASSRSH srs = NULL;
 	srs = LASHeader_GetSRS(header);
 	char* proj4_text = NULL;
@@ -31,13 +31,13 @@ int Proj_Set(LASHeaderH header, proj_t* proj) {
 	
     proj4_text = (char *) malloc(projLen * sizeof(char));
     proj4_text = LASSRS_GetProj4(srs);
-	printf("Projection is %s \n", proj4_text);
-    printf("SRS has length %zd\n", projLen);
-    printf("Projection received\n");
+	//printf("Projection is %s \n", proj4_text);
+    //printf("SRS has length %zd\n", projLen);
+    //printf("Projection received\n");
 	//strcpy(&proj->proj4[0], proj4_text);
 	strncpy(&proj->proj4[0], proj4_text, PATH_LEN);
 	
-	printf("Cleaning up\n");
+	//printf("Cleaning up\n");
 	//LASString_Free(proj4_text);
 	free(proj4_text);
 	if (srs != NULL) {
@@ -304,83 +304,64 @@ int createHeaderDataset(char* file, char* dataset, hsize_t* dims)
     return 0;
 }
 
+/** This function will read the necessary header data from a given LAS file **/
+int Header_read(char* path, header_t* header, uint32_t id, int mpi_rank) {
+	LASReaderH LASreader = NULL;
+	LASHeaderH LASheader = NULL;
+	//zero-fill the path buffer to get rid of any remaining paths
+	// Copy the path 
+	strncpy(header->path, path, PATH_LEN);
+	header->id = id;
+	//printf("[%i] Filepath set for file id %i\n", mpi_rank, id);
+	printf("[%i] Opening LASReader for file %s\n", mpi_rank, header->path);
+	LASreader = LASReader_Create(path);
+	if (!LASreader) {
+		fprintf(stderr,"Could not open file: %s\n", path);
+		// TODO: NEED A WAY TO HANDLE IO ERRORS
+		return 1;
+	}
+	printf("[%i] Opening LASHeader\n", mpi_rank);
+	LASheader = LASReader_GetHeader(LASreader);
+	if (!LASheader) {
+		fprintf(stderr, "Could not fetch header for file %s\n", path);
+		// TODO: NEED A WAY TO HANDLE IO ERRORS
+		return 1;
+	}
+	header->pnt_count = LASHeader_GetPointRecordsCount(LASheader);
+	Bound_Set(LASheader, &header->bounds);
+	printf("[%i] Bounds set for idx: %i \n", mpi_rank, id);
+	Proj_Set(LASheader, &header->proj);
+	printf("[%i] Projection set for id: %i \n", mpi_rank, id);
+	if (LASheader != NULL) {
+		LASHeader_Destroy(LASheader);
+		LASheader = NULL;
+	}
+	if (LASreader != NULL) {
+		LASReader_Destroy(LASreader);
+		LASreader = NULL;
+	}
+	return 0;
+}
 
 int readHeaderBlock(char paths[], int offset, hsize_t* block, header_t* headers, MPI_Comm comm, int mpi_rank)
 {
     int i; // counter
     int strLen = PATH_LEN;
-    //char* fpath;
-	//printf("[%i] Allocating memory for string\n", mpi_rank);
-    //fpath = malloc(sizeof(char) * strLen);
-    printf("[%i] Have %lu paths to read\n", mpi_rank, sizeof(&paths)/PATH_LEN);
     char fpath[strLen];
 
-    LASReaderH reader = NULL;
-    LASHeaderH header = NULL;
     int blockInt = *block;
-    int pntCount;//herr_t status;
-    fprintf(stderr, "[%i] Reading %zu files\n", mpi_rank, (size_t)blockInt);
+    uint32_t headerId;
+    fprintf(stderr, "[%i] Reading %i files\n", mpi_rank, blockInt);
     for (i = 0; i < (blockInt); i++) {
         /* Set reader and header null to allow for error checking */
+        //printf("[%i]Last file is %s\n", mpi_rank, &paths[(blockInt - 1) * PATH_LEN]);
 		printf("[%i] Reading file %i/%i: %s \n", mpi_rank, i, blockInt,  &paths[(strLen) * i]);
-		memset(&fpath[0], 0, strLen);
-        strncpy(&fpath[0], &paths[(strLen) * i], strLen);
-        printf("[%i] Opening LASReader %s\n", mpi_rank, &fpath[0]);
-        reader = LASReader_Create(&fpath[0]);
-        printf("Checking if reader was created\n");
-        if (!reader) {
-            LASError_Print("Count not open file to read");
-            continue;
-            //MPI_Finalize();
-            //exit(1);
-        }
-        printf("[%i] Opening LASHeader\n", mpi_rank);
-        header = LASReader_GetHeader(reader);
-        if (!header) {
-            LASError_Print("Could not fetch header");
-            continue;
-            //MPI_Finalize();
-            //exit(1);
-        }
-        /* Set the id for the header */
+		memset(&fpath[0], 0, PATH_LEN);
+        strncpy(&fpath[0], &paths[PATH_LEN * i], PATH_LEN);
+        headerId = offset + i;
+        Header_read(&fpath[0], &headers[i], headerId, mpi_rank);
         
-		// TODO: Make this universally unique
-        headers[i].id = (int)(offset + i);
-        printf("[%i] Header id for idx: %i is %i\n", mpi_rank, i, headers[i].id);
-        /* Get the point count */
-        pntCount = LASHeader_GetPointRecordsCount(header);
-        headers[i].pnt_count = pntCount;
-        printf("[%i] Point count for idx: %i is %i\n", mpi_rank, i, pntCount);
-        /* Get the projection definition */
-        /* Get the boundary values */
-        
-        Bound_Set(header, &headers[i].bounds);
-        printf("[%i] Bounds set for idx: %i \n", mpi_rank, i);
-        Proj_Set(header, &headers[i].proj);
-        printf("[%i] Projection set for idx: %i \n", mpi_rank, i);
-        //printf("MINx: %"PRIu32", MAXx: %"PRIu32"\n", headers[i].bounds.low.x, headers[i].bounds.high.x);
-        strncpy(headers[i].path, &fpath[0], strLen);
-        printf("[%i] Filepath set for idx: %i\n", mpi_rank, i);
-		if (header != NULL) {
-			LASHeader_Destroy(header);
-			header = NULL;
-			printf("[%i] Header cleaned\n", mpi_rank);
-		}
-		if (reader != NULL) {
-			LASReader_Destroy(reader);
-			reader = NULL;
-			printf("[%i] Reader cleaned\n", mpi_rank);
-		}
-		
-
     }
-    //free(fpath);
-//	if (header != NULL) {
-//		LASHeader_Destroy(header);
-//	}
-//	if (reader != NULL) {
-//		LASReader_Destroy(reader);
-//	}
     return 0;
 }
 

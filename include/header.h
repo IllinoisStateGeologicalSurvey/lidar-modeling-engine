@@ -36,9 +36,13 @@ hid_t ProjType_create(herr_t* status);
 
 void ProjType_destroy(hid_t projtype, herr_t* status);
 
+int Proj_Set(LASHeaderH header, proj_t* proj);
+
 hid_t BoundType_create(herr_t* status);
 
 void BoundType_destroy(hid_t boundtype, herr_t* status);
+
+int Bound_Set(LASHeaderH header, bound_t* bounds);
 
 hid_t HeaderType_create(herr_t* status);
 
@@ -60,5 +64,6 @@ int readHeaderBlock(char paths[], int offset, hsize_t* block, header_t* headers,
 
 int writeHeaderBlock(hid_t file_id, char* dataset, hsize_t* offset, hsize_t* block, header_t* headers, MPI_Comm comm, MPI_Info info);
 
+int Header_read(char* path, header_t* header, uint32_t id, int mpi_rank);
 
 #endif

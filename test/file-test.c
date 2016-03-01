@@ -23,7 +23,7 @@ void usage()
 }
 
 
-void parseArgs(int argc, char* argv[], char *lasPath, size_t* fileCount, char* h5_file, int* verbose)
+void parseArgs(int argc, char* argv[], char *lasPath, char* h5_file, int* verbose)
 {
 	int i;
 	/* CHeck the number of processors */
@@ -50,13 +50,6 @@ void parseArgs(int argc, char* argv[], char *lasPath, size_t* fileCount, char* h
 			i++;
 			strcpy(lasPath, argv[i]);
 		}
-		else if (strcmp(argv[i], "-t") == 0 ||
-				strcmp(argv[i], "--num-files") == 0
-				)
-		{
-			i++;
-			*fileCount = atoi(argv[i]);
-		}
 		else if (strcmp(argv[i], "-f") == 0 ||
 				strcmp(argv[i], "--h5-file") == 0)
 		{
@@ -80,6 +73,7 @@ int main(int argc, char* argv[])
     int i;
     int verbose;
     size_t totPoints = 0;
+    header_t *headers;
     int mpi_size, mpi_rank, mpi_err;
     mpi_size = 0;
     MPI_Comm comm = MPI_COMM_WORLD;
@@ -92,12 +86,11 @@ int main(int argc, char* argv[])
     MPI_Errhandler_set(MPI_COMM_WORLD, MPI_ERRORS_RETURN); /* Return info about errors*/
     printf("[%d] Starting  %d processes\n", mpi_rank, mpi_size);
     /* Check supplied arguments */
-	parseArgs(argc, argv, &dirname[0], &size, &h5_file[0], &verbose);
+	parseArgs(argc, argv, &dirname[0], &h5_file[0], &verbose);
     printf("Dirname: %s\n", dirname);
     
     int file_count = countLAS(dirname);
-    size = (size_t)file_count;
-    hsize_t dims = size;
+    hsize_t dims = (size_t)file_count;
     printf("Need to read %i files\n", file_count);
     /** Mpi task division **/    
 
@@ -116,12 +109,8 @@ int main(int argc, char* argv[])
     int blockOffs[mpi_size];
     int blockSizes[mpi_size];
     divide_tasks(file_count, mpi_size, &blockOffs[0], &blockSizes[0]);
-	for (i = 0; i < mpi_size; i++) {
-		printf("Block offset: %i, size: %i\n", blockOffs[i], blockSizes[i]);
-	}
     char* sub_paths = malloc(sizeof(char) * (blockSizes[mpi_rank] *  (PATH_LEN)));
 
-    printf("Process: %d reading points\n", mpi_rank);
     /** Scatter the filepaths to be read **/
     printf("Scattering paths\n");
     //TODO: Fix this send/receive -> it is blocking itself
@@ -135,7 +124,6 @@ int main(int argc, char* argv[])
 			blockCounter = blockOffs[i];
 			printf("Sending %i paths starting from idx: %i %s to %i\n", blockSizes[i], blockCounter, &outPaths[blockCounter * PATH_LEN], i);
 			mpi_err = MPI_Send(&outPaths[blockCounter * PATH_LEN], (blockSizes[i] * PATH_LEN), MPI_CHAR, i, 1, comm);
-			//mpi_err = MPI_Send(&blockCounter, 1, MPI_INT, i, 1, comm);
 			MPI_check_error(mpi_err);
 			printf("Sent %i paths starting from idx: %i to %i\n", blockSizes[i], blockCounter, i);
 		}
@@ -147,17 +135,11 @@ int main(int argc, char* argv[])
 		free(outPaths);
 	} else {
 		printf("[%i] Receiving %i paths\n", mpi_rank, blockSizes[mpi_rank]);
-		int mpi_test;
-		//mpi_err = MPI_Recv(&mpi_test, 1, MPI_INT, 0, 1, comm, &status);
 		mpi_err = MPI_Recv(&sub_paths[0], (blockSizes[mpi_rank] * PATH_LEN), MPI_CHAR, 0, 1, MPI_COMM_WORLD, &status);
-		//printf("[%i] Received test message %i\n", mpi_rank, mpi_test);
-		printf("[%i] Received %i paths\n", mpi_rank, blockSizes[mpi_rank]);
-		printf("[%i] Path check: %s\n", mpi_rank, sub_paths);
 		MPI_check_error(mpi_err);
 	}
     printf("[%i] Creating tasks\n", mpi_rank);
     /** TODO: Make processes read points **/
-    header_t *headers;
     headers = malloc(sizeof(header_t) * blockSizes[mpi_rank]);
     printf("[%i] Allocated memory for %i headers\n", mpi_rank, blockSizes[mpi_rank]);
     
@@ -165,7 +147,7 @@ int main(int argc, char* argv[])
     hsize_t hOff = (hsize_t)blockOffs[mpi_rank];
     hsize_t hBlock = (hsize_t)blockSizes[mpi_rank];
 	// TODO: This is exiting when 3/4 done, need to debug
-	readHeaderBlock(sub_paths, 0, &hBlock, headers, comm, mpi_rank);
+	readHeaderBlock(sub_paths, hOff, &hBlock, headers, comm, mpi_rank);
 
     printf("[%i] Headers Read, Writing...\n", mpi_rank); 
     //printf("Loaded Header data, writing to file %s, dataset: %s\n", h5_file, "/headers");
