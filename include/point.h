@@ -7,7 +7,6 @@
 #include <mpi.h>
 #include <hdf5.h>
 #include <assert.h>
-#include <stdlib.h>
 #include <math.h>
 #include <inttypes.h>
 #include <liblas/capi/liblas.h>
@@ -43,6 +42,11 @@ typedef struct color_t {
     short g;
     short b;
 } color_t;
+
+typedef struct bound_dbl_t {
+	coord_dbl_t low;
+	coord_dbl_t high;
+} bound_dbl_t;
 
 typedef struct Point {
     uint64_t   idx;
@@ -105,5 +109,9 @@ void Point_print(struct Point *p);
 int LASPoint_read(LASPointH* lasPnt, Point* pnt, double* x, double* y, double* z);
 
 int LASPoint_project(LASHeaderH* header, hsize_t* count, double* x, double* y, double* z, Point* pnts, int mpi_rank);
+
+void Bound_dbl_Set(bound_dbl_t* bounds, double minX, double minY, double minZ, double maxX, double maxY, double maxZ);
+
+int Bound_dbl_Project(bound_dbl_t* bound, LASSRSH srs);
 
 #endif

@@ -9,6 +9,7 @@
 #include <hdf5.h>
 #include "header.h"
 #include "point.h"
+#include "filter.h"
 #include <time.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -35,4 +36,11 @@ int PointSet_copy(char* LASpath, char* dataset_name, hsize_t* pointBlock, hid_t 
 int LASFile_read(LASReaderH reader, hsize_t* offset, hsize_t* count, Point* points, int mpi_rank);
 
 int checkOrphans(hid_t file_id, int mpi_rank);
+
+int openLAS(LASReaderH* reader, LASHeaderH* header, LASSRSH* srs, uint32_t* pntCount, char* path);
+
+int filterLAS(LASReaderH* reader, uint32_t* pntCount, filter_t* filter);
+
+int closeLAS(LASReaderH* reader, LASHeaderH* header, LASSRSH* srs, uint32_t* pntCount);
+
 #endif //READER_H

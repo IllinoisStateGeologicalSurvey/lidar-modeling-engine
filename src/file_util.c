@@ -50,7 +50,7 @@ void dump_entry (struct dirent *entry)
     fprintf(stdout, "%s is %s\n" , entry->d_name, type);
 }
 
-int buildArray( char  dirPath[], char outPaths[], size_t size) {
+int buildArray( char  dirPath[], char outPaths[], int file_count) {
     // make sure size >= 2
     DIR *dir;
     struct dirent *entry;
@@ -72,8 +72,8 @@ int buildArray( char  dirPath[], char outPaths[], size_t size) {
         exit(1);
     }
     chdir(dirPath);
-    printf("Looking for %zu files in %s\n", size, dirPath);
-    while (((entry = readdir(dir)) != NULL) && (counter < size))
+    printf("Looking for %i files in %s\n", file_count, dirPath);
+    while (((entry = readdir(dir)) != NULL) && (counter < file_count))
     {
         lstat(entry->d_name, &statbuf);
         if (S_ISDIR(statbuf.st_mode)) {
@@ -100,7 +100,7 @@ int buildArray( char  dirPath[], char outPaths[], size_t size) {
                             // Append the path to the filename
                             memset(fname, 0, sizeof(fname));
                             strcat(fname, dirPath);
-                            //strcat(fname, "/");
+                            strcat(fname, "/");
                             strcat(fname, entry->d_name);
                             //strcat(fname, '\0');
                             //printf("Fname: %s\n", fname);
@@ -113,8 +113,10 @@ int buildArray( char  dirPath[], char outPaths[], size_t size) {
                                 exit(1);
                             }*/
                             //** TODO: Figure out how to write to string array **/
+                            //snprintf(&outPaths[counter * PATH_LEN], PATH_LEN, fname);
                             strncpy(&outPaths[counter * (PATH_LEN)], fname, PATH_LEN);
-                            printf("Copied to path list %s.\n", &outPaths[counter * PATH_LEN]);
+                            
+                            //printf("Copied to path list %s.\n", &outPaths[counter * PATH_LEN]);
                             counter++;
                         }
                         else
@@ -252,6 +254,46 @@ int getWorkingDir(char* pathBuf)
     len = strlen(pathBuf);
     return len;
 }
+
+char* resolvePath(char* path, int verbose) {
+	char actualPath[PATH_LEN];
+	char *ptr;
+	if (verbose) {
+		printf("Checking for non-printable characters\n");
+		ptr = path;
+		while (*ptr) {
+			switch(*ptr) {
+				case '\v': printf("\\v"); break;
+				case '\n': printf("\\n"); break;
+				case '\t': printf("\\t"); break;
+				case '\r': printf("\\r"); break;
+				case '\0': printf("\\0"); break;
+				default: putchar(*ptr); break;
+			}
+			ptr++;
+		}
+		printf("\n");
+	}
+	// Remove newlines and carriage returns
+	path[strcspn(path, "\r\n")] = 0;
+	ptr = realpath(path, actualPath);
+	if (errno) {
+		printf("Error stating file: %s\n", strerror(errno));
+		//TODO: How should this be handled?
+		exit(1);
+	}
+	printf("Checking if %s exists\n", actualPath);
+	if (access (actualPath, F_OK) == -1)
+		printf("File Stat failed: %s\n", strerror(errno));
+	// Zero-fill path
+	memset(path, 0, PATH_LEN);
+	// Copy resolved path into original buffer
+	strcpy(path, actualPath);
+	return ptr;
+}
+
+	
+
 
 int fileExists(char* filename) {
     if (access(filename, R_OK) != -1) {

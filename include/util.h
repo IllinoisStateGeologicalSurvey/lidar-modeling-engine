@@ -26,5 +26,6 @@ void MPI_check_error(int mpi_error);
 */
 int divide_tasks(int count, int mpi_size, int* offsets, int* blocks);
 
+int getDataStore(char* h5Path);
 
 #endif

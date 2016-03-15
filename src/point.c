@@ -339,6 +339,8 @@ int LASPoint_read(LASPointH* lasPnt, Point* pnt, double* x, double* y, double* z
     return 0;
 }
 
+
+
 int LASPoint_project(LASHeaderH* header, hsize_t* count, double* x, double* y, double* z, Point* pnts, int mpi_rank) {
     fprintf(stdout, "[%d] LASpoint_project called\n", mpi_rank);
     projPJ pj_src, pj_wgs;
@@ -379,3 +381,42 @@ int LASPoint_project(LASHeaderH* header, hsize_t* count, double* x, double* y, d
     return 0;
 }
 
+void Bound_dbl_Set(bound_dbl_t* bounds, double minX, double minY, double minZ, double maxX, double maxY, double maxZ) {
+	Coord_Set(&bounds->low, minX, minY, minZ);
+	Coord_Set(&bounds->high, maxX, maxY, maxZ);
+}
+
+int Bound_dbl_Project(bound_dbl_t* bound, LASSRSH srs) {
+	projPJ pj_las, pj_wgs;
+	char* projStr = (char *)malloc(sizeof(char)*PATH_MAX);
+	projStr = LASSRS_GetProj4(srs);
+	if (!projStr) {
+		printf("File has no projection definition\n");
+	}
+	Proj_load(projStr,&pj_las);
+	double x[2],y[2],z[2];
+	double cc[3];
+	Coord_Get(cc, &bound->low);
+	x[0] = cc[0] * DEG_TO_RAD;
+	y[0] = cc[1] * DEG_TO_RAD;
+	z[0] = cc[2] * DEG_TO_RAD;
+	Coord_Get(cc, &bound->high);
+	x[1] = cc[0] * DEG_TO_RAD;
+	y[1] = cc[1] * DEG_TO_RAD;
+	z[1] = cc[2] * DEG_TO_RAD;;
+
+	Proj_load("+proj=longlat +ellps=WGS84 +datum=WGS84 +vunits=m +no_defs", &pj_wgs);
+	printf("Target projection: %s\n", pj_get_def(pj_las, 0));
+	//printf("Projecting bounds\n");
+
+	printf("Pre-Test: Coords (%f,%f,%f)\n",cc[0],cc[1],cc[2]);
+	pj_transform(pj_wgs, pj_las, 2, 1, &x[0], &y[0], &z[0]);
+	printf("Post-Test: Coords (%f,%f,%f)\n",x[1],y[1],z[1]);
+	Bound_dbl_Set(bound, x[0],y[0],z[0],x[1],y[1],z[1]);
+
+	//printf("New Bounds: (%f,%f), (%f,%f)\n", bound->low.x, bound->low.y, bound->high.x, bound->high.y);
+	pj_free(pj_wgs);
+	pj_free(pj_las);
+	free(projStr);
+	return 0;
+	}

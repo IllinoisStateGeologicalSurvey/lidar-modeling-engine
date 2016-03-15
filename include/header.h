@@ -22,6 +22,7 @@ typedef struct bound_t {
     coord_t high; 
 } bound_t;
 
+
 typedef struct header_t {
     uint32_t id;
     uint32_t pnt_count;
@@ -60,10 +61,12 @@ int MPI_ProjType_create(MPI_Datatype* mpi_projtype);
 
 int MPI_HeaderType_create(MPI_Datatype* mpi_headertype);
 
-int readHeaderBlock(char paths[], int offset, hsize_t* block, header_t* headers, MPI_Comm comm, int mpi_rank);
+int readHeaderBlock(char paths[], int offset, int block, header_t* headers);
 
-int writeHeaderBlock(hid_t file_id, char* dataset, hsize_t* offset, hsize_t* block, header_t* headers, MPI_Comm comm, MPI_Info info);
+int writeHeaderBlock_ser(hid_t file_id, char* dataset, hsize_t* offset, hsize_t* block, header_t* headers);
 
-int Header_read(char* path, header_t* header, uint32_t id, int mpi_rank);
+int writeHeaderBlock(hid_t file_id, char* dataset, hsize_t* offset, hsize_t* block, header_t* headers, MPI_Comm comm, MPI_Info);
+
+int Header_read(char* path, header_t* header, uint32_t id);
 
 #endif

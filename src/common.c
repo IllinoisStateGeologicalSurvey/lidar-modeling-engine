@@ -27,6 +27,7 @@ int Proj_load(const char* proj4string, projPJ* proj)
     if (!proj)
     {
         fprintf(stderr, "Error: Failed to initialize projection, check string: %s\n", proj4string);
+		MPI_Finalize();
         exit(1);
     } else {
         //printf("Projection Loaded\n");

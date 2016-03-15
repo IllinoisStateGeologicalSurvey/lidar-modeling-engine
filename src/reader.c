@@ -1,6 +1,7 @@
 #include "mpi.h"
 #include "reader.h"
 #include "header.h"
+#include <errno.h>
 #include "point.h"
 #include <time.h>
 #include <string.h>
@@ -11,7 +12,7 @@
 #include <hdf5.h>
 #include <proj_api.h>
 #include <liblas/capi/liblas.h>
-
+#include "filter.h"
 /* Tests to run: 
    check that file exists
    check the number of points to be read
@@ -22,7 +23,7 @@
    Sort datasets
    Grid datasets
 */
-hsize_t Headers_count(hid_t file_id) {
+hsize_t Headers_count(hid_t region_id) {
 	hid_t dset_id, fspace_id, plist_id, headertype;
 	herr_t status;
 	hsize_t nVals;
@@ -30,8 +31,8 @@ hsize_t Headers_count(hid_t file_id) {
 	headertype = HeaderType_create(&status);
 
 	plist_id = H5Pcreate(H5P_DATASET_ACCESS);
-	char dataset_name[10] = "/headers";
-	dset_id = H5Dopen(file_id, &dataset_name[0], plist_id);
+	char dataset_name[10] = "headers";
+	dset_id = H5Dopen(region_id, &dataset_name[0], plist_id);
 	/* Get the data space */
 	fspace_id = H5Dget_space(dset_id);
 	
@@ -44,7 +45,7 @@ hsize_t Headers_count(hid_t file_id) {
 
 }
 /** This function will read all of the headers from a given HDF file **/
-int Headers_read(header_t* headers, hid_t file_id) {
+int Headers_read(header_t* headers, hid_t region_id) {
 	hid_t dset_id, fspace_id, plist_id, headertype;
 	herr_t status;
 	
@@ -52,8 +53,8 @@ int Headers_read(header_t* headers, hid_t file_id) {
 	headertype = HeaderType_create(&status);
 
 	plist_id = H5Pcreate(H5P_DATASET_ACCESS);
-	char dataset_name[10] = "/headers";
-	dset_id = H5Dopen(file_id, &dataset_name[0], plist_id);
+	char dataset_name[10] = "headers";
+	dset_id = H5Dopen(region_id, &dataset_name[0], plist_id);
 	fspace_id = H5Dget_space(dset_id);
 
 	status = H5Sselect_all(fspace_id);
@@ -243,14 +244,10 @@ int PointSet_write(hid_t file_id, char* dataset, hsize_t* offset, hsize_t* block
     // Set up the dataset for parallel writing
     plist_id = H5Pcreate(H5P_DATASET_XFER);
     H5Pset_dxpl_mpio(plist_id, H5FD_MPIO_COLLECTIVE);
-    //H5Pset_dxpl_mpio(plist_id, H5FD_MPIO_INDEPENDENT);
     // Write the data
     status = H5Dwrite(dset_id, pointtype, memspace_id, fspace_id, plist_id, points);
     printf("[%i] Dataset written\n", mpi_rank);
-    //Clean up
     // Free the point data type
-    //printf("[%i] Closing up file %s\n", mpi_rank, file);
-    //Close out the file
     
     status = H5Dclose(dset_id);
     status = H5Sclose(fspace_id);
@@ -259,7 +256,6 @@ int PointSet_write(hid_t file_id, char* dataset, hsize_t* offset, hsize_t* block
     PointType_destroy(pointtype, &status);
     //checkOrphans(file_id, mpi_rank);
 	MPI_Barrier(comm);
- 	//status = H5Fclose(file_id);
     return 0;
 }
 
@@ -356,6 +352,37 @@ int LASFile_read(LASReaderH reader, hsize_t* offset, hsize_t* count, Point* poin
 
     return 0;
 }
+
+int openLAS(LASReaderH* reader, LASHeaderH* header, LASSRSH* srs, uint32_t* pntCount, char* path) {
+	// Need to correct for symlinks on GPFS
+	// For some reason, this returns the right path, but also a file not found
+	// error
+	char *ptr;
+	ptr = path;
+	*reader = NULL;
+	*header = NULL;
+	*reader = LASReader_Create(ptr);
+	printf("Checking if reader initialized\n");
+	if (!(*reader)) {
+		fprintf(stderr, "ERROR: Could not open file %s for reading.\n", path);
+		LASError_Print("Error: Could not open file\n");
+		MPI_Finalize();
+		exit(1);
+	}
+
+	*header = LASReader_GetHeader(*reader);
+	if (!(*header)) {
+		fprintf(stderr, "ERROR: Could not fetch header.\n");
+		MPI_Finalize();
+		exit(1);
+	}
+	*pntCount = LASHeader_GetPointRecordsCount(*header);
+	*srs = LASHeader_GetSRS(*header);
+	printf("File has projection: %s\n", LASSRS_GetProj4(*srs));
+	
+	//free(ptr);
+	return 0;
+}
 /** HDF5 Utility to check for any unclosed property lists */
 int checkOrphans(hid_t file_id, int mpi_rank) {
 	size_t norphans = H5Fget_obj_count(file_id, H5F_OBJ_ALL);
@@ -375,3 +402,36 @@ int checkOrphans(hid_t file_id, int mpi_rank) {
 	return 0;
 }
 
+int filterLAS(LASReaderH* reader, uint32_t* pntCount, filter_t* filter) {
+	uint32_t i;
+	// Placeholder for parallel reading in future
+	int off = 0;
+	LASPointH p = NULL;
+	uint32_t counter = 0;
+	for (i = 0; i < (*pntCount); i++) {
+		if (i == 0) {
+			p = LASReader_GetPointAt(*reader,off);
+		} else { 
+			p = LASReader_GetNextPoint(*reader);
+		}
+		if (!p) {
+			LASError_Print("Could not read point at index\n");
+		}
+		if (Filter_RangeCheck(filter, &p)) {
+			counter++;
+		}
+	}
+	return counter;
+}
+
+int closeLAS(LASReaderH* reader, LASHeaderH* header, LASSRSH* srs, uint32_t* pntCount) {
+		LASSRS_Destroy(*srs);
+		srs = NULL;
+		LASHeader_Destroy(*header);
+		header = NULL;
+		LASReader_Destroy(*reader);
+		reader = NULL;
+		pntCount = NULL;
+
+		return 0;
+}

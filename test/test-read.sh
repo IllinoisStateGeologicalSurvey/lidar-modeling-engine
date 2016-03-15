@@ -2,22 +2,20 @@
 
 TESTDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd)"
 BASEDIR="/home/ncasler/apps/DSME"
-
 LASBASE="/projects/isgs/lidar"
 
 BINDIR="${BASEDIR}/bin"
 SCRIPTDIR="${BASEDIR}/scripts"
 LOGDIR="${BASEDIR}/log"
+DATADIR="${BASEDIR}/data"
 
 # Set environment
 source ${SCRIPTDIR}/setenv.sh
 
-H5NAME="${BASEDIR}/test.h5"
+echo "Running as ${USER}"
+echo "Starting Point Read Test"
 
-# This script will read 1000 las files from a directory
-echo "Starting File Utility Test"
+mpirun -n 4 ${BINDIR}/readPoints -i ${DATADIR}/files.txt -b -88.26681 41.98540 -88.25840 41.99156 2>&1 | tee ${LOGDIR}/readPoints.log
 
-mpirun -n 4 ${BINDIR}/testFileUtils -i "${LASBASE}/dupage/las/" -f "${H5NAME}" 2>&1 | tee ${LOGDIR}/fileUtil.log
 
-echo "Ending File Utility Test"
-
+echo "Ending Point Read Test"

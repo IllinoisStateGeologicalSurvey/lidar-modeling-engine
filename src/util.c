@@ -6,8 +6,15 @@
 #include <stdlib.h>
 #include <math.h>
 #include <mpi.h>
+#include <string.h>
+#include <dirent.h>
+#include <unistd.h>
+#include <limits.h>
+#include <libgen.h>
 #include <sys/time.h>
 #include "util.h"
+#include "file_util.h"
+#include "header.h"
 
 Jobstat jobstat; //stat;
 
@@ -56,6 +63,18 @@ int get_block(int mpi_rank, int np, int pntCount, int pntLength, int *offsetx, i
     return 1;
 
 
+}
+
+int getDataStore(char* h5Path) {
+	char binPath[PATH_MAX];
+	char dataDir[10] = "/data";
+	char h5_name[15] = "/LME.h5\0";
+	getWorkingDir(&binPath[0]);
+	strcpy(h5Path, dirname(&binPath[0]));
+	strcat(h5Path, &dataDir[0]);
+	strcat(h5Path, &h5_name[0]);
+
+	return 0;
 }
 
 void MPI_check_error(int mpi_err) {

@@ -109,9 +109,7 @@ int main(int argc, char* argv[])
     MPI_Comm_size(comm, &mpi_size);
     MPI_Comm_rank(comm, &mpi_rank);
     MPI_Errhandler_set(MPI_COMM_WORLD, MPI_ERRORS_RETURN); /* Return info about errors*/
-    //printf("Setting MPI Heaader type\n");
-    //MPI_HeaderType_create(mpi_headertype);
-	start = MPI_Wtime();
+    start = MPI_Wtime();
     /* Read supplied arguments */
     parseArgs(argc, argv, &fileCount, file_name_in, &verbose);
     

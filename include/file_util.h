@@ -30,10 +30,12 @@ int listFiles(char dirPath[], int depth);
 
 int countLAS(char dirPath[]);
 
-int buildArray(char dirPath[], char outPaths[], size_t size);
+int buildArray(char dirPath[], char outPaths[], int file_count);
 
 int getWorkingDir(char* pathBuf);
 
 int fileExists(char* filename);
+
+char* resolvePath(char* path, int verbose);
 
 #endif

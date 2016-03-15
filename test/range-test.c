@@ -7,18 +7,36 @@
 #include <hdf5.h>
 #include <mpi.h>
 #include <string.h>
+#include "util.h"
 
 int intersects(bound_t* bound_1, bound_t* bound_2) {
-	if ((bound_1->high.x < bound_2->low.x) || (bound_1->high.y < bound_2->low.y)) {
-		// Bound 2 is above/right of bound 1
+	// Check if bound_1 is below bound_2
+	if (bound_1->high.y < bound_2->low.y){
+		//Bound 1 is below
 		return 0;
-	} else if ((bound_2->high.x < bound_2->low.x) || (bound_2->high.y < bound_1->low.y)){
-		// Bound 1 is above/right of bounds 2
+	} else if (bound_1->high.x < bound_2->low.x) {
+		// Bound 1 is left
+		return 0;
+	} else if (bound_1->low.y > bound_2->high.y) {
+		// Bound 1 is above
+		return 0;
+	} else if (bound_1->low.x > bound_2->high.x) {
+		// Bound 2 is right
 		return 0;
 	} else {
 		printf("bounds intersect\n");
 		return 1;
 	}
+	//if ((bound_1->high.x < bound_2->low.x) || (bound_1->high.y < bound_2->low.y)) {
+		// Bound 2 is above/right of bound 1
+	//	return 0;
+	//} else if ((bound_2->high.x < bound_2->low.x) || (bound_2->high.y < bound_1->low.y)){
+		// Bound 1 is above/right of bounds 2
+	//	return 0;
+	//	printf("Y Coords: check (%"PRIu32" <= %"PRIu32") and (%"PRIu32" <= %"PRIu32")\n", bound_1->low.y, bound_2->low.y, bound_1->high.y, bound_2->high.y);
+	//	printf("bounds intersect\n");
+	//	return 1;
+//	}
 	
 }
 
@@ -31,7 +49,7 @@ void usage()
 	fprintf(stderr, "-----------------------------------------------------------\n");
 }
 
-void parseArgs(int argc, char* argv[], bound_t* bound_1, char* h5_file, int* verbose) {
+void parseArgs(int argc, char* argv[], bound_t* bound_1, char* rName, int* verbose) {
 	int i,j;
 	/* Check the number of processors */
 	coord_dbl_t*  ll_raw = malloc(sizeof(coord_dbl_t));
@@ -77,12 +95,12 @@ void parseArgs(int argc, char* argv[], bound_t* bound_1, char* h5_file, int* ver
 			Coord_Encode(&bound_1->high, ur_raw);
 			i = i+1;
 		}
-		else if (strcmp(argv[i], "-f") == 0 ||
-				strcmp(argv[i], "--file") == 0
+		else if (strcmp(argv[i], "-r") == 0 ||
+				strcmp(argv[i], "--region") == 0
 				)
 		{
 			i++;
-			strcpy(h5_file, argv[i]);
+			strcpy(rName, argv[i]);
 		}
 		else
 		{
@@ -102,26 +120,56 @@ int main(int argc, char* argv[]) {
 	int i, intcount = 0;
 	uint32_t pntCounter = 0;
 	int verbose;
-	char h5_file[PATH_MAX];
-	parseArgs(argc, argv, &bound_1, &h5_file[0], &verbose);
-	hid_t file_id, plist_id;
+	char* rName = (char *)malloc(sizeof(char)* PATH_LEN);
+	char* h5_file = (char *)malloc(sizeof(char)* PATH_LEN);
+	getDataStore(h5_file);
+	parseArgs(argc, argv, &bound_1, rName, &verbose);
+	hid_t file_id, region_group_id, region_id, plist_id;
 	hsize_t nHeaders;
 	header_t* headers;
 	plist_id = H5Pcreate(H5P_FILE_ACCESS);
 	file_id = H5Fopen(h5_file, H5F_ACC_RDONLY | H5F_ACC_DEBUG, plist_id);
-	nHeaders = Headers_count(file_id);
+	plist_id = H5Pcreate(H5P_GROUP_ACCESS);
+	region_group_id = H5Gopen(file_id, "regions", H5P_DEFAULT);
+	// Check if the region exists
+	if (H5Lexists(region_group_id, rName, H5P_DEFAULT)) {
+		region_id = H5Gopen(region_group_id, rName, H5P_DEFAULT);
+	} else {
+		fprintf(stderr, "Error: Region: %s does not exist.\n", rName);
+		exit(1);
+	}
+	nHeaders = Headers_count(region_id);
 	headers = malloc(sizeof(header_t)*(int)nHeaders);
-	Headers_read(headers, file_id);	
+	Headers_read(headers, region_id);
+	// Hard coded for now: CHANGE ASAP
+	FILE* fp = fopen("/home/ncasler/apps/DSME/data/files.txt", "w");
+	fprintf(stderr, "File opened successfully\n");
 	for (i=0; i < nHeaders; i++) {
 		if (intersects(&bound_1, &headers[i].bounds)) {
-			printf("Header [%i] intersects, and has %i pts\n", i, headers[i].pnt_count);
+			coord_dbl_t ll,ur;
+			printf("Filter Bounds: \n\n\n");
+			Coord_Decode(&ll,&bound_1.low);
+			Coord_Decode(&ur,&bound_1.high);
+			printf("Intersection found: (%f,%f),(%f,%f)\n", ll.x, ll.y, ur.x, ur.y);
+			Coord_Decode(&ll,&headers[i].bounds.low);
+			Coord_Decode(&ur,&headers[i].bounds.high);
+			printf("Check against: (%f,%f,(%f,%f)\n", ll.x, ll.y, ur.x, ur.y);
+			printf("Header [%i] %s intersects, and has %i pts\n", i, headers[i].path, headers[i].pnt_count);
+			fputs(&headers[i].path[0], fp);
+			fputs("\n", fp);
 			intcount++;
 			pntCounter = pntCounter + headers[i].pnt_count;
 		}
 	}
+	fputs("\0", fp);
+	fclose(fp);
 	printf("Need to read %i files with %i for surface\n", intcount, pntCounter);
 	free(headers);
+	free(h5_file);
+	free(rName);
 	H5Pclose(plist_id);
+	H5Gclose(region_id);
+	H5Gclose(region_group_id);
 	H5Fclose(file_id);
 	//bound_t iBounds;
 	/*
