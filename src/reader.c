@@ -237,21 +237,7 @@ int PointSet_write(hid_t file_id, char* dataset, hsize_t* offset, hsize_t* block
     printf("[%i] FileSpace Created\n", mpi_rank);
     
     // Create the HDF Point datatype
-    pointtype = PointType_create(&status);
-    // Get the hyperslab to write the data into
-    status = H5Sselect_hyperslab(fspace_id, H5S_SELECT_SET, offset, &stride, &count, block);
-    printf("[%i] Hyperslab selected\n", mpi_rank);
-    // Set up the dataset for parallel writing
-    plist_id = H5Pcreate(H5P_DATASET_XFER);
-    H5Pset_dxpl_mpio(plist_id, H5FD_MPIO_COLLECTIVE);
-    // Write the data
-    status = H5Dwrite(dset_id, pointtype, memspace_id, fspace_id, plist_id, points);
-    printf("[%i] Dataset written\n", mpi_rank);
-    // Free the point data type
-    
-    status = H5Dclose(dset_id);
-    status = H5Sclose(fspace_id);
-    status = H5Sclose(memspace_id);
+    pointtype = PointType_create(&status); // Get the hyperslab to write the data into status = H5Sselect_hyperslab(fspace_id, H5S_SELECT_SET, offset, &stride, &count, block); printf("[%i] Hyperslab selected\n", mpi_rank); Set up the dataset for parallel writing plist_id = H5Pcreate(H5P_DATASET_XFER); H5Pset_dxpl_mpio(plist_id, H5FD_MPIO_COLLECTIVE); Write the data status = H5Dwrite(dset_id, pointtype, memspace_id, fspace_id, plist_id, points); printf("[%i] Dataset written\n", mpi_rank); Free the point data type status = H5Dclose(dset_id); status = H5Sclose(fspace_id); status = H5Sclose(memspace_id);
     status = H5Pclose(plist_id);
     PointType_destroy(pointtype, &status);
     //checkOrphans(file_id, mpi_rank);
@@ -417,7 +403,7 @@ int filterLAS(LASReaderH* reader, uint32_t* pntCount, filter_t* filter) {
 		if (!p) {
 			LASError_Print("Could not read point at index\n");
 		}
-		if (Filter_RangeCheck(filter, &p)) {
+		if (Filter_RangeCheck(filter, &p) && Filter_ReturnCheck(filter, &p)) {
 			counter++;
 		}
 	}

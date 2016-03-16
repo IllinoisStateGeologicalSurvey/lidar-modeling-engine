@@ -42,14 +42,22 @@ OBJECTS		  := $(subst $(SOURCEDIR),$(BUILDDIR),$(SOURCES:%.c=%.o))
 
 #test: $(SRCS)
 
-all: $(BUILDDIR)/testFileUtils \
+all: $(BUILDDIR)/initLME \
+	$(BUILDDIR)/addRegion \
+	$(BUILDDIR)/readPoints \
 	$(BUILDDIR)/readLas \
 	$(BUILDDIR)/headerRead \
 	$(BUILDDIR)/testRange
 	
 
-$(BUILDDIR)/testFileUtils: $(TESTDIR)/file-test.c
-	$(CC) $(CFLAGS) -o $@ $(TESTDIR)/file-test.c $(SOURCES) $(EXTINCLUDE) $(EXTLIBS)
+$(BUILDDIR)/initLME: $(TESTDIR)/init.c
+	$(CC) $(CFLAGS) -o $@ $(TESTDIR)/init.c $(SOURCES) $(EXTINCLUDE) $(EXTLIBS)
+
+$(BUILDDIR)/addRegion: $(TESTDIR)/addRegion.c
+	$(CC) $(CFLAGS) -o $@ $(TESTDIR)/addRegion.c $(SOURCES) $(EXTINCLUDE) $(EXTLIBS)
+
+$(BUILDDIR)/readPoints: $(TESTDIR)/readPoints.c
+	$(CC) $(CFLAGS) -o $@ $(TESTDIR)/readPoints.c $(SOURCES) $(EXTINCLUDE) $(EXTLIBS)
 
 $(BUILDDIR)/readLas: $(TESTDIR)/readLas.c
 	$(CC) $(CFLAGS) -o $@ $(TESTDIR)/readLas.c $(SOURCES) $(EXTINCLUDE) $(EXTLIBS)

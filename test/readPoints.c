@@ -155,11 +155,12 @@ int main(int argc, char* argv[])
 	for (i = 0; i < t_blocks[mpi_rank]; i++) {
 		int counter = t_offsets[mpi_rank] + i;
 		Filter_SetRange(filter, bounds);
+		Filter_SetReturn(filter, 2);
 		printf("[%i] Reading %s\n", mpi_rank, paths[counter]);
 		openLAS(&reader,&header, &srs, &pntCount, paths[counter]);
 		Bound_dbl_Project(&filter->range, srs);
-		printf("File has Bounds: (%f,%f,%f,%f)\n",LASHeader_GetMinX(header), LASHeader_GetMinY(header), LASHeader_GetMaxX(header), LASHeader_GetMaxY(header));
-		printf("FilterBounds: (%f,%f,%f,%f)\n",filter->range.low.x,filter->range.low.y,filter->range.high.x,filter->range.high.y);
+		//printf("File has Bounds: (%f,%f,%f,%f)\n",LASHeader_GetMinX(header), LASHeader_GetMinY(header), LASHeader_GetMaxX(header), LASHeader_GetMaxY(header));
+		//printf("FilterBounds: (%f,%f,%f,%f)\n",filter->range.low.x,filter->range.low.y,filter->range.high.x,filter->range.high.y);
 		bufCount = filterLAS(&reader, &pntCount, filter);
 		totPoints = bufCount + totPoints;
 		printf("[%i] Found %"PRIu32" points to process\n", mpi_rank, bufCount);;

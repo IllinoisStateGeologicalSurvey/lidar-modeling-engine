@@ -380,7 +380,7 @@ int LASPoint_project(LASHeaderH* header, hsize_t* count, double* x, double* y, d
 
     return 0;
 }
-
+/*
 void Bound_dbl_Set(bound_dbl_t* bounds, double minX, double minY, double minZ, double maxX, double maxY, double maxZ) {
 	Coord_Set(&bounds->low, minX, minY, minZ);
 	Coord_Set(&bounds->high, maxX, maxY, maxZ);
@@ -411,6 +411,7 @@ int Bound_dbl_Project(bound_dbl_t* bound, LASSRSH srs) {
 
 	printf("Pre-Test: Coords (%f,%f,%f)\n",cc[0],cc[1],cc[2]);
 	pj_transform(pj_wgs, pj_las, 2, 1, &x[0], &y[0], &z[0]);
+
 	printf("Post-Test: Coords (%f,%f,%f)\n",x[1],y[1],z[1]);
 	Bound_dbl_Set(bound, x[0],y[0],z[0],x[1],y[1],z[1]);
 
@@ -420,3 +421,4 @@ int Bound_dbl_Project(bound_dbl_t* bound, LASSRSH srs) {
 	free(projStr);
 	return 0;
 	}
+*/

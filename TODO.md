@@ -1,20 +1,16 @@
 # BUGS
 ### ReadHeaderBlock 
-  Should properly balance headers between processes
+  Should properly balance headers between processes -> Fast enough for now
 ### Implement proper Hilbert index
-  current implementation is causing a few errors around edges, need further investigation
-
-### PointWrite
-  Should properly write files based on header id(may need to reorg datasets)
-
+  current implementation is functions, but need to find method to query indexes
 
 ### Update reading process to insert reference to the point's source file
-
-## TODO
+	
+## TODO	
 
 ### MergeSort
-  Implement mergesort into the reading phase
-
-### Rtree based on indexes
-
-### Read point files based on area and clip point
+  Implement mergesort into the reading phase 
+	
+### Rtree based on indexes -> 50% Complete
+	
+### Read point files based on area and clip point -> DONE

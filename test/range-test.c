@@ -9,7 +9,7 @@
 #include <string.h>
 #include "util.h"
 
-int intersects(bound_t* bound_1, bound_t* bound_2) {
+/*int intersects(bound_t* bound_1, bound_t* bound_2) {
 	// Check if bound_1 is below bound_2
 	if (bound_1->high.y < bound_2->low.y){
 		//Bound 1 is below
@@ -39,7 +39,7 @@ int intersects(bound_t* bound_1, bound_t* bound_2) {
 //	}
 	
 }
-
+*/
 void usage() 
 {
 	fprintf(stderr, "-----------------------------------------------------------\n");
@@ -145,15 +145,15 @@ int main(int argc, char* argv[]) {
 	FILE* fp = fopen("/home/ncasler/apps/DSME/data/files.txt", "w");
 	fprintf(stderr, "File opened successfully\n");
 	for (i=0; i < nHeaders; i++) {
-		if (intersects(&bound_1, &headers[i].bounds)) {
-			coord_dbl_t ll,ur;
-			printf("Filter Bounds: \n\n\n");
-			Coord_Decode(&ll,&bound_1.low);
-			Coord_Decode(&ur,&bound_1.high);
-			printf("Intersection found: (%f,%f),(%f,%f)\n", ll.x, ll.y, ur.x, ur.y);
-			Coord_Decode(&ll,&headers[i].bounds.low);
-			Coord_Decode(&ur,&headers[i].bounds.high);
-			printf("Check against: (%f,%f,(%f,%f)\n", ll.x, ll.y, ur.x, ur.y);
+		if (Bound_intersects(&bound_1, &headers[i].bounds)) {
+			//coord_dbl_t ll,ur;
+			//printf("Filter Bounds: \n\n\n");
+			//Coord_Decode(&ll,&bound_1.low);
+			//Coord_Decode(&ur,&bound_1.high);
+			//printf("Intersection found: (%f,%f),(%f,%f)\n", ll.x, ll.y, ur.x, ur.y);
+			//Coord_Decode(&ll,&headers[i].bounds.low);
+			//Coord_Decode(&ur,&headers[i].bounds.high);
+			//printf("Check against: (%f,%f,(%f,%f)\n", ll.x, ll.y, ur.x, ur.y);
 			printf("Header [%i] %s intersects, and has %i pts\n", i, headers[i].path, headers[i].pnt_count);
 			fputs(&headers[i].path[0], fp);
 			fputs("\n", fp);

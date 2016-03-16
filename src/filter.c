@@ -9,6 +9,7 @@
 #include <proj_api.h>
 #include <liblas/capi/liblas.h>
 #include "point.h"
+#include "bound.h"
 #include "filter.h"
 
 
@@ -36,6 +37,11 @@ int Filter_SetRange(filter_t* filter, bound_dbl_t* range) {
 	return 0;
 }
 
+int Filter_SetReturn(filter_t* filter, int retnFlag) {
+	filter->retn = retnFlag;
+	return 0;
+}
+
 void Filter_Destroy(filter_t* filter) {
 	free(filter);
 }
@@ -49,7 +55,7 @@ int Filter_RangeCheck(filter_t* filter, LASPointH* lasPnt) {
 	//printf("Is (%f,%f) in (%f,%f)(%f,%f)\n", x, y, filter->range.low.x, filter->range.low.y, filter->range.high.x, filter->range.high.y);	
 	//printf("Is %f < %f or %f < %f\n", x, filter->range.low.x, y, filter->range.low.y);
 	if (x < filter->range.low.x) {
-		printf("Left\n");
+		//printf("Left\n");
 		return 0;
 	}
 	else if (y < filter->range.low.y) {
@@ -58,14 +64,14 @@ int Filter_RangeCheck(filter_t* filter, LASPointH* lasPnt) {
 	//	printf("Below\n");
 		return 0;
 	} else if (x > filter->range.high.x) {
-		printf("Right\n");
+		//printf("Right\n");
 		return 0;
 	} else if (y > filter->range.high.y) {
 		//Point is above/right of box
-		printf("Above\n");
+		//printf("Above\n");
 		return 0;
 	} else {
-		printf("WITHIN\n");
+		//printf("WITHIN\n");
 		return 1;
 	}
 }
@@ -87,6 +93,7 @@ int Filter_ReturnCheck(filter_t* filter, LASPointH* lasPnt) {
 			break;
 		case 2:
 			if (LASPoint_GetReturnNumber(*lasPnt) == LASPoint_GetNumberOfReturns(*lasPnt)) {
+				//printf("Last Return\n");
 				flag = 1;
 			}
 			break;

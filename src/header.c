@@ -46,7 +46,7 @@ int Proj_Set(LASHeaderH header, proj_t* proj) {
     return 0;
 }
 
-
+/*
 int Bound_Set(LASHeaderH header, bound_t* bounds) {
     //coord_t *low, *high;
     //coord_t *low = malloc(sizeof(coord_t));
@@ -54,10 +54,8 @@ int Bound_Set(LASHeaderH header, bound_t* bounds) {
     coord_dbl_t* ur = malloc(sizeof(coord_dbl_t));
     coord_dbl_t* ll = malloc(sizeof(coord_dbl_t));
 
-    /* Set min */
     Coord_Set(ll, LASHeader_GetMinX(header), LASHeader_GetMinY(header), LASHeader_GetMinZ(header));
     Coord_Set(ur, LASHeader_GetMaxX(header), LASHeader_GetMaxY(header), LASHeader_GetMaxZ(header));
-    /* Scale/offset coordinates */
     Coord_Encode(&bounds->low, ll);
     Coord_Encode(&bounds->high, ur);
     //printf("LL.x is %"PRIu32"\n", &bounds.low.x);
@@ -82,7 +80,7 @@ int Bound_intersects(bound_t* bound_1, bound_t* bound_2) {
 		return 1;
 	}
 }
-
+*/
 int Header_Set(uint32_t pnt_count, bound_t bounds, char fname, proj_t proj_str) {
 	return 0;
 }
@@ -111,7 +109,7 @@ hid_t ProjType_create(herr_t* status) {
 void ProjType_destroy(hid_t projtype, herr_t* status) {
     *status = H5Tclose(projtype);
 }
-
+/*
 hid_t BoundType_create(herr_t *status) {
     hid_t boundtype;
     hid_t coordtype;
@@ -128,7 +126,7 @@ void BoundType_destroy(hid_t boundtype, herr_t* status) {
     *status = H5Tclose(boundtype);
     
 }
-
+*/
 hid_t HeaderType_create(herr_t* status) {
     hid_t coordtype, boundtype, projtype, headertype;
     coordtype = CoordType_create(status);
@@ -149,7 +147,7 @@ hid_t HeaderType_create(herr_t* status) {
 void HeaderType_destroy(hid_t headertype, herr_t* status) {
     *status = H5Tclose(headertype);
 }
-
+/*
 int MPI_BoundType_create(MPI_Datatype *mpi_boundtype) {
     int nitems=2;
     int blocklengths[2] = {1,1};
@@ -166,7 +164,7 @@ int MPI_BoundType_create(MPI_Datatype *mpi_boundtype) {
     
     return 0;
 }
-
+*/
 int MPI_ProjType_create(MPI_Datatype *mpi_projtype) {
     int nitems=1;
     int blocklength = PATH_LEN;
@@ -329,7 +327,7 @@ int Header_read(char* path, header_t* header, uint32_t id) {
 		return 1;
 	}
 	header->pnt_count = LASHeader_GetPointRecordsCount(LASheader);
-	Bound_Set(LASheader, &header->bounds);
+	LASBound_Get(LASheader, &header->bounds);
 	printf("Bounds set for idx: %i \n", id);
 	Proj_Set(LASheader, &header->proj);
 	printf("Projection set for id: %i \n", id);
