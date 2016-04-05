@@ -345,11 +345,19 @@ int LASPoint_project(LASHeaderH* header, hsize_t* count, double* x, double* y, d
     fprintf(stdout, "[%d] LASpoint_project called\n", mpi_rank);
     projPJ pj_src, pj_wgs;
     int i;
+    if (!LASProj_get(header, &pj_src)) {
+		fprintf(stderr, "Error loading projection from source\n");
+		return 1;
+	}
+	if (!Proj_load("+proj=longlat +ellps=WGS84 +datum=WGS84 +vunits=m +no_defs", &pj_wgs)) {
+		printf("Error loading WGS84 projection\n");
+		pj_free(pj_src);
+		return 1;
+	}
+	//Allocate space for coordinates
     coord_dbl_t* rawCoords = malloc(sizeof(coord_dbl_t));
     coord_t* cc = malloc(sizeof(coord_dbl_t));
-    LASProj_get(header, &pj_src); // TODO: FIX THIS LINE
-    Proj_load("+proj=longlat +ellps=WGS84 +datum=WGS84 +vunits=m +no_defs", &pj_wgs);
-    //Transform coordinates
+
     printf("[%d] Sample coordinates 0 of %i: %f, %f, %f\n", mpi_rank,(int)*count, x[0], y[0], z[0]);
     pj_transform(&pj_src, &pj_wgs, *count, 1, x, y, z);
 

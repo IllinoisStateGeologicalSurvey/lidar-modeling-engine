@@ -102,7 +102,7 @@ int buildArray( char  dirPath[], char outPaths[], int file_count) {
                             strcat(fname, dirPath);
                             strcat(fname, "/");
                             strcat(fname, entry->d_name);
-                            //strcat(fname, '\0');
+                            strcat(fname, "\0");
                             //printf("Fname: %s\n", fname);
                             /* TODO: Figure out why real path spits null strings here
                             char *res = realpath(fname, buf);

@@ -1,0 +1,2 @@
+/projects/isgs/lidar/dupage/las/POINTS_020.las
+/projects/isgs/lidar/dupage/las/POINTS_001.las

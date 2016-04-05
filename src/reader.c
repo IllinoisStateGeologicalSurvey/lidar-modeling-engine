@@ -66,7 +66,7 @@ int Headers_read(header_t* headers, hid_t region_id) {
 	status = H5Pclose(plist_id);
 	HeaderType_destroy(headertype, &status);
 	
-	return 0;
+	return EXIT_SUCCESS;
 }
 /** This will read a hyperslab of headers from an HDF file **/
 int HeaderSet_read(int start, int numHeaders, header_t* headers, char* filename)
@@ -95,7 +95,7 @@ int HeaderSet_read(int start, int numHeaders, header_t* headers, char* filename)
 
     /* Open the dataset */
     plist_id =  H5Pcreate(H5P_DATASET_ACCESS);
-    char* dataset_name = "/headers";
+    char* dataset_name = "headers";
     dset_id = H5Dopen(file_id, dataset_name, plist_id);
 
     /** Get the data space **/
@@ -114,7 +114,7 @@ int HeaderSet_read(int start, int numHeaders, header_t* headers, char* filename)
 
     status = H5Fclose(file_id);
 
-    return 0;
+    return EXIT_SUCCESS;
 }
 
 int HeaderPoint_get(header_t* header, char* dset_name) {
@@ -122,7 +122,7 @@ int HeaderPoint_get(header_t* header, char* dset_name) {
     sprintf(dset_name, "/pt_%08d", header->id);
     printf(" Dataset name: %s\n", dset_name); 
 
-    return 0;
+    return EXIT_SUCCESS;
 }
 /*  PointSet_prepare:
  *  This function will get the designated dataset name from the index
@@ -142,7 +142,7 @@ int PointSet_prepare(header_t* header, char* LASpath, hsize_t* pointBlock) {
     strcpy(LASpath, header->path);
     *pointBlock = (hsize_t)header->pnt_count;
 
-    return 0;
+    return EXIT_SUCCESS;
 }
     
 
@@ -204,7 +204,7 @@ int PointSet_create(header_t* header, hid_t group_id)
     free(max_dim);
  //   free(dataset_name);
     printf("Dataset cleanup finished\n");
-    return 0;
+    return EXIT_SUCCESS;
 }
 
 int PointSet_write(hid_t file_id, char* dataset, hsize_t* offset, hsize_t* block, Point* points, MPI_Comm comm, MPI_Info info) {
@@ -242,7 +242,7 @@ int PointSet_write(hid_t file_id, char* dataset, hsize_t* offset, hsize_t* block
     PointType_destroy(pointtype, &status);
     //checkOrphans(file_id, mpi_rank);
 	MPI_Barrier(comm);
-    return 0;
+    return EXIT_SUCCESS;
 }
 
 int PointSet_copy(char* LASpath, char* dataset_name, hsize_t* pointBlock, hid_t group_id,  MPI_Comm comm, MPI_Info info) {
@@ -261,17 +261,21 @@ int PointSet_copy(char* LASpath, char* dataset_name, hsize_t* pointBlock, hid_t 
     // CHeck that the file was properly opened
     if (!lasReader) {
         LASError_Print("Could not open the file for reading\n");
-        exit(1);
+        return 0;
     }
     MPI_Barrier(comm);
     printf("[%d] Reading file %s\n", mpi_rank, LASpath);
-    LASFile_read(lasReader, &pointOffset, &pointCnt, points, mpi_rank);
+    if (!LASFile_read(lasReader, &pointOffset, &pointCnt, points, mpi_rank)) {
+		fprintf(stderr, "IO Error: Failed to reader LAS file %s\n", LASpath);
+		free(points);
+		return 0;
+	}
     printf("[%d] Successfully read file: %s\n", mpi_rank, LASpath);
     MPI_Barrier(comm);
     //printf("[%d] POINT_SET_WRITE called on: %s\n", mpi_rank, h5_dset);
     PointSet_write(group_id, dataset_name, &pointOffset, pointBlock, points, comm, info);
     free(points);
-    return 0;
+    return 1;
 }
 
 
@@ -282,7 +286,7 @@ int LASFile_read(LASReaderH reader, hsize_t* offset, hsize_t* count, Point* poin
     LASHeaderH header = NULL;
     printf("[%i] Beginning LAS File reading\n", mpi_rank);
     header = LASReader_GetHeader(reader);
-    printf("[%i] Header opened\n",mpi_rank);
+	printf("[%i] Header opened\n",mpi_rank);
     /* Check that the point count is not larger than file */
 //int end = count;
     printf("[%i] Sanity check: header offset: %i, pntcount: %i\n",mpi_rank,(int)*offset,  (int)*count);
@@ -325,8 +329,17 @@ int LASFile_read(LASReaderH reader, hsize_t* offset, hsize_t* count, Point* poin
     printf("[%d] Projecting Points\n", mpi_rank);
     // Projecting points is faster if they are done at the same time, using an array and count
     /* Initialize projection parameters */
-    LASPoint_project(&header, count, &x[0], &y[0], &z[0], &points[0], mpi_rank);
-    printf("[%d] Cleaning up\n", mpi_rank); 
+	
+    if (!LASPoint_project(&header, count, &x[0], &y[0], &z[0], &points[0], mpi_rank)) {
+		fprintf(stderr, "Projection Error: Failed to project points\n");
+		free(x);
+		free(y);
+		free(z);
+		LASHeader_Destroy(header);
+		header = NULL;
+		return 0;
+	}
+	printf("[%d] Cleaning up\n", mpi_rank); 
     //Point_print(&points[0]);
 
     free(x);
@@ -336,7 +349,7 @@ int LASFile_read(LASReaderH reader, hsize_t* offset, hsize_t* count, Point* poin
     LASHeader_Destroy(header);
     header = NULL;
 
-    return 0;
+    return 1;
 }
 
 int openLAS(LASReaderH* reader, LASHeaderH* header, LASSRSH* srs, uint32_t* pntCount, char* path) {
@@ -352,22 +365,20 @@ int openLAS(LASReaderH* reader, LASHeaderH* header, LASSRSH* srs, uint32_t* pntC
 	if (!(*reader)) {
 		fprintf(stderr, "ERROR: Could not open file %s for reading.\n", path);
 		LASError_Print("Error: Could not open file\n");
-		MPI_Finalize();
-		exit(1);
+		return 0;
 	}
 
 	*header = LASReader_GetHeader(*reader);
 	if (!(*header)) {
 		fprintf(stderr, "ERROR: Could not fetch header.\n");
-		MPI_Finalize();
-		exit(1);
+		return 0;
 	}
 	*pntCount = LASHeader_GetPointRecordsCount(*header);
 	*srs = LASHeader_GetSRS(*header);
 	printf("File has projection: %s\n", LASSRS_GetProj4(*srs));
 	
 	//free(ptr);
-	return 0;
+	return 1;
 }
 /** HDF5 Utility to check for any unclosed property lists */
 int checkOrphans(hid_t file_id, int mpi_rank) {
@@ -385,7 +396,7 @@ int checkOrphans(hid_t file_id, int mpi_rank) {
 			fprintf(stderr,"[%i] %d of %zd things still open: %d with name %s of type %d\n", mpi_rank, i, norphans, objects[i], name, info.type);
 		}
 	}
-	return 0;
+	return EXIT_SUCCESS;
 }
 
 int filterLAS(LASReaderH* reader, uint32_t* pntCount, filter_t* filter) {
@@ -419,5 +430,5 @@ int closeLAS(LASReaderH* reader, LASHeaderH* header, LASSRSH* srs, uint32_t* pnt
 		reader = NULL;
 		pntCount = NULL;
 
-		return 0;
+		return EXIT_SUCCESS;
 }

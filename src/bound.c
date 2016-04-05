@@ -12,22 +12,28 @@
 #include <proj_api.h>
 #include <liblas/capi/liblas.h>
 
-int LASBound_Get(LASHeaderH header, bound_t* bounds) {
+int LASBound_Get(LASHeaderH *header, bound_t* bounds) {
 
 	//Need to get the projection from the LAS file
 	double x[2],y[2],z[2];
 	coord_dbl_t ll, ur;
 	projPJ pj_las, pj_wgs;
-	LASProj_get(&header, &pj_las);
+	if (!LASProj_get(header, &pj_las)) {
+		fprintf(stderr, "Projection Error: Failed to get projection from source\n");
+		return 0;
+	}
 	
-	x[0] = LASHeader_GetMinX(header);
-	x[1] = LASHeader_GetMaxX(header);
-	y[0] = LASHeader_GetMinY(header);
-	y[1] = LASHeader_GetMaxY(header);
-	z[0] = LASHeader_GetMinZ(header);
-	z[1] = LASHeader_GetMaxZ(header);
+	x[0] = LASHeader_GetMinX(*header);
+	x[1] = LASHeader_GetMaxX(*header);
+	y[0] = LASHeader_GetMinY(*header);
+	y[1] = LASHeader_GetMaxY(*header);
+	z[0] = LASHeader_GetMinZ(*header);
+	z[1] = LASHeader_GetMaxZ(*header);
 
-	Proj_load("+proj=longlat +ellps=WGS84 +datum=WGS84 +vunits=m +no_defs", &pj_wgs);
+	if (!Proj_load("+proj=longlat +ellps=WGS84 +datum=WGS84 +vunits=m +no_defs", &pj_wgs)) {
+		fprintf(stderr, "Projection Error: Failed to initiate the WGS84 projection\n");
+		return 0;
+	}
 	printf("Target projection: %s\n", pj_get_def(pj_las, 0));
 	//printf("Projecting bounds\n");
 	pj_transform(pj_las, pj_wgs, 2, 1, &x[0], &y[0], &z[0]);
@@ -47,7 +53,7 @@ int LASBound_Get(LASHeaderH header, bound_t* bounds) {
 	pj_free(pj_las);
 	pj_free(pj_wgs);
 
-	return 0;
+	return 1;
 }
 
 
@@ -129,8 +135,14 @@ int Bound_dbl_Project(bound_dbl_t* bound, LASSRSH srs) {
 	projStr = LASSRS_GetProj4(srs);
 	if (!projStr) {
 		printf("File has no projection definition\n");
+		free(projStr);
+		return 0;
 	}
-	Proj_load(projStr,&pj_las);
+	if (!Proj_load(projStr,&pj_las)) {
+		fprintf(stderr, "Failed to load projection from source\n");
+		free(projStr);
+		return 0;
+	}
 	double x[2],y[2],z[2];
 	double cc[3];
 	Coord_Get(cc, &bound->low);
@@ -142,7 +154,12 @@ int Bound_dbl_Project(bound_dbl_t* bound, LASSRSH srs) {
 	y[1] = cc[1] * DEG_TO_RAD;
 	z[1] = cc[2] * DEG_TO_RAD;;
 
-	Proj_load("+proj=longlat +ellps=WGS84 +datum=WGS84 +vunits=m +no_defs", &pj_wgs);
+	if (!Proj_load("+proj=longlat +ellps=WGS84 +datum=WGS84 +vunits=m +no_defs", &pj_wgs)) {	
+		fprintf(stderr, "Failed to load WGS84 projection\n");
+		pj_free(pj_las);
+		free(projStr);
+		return 0;
+	}
 	printf("Target projection: %s\n", pj_get_def(pj_las, 0));
 	//printf("Projecting bounds\n");
 
@@ -156,5 +173,5 @@ int Bound_dbl_Project(bound_dbl_t* bound, LASSRSH srs) {
 	pj_free(pj_wgs);
 	pj_free(pj_las);
 	free(projStr);
-	return 0;
+	return 1;
 	}

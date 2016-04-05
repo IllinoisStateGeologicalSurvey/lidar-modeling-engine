@@ -26,6 +26,8 @@ int Filter_Set(filter_t* filter, bound_dbl_t* range, int retn, int intensity, ch
 
 int Filter_SetRange(filter_t* filter, bound_dbl_t* range);
 
+int Filter_SetReturn(filter_t* filter, int retnFlag);
+
 void Filter_Destroy(filter_t* filter);
 
 int Filter_RangeCheck(filter_t* filter, LASPointH* lasPnt);

@@ -14,7 +14,7 @@ source ${SCRIPTDIR}/setenv.sh
 
 echo "Starting Region Addition"
 
-	mpirun -np 4 ${BINDIR}/addRegion -r "dupage" -p "${LASBASE}/dupage/las" 2>&1 | tee ${LOGDIR}/regionAdd.log
+	mpirun -np 4 ${BINDIR}/addRegion -r "clark" -p "${LASBASE}/clark/las" 2>&1 | tee ${LOGDIR}/regionAdd.log
 
 
 echo "Ending Region Addition"

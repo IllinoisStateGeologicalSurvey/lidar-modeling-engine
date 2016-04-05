@@ -164,7 +164,17 @@ int main (int argc, char* argv[])
     
     // TO DO:Need to check the clean up in readBlock to make sure there is no leak 
     printf("[%i] Reading points from file\n", mpi_rank);
-    LASFile_read(reader, offset, block, sub_points, mpi_rank);
+    if (!LASFile_read(reader, offset, block, sub_points, mpi_rank)) {
+		fprintf(stderr, "IO Error: Failed to read %s\n", file_name_in);
+		LASReader_Destroy(reader);
+		Point_destroy(sub_points);
+		Point_destroy(point);
+		if (mpi_rank == 0) {
+			free(points);
+		}
+		MPI_Finalize();
+		return 1;
+	}
     printf("[%i] Finished reading points\n", mpi_rank); 
 	ptime("Points read");
    

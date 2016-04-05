@@ -299,7 +299,7 @@ int createHeaderDataset(char* file, char* dataset, hsize_t* dims)
     /* Close the file */
     status = H5Fclose(file_id);
 
-    return 0;
+    return EXIT_SUCCESS;
 }
 
 /** This function will read the necessary header data from a given LAS file **/
@@ -317,17 +317,28 @@ int Header_read(char* path, header_t* header, uint32_t id) {
 	if (!LASreader) {
 		fprintf(stderr,"Could not open file: %s\n", path);
 		// TODO: NEED A WAY TO HANDLE IO ERRORS
-		return 1;
+		return 0;
 	}
 	printf("Opening LASHeader\n");
 	LASheader = LASReader_GetHeader(LASreader);
 	if (!LASheader) {
 		fprintf(stderr, "Could not fetch header for file %s\n", path);
 		// TODO: NEED A WAY TO HANDLE IO ERRORS
-		return 1;
+		return 0;
 	}
 	header->pnt_count = LASHeader_GetPointRecordsCount(LASheader);
-	LASBound_Get(LASheader, &header->bounds);
+	if (!LASBound_Get(&LASheader, &header->bounds)) {
+		fprintf(stderr, "Bound Error: Failed to read Bound from source\n");
+		if (LASheader != NULL) {
+			LASHeader_Destroy(LASheader);
+			LASheader = NULL;
+		}
+		if (LASreader != NULL) {
+			LASReader_Destroy(LASreader);
+			LASreader = NULL;
+		}
+		return 0;
+	}
 	printf("Bounds set for idx: %i \n", id);
 	Proj_Set(LASheader, &header->proj);
 	printf("Projection set for id: %i \n", id);
@@ -339,7 +350,7 @@ int Header_read(char* path, header_t* header, uint32_t id) {
 		LASReader_Destroy(LASreader);
 		LASreader = NULL;
 	}
-	return 0;
+	return 1;
 }
 
 int readHeaderBlock(char paths[], int offset, int block, header_t* headers)
@@ -361,10 +372,13 @@ int readHeaderBlock(char paths[], int offset, int block, header_t* headers)
         
         headerId = offset + i;
         
-        Header_read(&fpath[0], &headers[i], headerId);
+        if (!Header_read(&fpath[0], &headers[i], headerId)) {
+			fprintf(stderr,"Header Error: Failed to read header for %s\n", fpath);
+			continue;
+		}
         
     }
-    return 0;
+    return 1;
 }
 /*int readHeaderBlock(char paths[], int offset, int block, header_t* headers, MPI_Comm comm, int mpi_rank)
 {
@@ -430,7 +444,7 @@ int writeHeaderBlock_ser(hid_t file_id, char* dataset, hsize_t* offset, hsize_t*
     status = H5Sclose(memspace_id);
     status = H5Pclose(plist_id);
     HeaderType_destroy(headertype, &status);
-    return 0;
+    return EXIT_SUCCESS;
 }
 int writeHeaderBlock(hid_t file_id, char* dataset, hsize_t* offset, hsize_t* block, header_t* headers, MPI_Comm comm, MPI_Info info)
 {
@@ -477,5 +491,5 @@ int writeHeaderBlock(hid_t file_id, char* dataset, hsize_t* offset, hsize_t* blo
     status = H5Pclose(plist_id);
     HeaderType_destroy(headertype, &status);
     //status = H5Fclose(file_id);
-    return 0;
+    return EXIT_SUCCESS;
 }

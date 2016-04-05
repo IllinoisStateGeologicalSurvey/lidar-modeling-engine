@@ -23,16 +23,18 @@ int Proj_load(const char* proj4string, projPJ* proj)
     //projPJ pj;
     //printf("Calling pj_init_plus\n");
     *proj = pj_init_plus(proj4string);
-    printf("Projection initiated\n");
+    printf("Projection initiated with:  %s\n", proj4string);
     if (!proj)
     {
         fprintf(stderr, "Error: Failed to initialize projection, check string: %s\n", proj4string);
-		MPI_Finalize();
-        exit(1);
+		return 0;
+		//TODO:Create a graceful error strategy
+		//MPI_Finalize();
+        //exit(1);
     } else {
         //printf("Projection Loaded\n");
         printf("Loaded projection: %s\n", pj_get_def(*proj, 0));
-        return 0;
+        return 1;
     }
 }
 
@@ -43,11 +45,16 @@ int  LASProj_get(LASHeaderH* header, projPJ* proj)
     LASSRSH srs = LASHeader_GetSRS(*header);
     //printf("Project loaded from Header\n");
     char* projStr = LASSRS_GetProj4(srs);
+	printf("LASProg_get found : %s\n", projStr);
     //printf("Projection is: %s\n", projStr);
     
-    Proj_load(projStr, proj);
+    if (!Proj_load(projStr, proj)) {
 
-    return 0;
+		printf("LASProg_Get Projection Error: Failed to load projection from source\n");
+		return 0;
+	}
+
+    return 1;
 }
 
 
