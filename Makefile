@@ -1,6 +1,7 @@
 # HDF5 Makefile template
 HDF_INSTALL = /sw/hdf5-1.8.15-para
 MPI_INSTALL = /sw/EasyBuild/software/MPICH/3.1.4-GCC-4.9.2-binutils-2.25
+GEOS_INSTALL = /sw/geosoft/geos
 LIBLAS_INSTALL = /gpfs_scratch/ncasler/liblas
 PROJ_INSTALL=/gpfs_scratch/ncasler/proj
 #SZIP_INSTALL = /sw/EasyBuild/software/Szip/2.1-gmpolf-2015
@@ -14,14 +15,15 @@ BUILDDIR	= bin
 OBJDIR		= obj
 TESTDIR		= test
 INCLUDE		= -I./include 
-EXTINCLUDE	= $(INCLUDE) -I$(MPI_INSTALL)/include -I$(HDF_INSTALL)/include -I$(LIBLAS_INSTALL)/include -I$(PROJ_INSTALL)/include
+GEOS_INCLUDE = $(GEOS_INSTALL)/include
+EXTINCLUDE	= $(INCLUDE) -I$(MPI_INSTALL)/include -I$(HDF_INSTALL)/include -I$(LIBLAS_INSTALL)/include -I$(GEOS_INCLUDE) -I$(PROJ_INSTALL)/include
 #-I$(SZIP_INSTALL)/include
-
+LIBGEOS		=  $(GEOS_INSTALL)/lib/libgeos_c.so
 LIBSHDF		=  $(HDF_INSTALL)/lib/libhdf5.a $(MPI_INSTALL)/lib/libmpi.a 
 LIBSLAS		=  $(LIBLAS_INSTALL)/lib/liblas_c.so $(LIBLAS_INSTALL)/lib/liblas_c.so.3
 LIBSPROJ	=  $(PROJ_INSTALL)/lib/libproj.a
 #$(SZIP_INSTALL)/lib/libsz.a
-EXTLIBS		= $(LIBSHDF) $(LIBSLAS) $(LIBSPROJ) $(EXTLIB) $(LIB)
+EXTLIBS		= $(LIBSHDF) $(LIBGEOS) $(LIBSLAS) $(LIBSPROJ) $(EXTLIB) $(LIB)
 
 SOURCES		  := $(wildcard $(SOURCEDIR)/*.c)
 OBJECTS		  := $(subst $(SOURCEDIR),$(BUILDDIR),$(SOURCES:%.c=%.o))
@@ -44,6 +46,7 @@ OBJECTS		  := $(subst $(SOURCEDIR),$(BUILDDIR),$(SOURCES:%.c=%.o))
 
 all: $(BUILDDIR)/initLME \
 	$(BUILDDIR)/addRegion \
+	$(BUILDDIR)/addRegionPar \
 	$(BUILDDIR)/readPoints \
 	$(BUILDDIR)/readLas \
 	$(BUILDDIR)/headerRead \
@@ -55,6 +58,9 @@ $(BUILDDIR)/initLME: $(TESTDIR)/init.c
 
 $(BUILDDIR)/addRegion: $(TESTDIR)/addRegion.c
 	$(CC) $(CFLAGS) -o $@ $(TESTDIR)/addRegion.c $(SOURCES) $(EXTINCLUDE) $(EXTLIBS)
+
+$(BUILDDIR)/addRegionPar: $(TESTDIR)/addRegionPar.c
+	$(CC) $(CFLAGS) -o $@ $(TESTDIR)/addRegionPar.c $(SOURCES) $(EXTINCLUDE) $(EXTLIBS)
 
 $(BUILDDIR)/readPoints: $(TESTDIR)/readPoints.c
 	$(CC) $(CFLAGS) -o $@ $(TESTDIR)/readPoints.c $(SOURCES) $(EXTINCLUDE) $(EXTLIBS)

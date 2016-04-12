@@ -34,16 +34,16 @@ int LASBound_Get(LASHeaderH *header, bound_t* bounds) {
 		fprintf(stderr, "Projection Error: Failed to initiate the WGS84 projection\n");
 		return 0;
 	}
-	printf("Target projection: %s\n", pj_get_def(pj_las, 0));
+	//printf("Target projection: %s\n", pj_get_def(pj_las, 0));
 	//printf("Projecting bounds\n");
 	pj_transform(pj_las, pj_wgs, 2, 1, &x[0], &y[0], &z[0]);
 	int i= 0;
-	printf("Post-transform : (%f,%f,%f),(%f,%f,%f)\n", x[0],y[0],z[0],x[1],y[1],z[1]);
+	//printf("Post-transform : (%f,%f,%f),(%f,%f,%f)\n", x[0],y[0],z[0],x[1],y[1],z[1]);
 	for ( i =0; i < 2; i++) {
 		x[i] *= RAD_TO_DEG;
 		y[i] *= RAD_TO_DEG;
 	}
-	printf("Degree Converted : (%f,%f,%f),(%f,%f,%f)\n", x[0],y[0],z[0],x[1],y[1],z[1]);
+	//printf("Degree Converted : (%f,%f,%f),(%f,%f,%f)\n", x[0],y[0],z[0],x[1],y[1],z[1]);
 	Coord_Set(&ll, x[0], y[0], z[0]);
 	Coord_Set(&ur, x[1], y[1], z[1]);
 	Coord_Encode(&bounds->low, &ll);
@@ -118,7 +118,7 @@ int MPI_BoundType_create(MPI_Datatype *mpi_boundtype) {
     offsets[1] = offsetof(bound_t, high);
     MPI_Type_create_struct(nitems, blocklengths, offsets, types, mpi_boundtype);
     MPI_Type_commit(mpi_boundtype);
-    printf("Bound type created\n");
+   // printf("Bound type created\n");
     
     return 0;
 }
@@ -160,13 +160,13 @@ int Bound_dbl_Project(bound_dbl_t* bound, LASSRSH srs) {
 		free(projStr);
 		return 0;
 	}
-	printf("Target projection: %s\n", pj_get_def(pj_las, 0));
+	//printf("Target projection: %s\n", pj_get_def(pj_las, 0));
 	//printf("Projecting bounds\n");
 
-	printf("Pre-Test: Coords (%f,%f,%f)\n",cc[0],cc[1],cc[2]);
+	//printf("Pre-Test: Coords (%f,%f,%f)\n",cc[0],cc[1],cc[2]);
 	pj_transform(pj_wgs, pj_las, 2, 1, &x[0], &y[0], &z[0]);
 
-	printf("Post-Test: Coords (%f,%f,%f)\n",x[1],y[1],z[1]);
+	//printf("Post-Test: Coords (%f,%f,%f)\n",x[1],y[1],z[1]);
 	Bound_dbl_Set(bound, x[0],y[0],z[0],x[1],y[1],z[1]);
 
 	//printf("New Bounds: (%f,%f), (%f,%f)\n", bound->low.x, bound->low.y, bound->high.x, bound->high.y);

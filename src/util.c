@@ -67,12 +67,14 @@ int get_block(int mpi_rank, int np, int pntCount, int pntLength, int *offsetx, i
 
 int getDataStore(char* h5Path) {
 	char binPath[PATH_MAX];
+	//char basePath[PATH_MAX];
 	char dataDir[10] = "/data";
 	char h5_name[15] = "/LME.h5\0";
 	getWorkingDir(&binPath[0]);
-	strcpy(h5Path, dirname(&binPath[0]));
+	strcpy(h5Path, &binPath[0]);
 	strcat(h5Path, &dataDir[0]);
 	strcat(h5Path, &h5_name[0]);
+	printf("DataStore Path: %s\n", h5Path);
 
 	return 0;
 }

@@ -239,17 +239,15 @@ void taskType_Destroy(task_t *task) {
 
 int getWorkingDir(char* pathBuf)
 {
-    char szTmp[32];
-    size_t len=PATH_LEN;
-    sprintf(szTmp, "/proc/%d/exe", getpid());
-    char pathTmp[len];
-    MIN(readlink(szTmp,pathTmp,len),len -1);
+    int len;
+	getcwd(pathBuf, PATH_LEN);
+	//MIN(readlink(szTmp,pathTmp,len),len -1);
     //int bytes = MIN(readlink(szTmp, pathTmp, len), len - 1);
     //if (bytes >= 0)
     //    pathTmp[bytes] = "\0";
-    strcpy(pathBuf, dirname(pathTmp));
+	printf("Path: %s\n", pathBuf);
+	
     //pathBuf = dirname(pathTmp);
-    fprintf(stderr, "WORKING PATH: %s\n", pathBuf);
     //pathBuf = dirname(pathBuf);
     len = strlen(pathBuf);
     return len;

@@ -312,14 +312,14 @@ int Header_read(char* path, header_t* header, uint32_t id) {
 	header->id = id;
         
 	//printf("[%i] Filepath set for file id %i\n", mpi_rank, id);
-	printf("Opening LASReader for file %s\n", header->path);
+	//printf("Opening LASReader for file %s\n", header->path);
 	LASreader = LASReader_Create(path);
 	if (!LASreader) {
 		fprintf(stderr,"Could not open file: %s\n", path);
 		// TODO: NEED A WAY TO HANDLE IO ERRORS
 		return 0;
 	}
-	printf("Opening LASHeader\n");
+	//printf("Opening LASHeader\n");
 	LASheader = LASReader_GetHeader(LASreader);
 	if (!LASheader) {
 		fprintf(stderr, "Could not fetch header for file %s\n", path);
@@ -339,9 +339,9 @@ int Header_read(char* path, header_t* header, uint32_t id) {
 		}
 		return 0;
 	}
-	printf("Bounds set for idx: %i \n", id);
+	//printf("Bounds set for idx: %i \n", id);
 	Proj_Set(LASheader, &header->proj);
-	printf("Projection set for id: %i \n", id);
+	//printf("Projection set for id: %i \n", id);
 	if (LASheader != NULL) {
 		LASHeader_Destroy(LASheader);
 		LASheader = NULL;
@@ -361,14 +361,14 @@ int readHeaderBlock(char paths[], int offset, int block, header_t* headers)
 
     int blockInt = block;
     uint32_t headerId;
-    fprintf(stderr, "Reading %i files\n", blockInt);
+    //fprintf(stderr, "Reading %i files\n", blockInt);
     for (i = 0; i < (blockInt); i++) {
         /* Set reader and header null to allow for error checking */
         //printf("[%i]Last file is %s\n", mpi_rank, &paths[(blockInt - 1) * PATH_LEN]);
         memset(&fpath[0], 0, PATH_LEN);
         strncpy(&fpath[0], &paths[PATH_LEN * i], PATH_LEN);
 	//snprintf(&fpath[0], PATH_LEN, &paths[PATH_LEN * i]);
-        printf("Reading file %i/%i: %s \n", i, blockInt, &fpath[0]);
+    //    printf("Reading file %i/%i: %s \n", i, blockInt, &fpath[0]);
         
         headerId = offset + i;
         
@@ -414,14 +414,14 @@ int writeHeaderBlock_ser(hid_t file_id, char* dataset, hsize_t* offset, hsize_t*
     hsize_t stride = 1;
     hsize_t count = 1;
     // SANITY TEST ON HEADER: MAKE SURE IT HAS A POINTCOUNT VALUE and a PaTH 
-    printf("Beginning write: Path: %s, Point count:%d\n", headers[0].path, headers[0].pnt_count);
+   // printf("Beginning write: Path: %s, Point count:%d\n", headers[0].path, headers[0].pnt_count);
     //plist_id = H5Pcreate(H5P_FILE_ACCESS);
     // Set parallel reading property flag 
     //H5Pset_fapl_mpio(plist_id, comm, info);
-    printf("Opening file for reading\n");
+ //   printf("Opening file for reading\n");
     // Open file for reading 
     //file_id = H5Fopen(file, H5F_ACC_RDWR | H5F_ACC_DEBUG, plist_id);
-    printf("File opened, opening Dataset.\n");
+   // printf("File opened, opening Dataset.\n");
     // Open Dataset 
     plist_id = H5Pcreate(H5P_DATASET_ACCESS);
     
@@ -460,10 +460,10 @@ int writeHeaderBlock(hid_t file_id, char* dataset, hsize_t* offset, hsize_t* blo
     //plist_id = H5Pcreate(H5P_FILE_ACCESS);
     // Set parallel reading property flag 
     //H5Pset_fapl_mpio(plist_id, comm, info);
-    printf("[%i]Opening file for reading\n", mpi_rank);
+  //  printf("[%i]Opening file for reading\n", mpi_rank);
     // Open file for reading
     //file_id = H5Fopen(file, H5F_ACC_RDWR | H5F_ACC_DEBUG, plist_id);
-    printf("[%i] File opened, opening Dataset.\n", mpi_rank);
+   // printf("[%i] File opened, opening Dataset.\n", mpi_rank);
     // Open Dataset
     plist_id = H5Pcreate(H5P_DATASET_ACCESS);
     
@@ -474,7 +474,7 @@ int writeHeaderBlock(hid_t file_id, char* dataset, hsize_t* offset, hsize_t* blo
     memspace_id = H5Screate_simple(rank, block, NULL);
 
     headertype = HeaderType_create(&status);
-    printf("[%i] Selecting offset: %i, stride: %i, count: %i, block: %i\n", mpi_rank, (int)*offset, (int)stride, (int)count, (int)*block);
+    //printf("[%i] Selecting offset: %i, stride: %i, count: %i, block: %i\n", mpi_rank, (int)*offset, (int)stride, (int)count, (int)*block);
     status = H5Sselect_hyperslab(fspace_id, H5S_SELECT_SET, offset, &stride, &count, block);
     
     // Set flag for parallel writing
@@ -482,9 +482,9 @@ int writeHeaderBlock(hid_t file_id, char* dataset, hsize_t* offset, hsize_t* blo
     H5Pset_dxpl_mpio(plist_id, H5FD_MPIO_COLLECTIVE);
     // CHECKING THE DATA 
     //int i;
-    printf("[%i] Writing dataset\n", mpi_rank);
+    //printf("[%i] Writing dataset\n", mpi_rank);
     status = H5Dwrite(dset_id, headertype, memspace_id, fspace_id, plist_id, headers);
-	printf("[%i] Cleaning up\n", mpi_rank);
+	//printf("[%i] Cleaning up\n", mpi_rank);
     status = H5Dclose(dset_id);
     status = H5Sclose(fspace_id);
     status = H5Sclose(memspace_id);
