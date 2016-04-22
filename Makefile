@@ -50,8 +50,11 @@ all: $(BUILDDIR)/initLME \
 	$(BUILDDIR)/readPoints \
 	$(BUILDDIR)/readLas \
 	$(BUILDDIR)/headerRead \
-	$(BUILDDIR)/testRange
+	$(BUILDDIR)/testRange \
+	$(BUILDDIR)/checkCatalog
 	
+$(BUILDDIR)/checkCatalog: $(TESTDIR)/checkCatalog.c
+	$(CC) $(CFLAGS) -o $@ $(TESTDIR)/checkCatalog.c $(SOURCES) $(EXTINCLUDE) $(EXTLIBS)
 
 $(BUILDDIR)/initLME: $(TESTDIR)/init.c
 	$(CC) $(CFLAGS) -o $@ $(TESTDIR)/init.c $(SOURCES) $(EXTINCLUDE) $(EXTLIBS)
