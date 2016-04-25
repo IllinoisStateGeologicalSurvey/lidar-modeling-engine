@@ -12,6 +12,7 @@
 #include <hdf5.h>
 #include <proj_api.h>
 #include <liblas/capi/liblas.h>
+#include "point.h"
 #include "filter.h"
 /* Tests to run: 
    check that file exists
@@ -399,12 +400,20 @@ int checkOrphans(hid_t file_id, int mpi_rank) {
 	return EXIT_SUCCESS;
 }
 
-int filterLAS(LASReaderH* reader, uint32_t* pntCount, filter_t* filter) {
+int filterLAS(LASHeaderH* header, LASReaderH* reader, uint32_t* pntCount, filter_t* filter, Point* points, int mpi_rank) {
 	uint32_t i;
 	// Placeholder for parallel reading in future
 	int off = 0;
 	LASPointH p = NULL;
+	printf("[%i] Allocating memory for points\n", mpi_rank);
+	double *x, *y, *z;
+	x = (double *)malloc(sizeof(double) * (size_t)(*pntCount));
+	y = (double *)malloc(sizeof(double) * (size_t)(*pntCount));
+	z = (double *)malloc(sizeof(double) * (size_t)(*pntCount));
+	// Need to get the projection of the source file
 	uint32_t counter = 0;
+	hsize_t block = 0;
+	printf("[%i] Applying filter to points\n", mpi_rank);
 	for (i = 0; i < (*pntCount); i++) {
 		if (i == 0) {
 			p = LASReader_GetPointAt(*reader,off);
@@ -414,14 +423,32 @@ int filterLAS(LASReaderH* reader, uint32_t* pntCount, filter_t* filter) {
 		if (!p) {
 			LASError_Print("Could not read point at index\n");
 		}
-		if (Filter_RangeCheck(filter, &p) && Filter_ReturnCheck(filter, &p)) {
+		else if (Filter_RangeCheck(filter, &p) && Filter_ReturnCheck(filter, &p)) {
+			// TODO: Accumulate points here to serve
+			// TODO: Setup  method to project points to minimize number of
+			// transformations necessary to create a grid from points with
+			// different projections.
+			LASPoint_read(&p, &points[counter], &x[counter], &y[counter], &z[counter]);
 			counter++;
 		}
 	}
+	block = counter;
+	printf("[%i] Projecting %i points\n", mpi_rank, counter);
+	if (!LASPoint_project(header, &block, &x[0], &y[0], &z[0], &points[0], mpi_rank)) {
+		fprintf(stderr, "[%i] Projection Error: Failed to project points\n", mpi_rank);
+		free(x);
+		free(y);
+		free(z);
+		return 0;
+	}
+	printf("[%i] Cleaning up\n", mpi_rank);
+	free(x);
+	free(y);
+	free(z);
 	return counter;
 }
 
-int closeLAS(LASReaderH* reader, LASHeaderH* header, LASSRSH* srs, uint32_t* pntCount) {
+int closeLAS(LASReaderH* reader, LASHeaderH* header, LASSRSH* srs, uint32_t* pntCount, Point* points) {
 		LASSRS_Destroy(*srs);
 		srs = NULL;
 		LASHeader_Destroy(*header);
@@ -429,6 +456,7 @@ int closeLAS(LASReaderH* reader, LASHeaderH* header, LASSRSH* srs, uint32_t* pnt
 		LASReader_Destroy(*reader);
 		reader = NULL;
 		pntCount = NULL;
+		free(points);
 
 		return EXIT_SUCCESS;
 }

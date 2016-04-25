@@ -15,7 +15,7 @@ source ${SCRIPTDIR}/setenv.sh
 echo "Running as ${USER}"
 echo "Starting Point Read Test"
 
-mpirun -n 2 ${BINDIR}/readPoints -i ${DATADIR}/files.txt -b -88.26681 41.98540 -88.25840 41.99156 2>&1 | tee ${LOGDIR}/readPoints.log
+mpirun -n 10 ${BINDIR}/readPoints -i ${DATADIR}/files.txt -b -88.26681 41.98540 -88.25840 41.99156 2>&1 | tee ${LOGDIR}/readPoints.log
 
 
 echo "Ending Point Read Test"

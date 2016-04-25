@@ -158,15 +158,30 @@ int main(int argc, char* argv[])
 		Filter_SetReturn(filter, 2);
 		printf("[%i] Reading %s\n", mpi_rank, paths[counter]);
 		openLAS(&reader,&header, &srs, &pntCount, paths[counter]);
+		Point* points = (Point *)malloc(sizeof(Point) * pntCount);
+		// Put the bounds into LAS file's projection
 		Bound_dbl_Project(&filter->range, srs);
 		//printf("File has Bounds: (%f,%f,%f,%f)\n",LASHeader_GetMinX(header), LASHeader_GetMinY(header), LASHeader_GetMaxX(header), LASHeader_GetMaxY(header));
 		//printf("FilterBounds: (%f,%f,%f,%f)\n",filter->range.low.x,filter->range.low.y,filter->range.high.x,filter->range.high.y);
-		bufCount = filterLAS(&reader, &pntCount, filter);
-		totPoints = bufCount + totPoints;
-		printf("[%i] Found %"PRIu32" points to process\n", mpi_rank, bufCount);;
-
-		closeLAS(&reader, &header, &srs, &pntCount);
+		printf("[%i] Filtering file\n", mpi_rank);
+		bufCount = filterLAS(&header, &reader, &pntCount, filter, points, mpi_rank);
+		// Need to add the points to something
+		// Can write to HDF, but will require a collective call. 
+		// Could also call a write after the number of points hits a certain
+		// number to protect the heap. 
+		// TODO: NEED TO IMPLEMENT A THRESHOLD FOR THE NUMBER OF POINTS A PROCESS CAN
+		// HANDLE, it looks like the process is choking on a buffer of 1325556
+		// points
+		if (bufCount > 0) {	
+			totPoints = bufCount + totPoints;
+			printf("[%i] Found %"PRIu32" points to process\n", mpi_rank, bufCount);
+			printf("[%i] POint [%i] Is (%d,%d,%d)\n", mpi_rank, 1, points[1].coords.x,points[1].coords.y, points[1].coords.z);
+		}
+			// TODO: Find method to aggregate points for writing without
+			// overflowing buffer
+		closeLAS(&reader, &header, &srs, &pntCount, points);
 		endtime = MPI_Wtime();
+		free(points);
 		printf("[%i] File processed in %f seconds\n", mpi_rank, endtime-starttime);
 	}
 	printf("[%i] Total points to process: %"PRIu32" \n", mpi_rank, totPoints);

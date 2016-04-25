@@ -39,8 +39,8 @@ int checkOrphans(hid_t file_id, int mpi_rank);
 
 int openLAS(LASReaderH* reader, LASHeaderH* header, LASSRSH* srs, uint32_t* pntCount, char* path);
 
-int filterLAS(LASReaderH* reader, uint32_t* pntCount, filter_t* filter);
+int filterLAS(LASHeaderH* header, LASReaderH* reader, uint32_t* pntCount, filter_t* filter, Point* points, int mpi_rank);
 
-int closeLAS(LASReaderH* reader, LASHeaderH* header, LASSRSH* srs, uint32_t* pntCount);
+int closeLAS(LASReaderH* reader, LASHeaderH* header, LASSRSH* srs, uint32_t* pntCount, Point* points);
 
 #endif //READER_H
