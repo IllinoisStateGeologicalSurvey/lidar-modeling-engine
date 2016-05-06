@@ -49,7 +49,9 @@ int main(int argc, char* argv[])
     int mpi_size, mpi_rank, mpi_err, mpi_err_class, resultlen;
     MPI_Comm comm = MPI_COMM_WORLD;
     MPI_Info info = MPI_INFO_NULL;
-    MPI_Status status;
+	// Should improve mpi-io on gpfs in HDF5
+    MPI_Info_set(info, "IBM_largeblock_io", "true");
+	MPI_Status status;
     char err_buffer[MPI_MAX_ERROR_STRING];
 
     MPI_Init(&argc, &argv);

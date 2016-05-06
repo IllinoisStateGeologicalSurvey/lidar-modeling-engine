@@ -17,10 +17,15 @@
 #include <proj_api.h>
 
 
-/** Get PROJ4 projection from proj4 string **/
+/** 
+ * @brief Proj_load: read a projPJ object from a Proj.4 String
+ *
+ * @param proj4string: const char* = Pointer to proj4 string
+ * @param proj: projPJ* = Pointer to projection object to write the definition
+ * @return 1 if successful, else 0
+ */
 int Proj_load(const char* proj4string, projPJ* proj)
 {
-    //projPJ pj;
     //printf("Calling pj_init_plus\n");
     *proj = pj_init_plus(proj4string);
     //printf("Projection initiated with:  %s\n", proj4string);
@@ -38,7 +43,14 @@ int Proj_load(const char* proj4string, projPJ* proj)
     }
 }
 
-/** Get Proj4 projection from LAS header **/
+/** 
+ * @brief LASProj_get: Retrive a projPJ projection definition from a LAS file header
+ *
+ * @param header: LASHeaderH* = Pointer to LAS file header
+ * @param proj: projPJ* = Pointer to projPJ object to write the projection
+ * definition
+ * @return 1 if successful, else 0
+ */
 int  LASProj_get(LASHeaderH* header, projPJ* proj)
 {
     //printf("Reading the projection from header\n");
@@ -58,7 +70,12 @@ int  LASProj_get(LASHeaderH* header, projPJ* proj)
 }
 
 
-
+/** 
+ * @brief getPointCount: Read the number of points from a LAS file header
+ *
+ * @param header: LASHeaderH = Header object containing LAS metadata
+ * @return Int = Number of points in the file
+ */
 int getPointCount(LASHeaderH header)
 {
     int pntCount = 0;
@@ -67,7 +84,16 @@ int getPointCount(LASHeaderH header)
     return pntCount;
 }
 
-/** Project point from source projection to target projection. One point at a time **/
+/** @brief project: Project a point from one projection to another
+ *
+ * @param pj_src: projPJ = Source projection definition
+ * @param pj_dst: projPJ = Destination projection definition
+ * @param x: double = The coordinate on the X-axis
+ * @param y: double = The coordinate on the Y-axis
+ * @param z: double = The coordinate on the Z-axis
+ * @return 0 if projection succeeds, else 1 (TODO: Should probably reverse these
+ * return values for consitency)
+ */
 int project(projPJ pj_src, projPJ pj_dst, double x, double y, double z)
 {
     //printf("Source projection: %s\n", pj_get_def(pj_src, 0));
@@ -81,9 +107,15 @@ int project(projPJ pj_src, projPJ pj_dst, double x, double y, double z)
     return 0;
 }
 
+/**
+ * @brief createDataset: Create an HDF5 dataset witha given name and size
+ *
+ * @param file: char* = Pointer to string containing HDF5 filename
+ * @param dataset: char* = Pointer to string containing the desired dataset name
+ * @param dim: hsize_t* = Array containing the lengths of the dataset dimensions
+ */
 int createDataset(char* file, char* dataset, hsize_t* dim) 
 {
-    //hid_t   file_id, dataset_id, dataspace_id, plist_id, colortype, returntype, coordtype,  pointtype; /*identifiers */
     hid_t	file_id, dataset_id, dataspace_id, plist_id, pointtype;
 
     hsize_t* max_dim = malloc(sizeof(hsize_t));

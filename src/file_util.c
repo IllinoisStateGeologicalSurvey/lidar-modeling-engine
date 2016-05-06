@@ -15,6 +15,11 @@
 
 //#define PATH_LEN=4096
 
+/** 
+ * @brief dump_entry: Check the name and type of a filesystem entry
+ *
+ * @param entry: #dirent = Pointer to a directory entry metadata object
+ */
 void dump_entry (struct dirent *entry)
 {
     char type[200];
@@ -50,6 +55,16 @@ void dump_entry (struct dirent *entry)
     fprintf(stdout, "%s is %s\n" , entry->d_name, type);
 }
 
+/**
+ * @brief buildArray: Create an array of LAS filepaths found in a directory
+ *
+ * @param dirPath: char[] = Character array holding the directory path to be
+ * searched
+ * @param outPaths: char[] = Character array that will hold the LAS file paths
+ * @param file_count: int = Number of files to find before returning
+ * @return 0 if successful, else 1 (TODO: Should probably reverse these return
+ * values for consistency
+ */
 int buildArray( char  dirPath[], char outPaths[], int file_count) {
     // make sure size >= 2
     DIR *dir;
@@ -134,6 +149,15 @@ int buildArray( char  dirPath[], char outPaths[], int file_count) {
     closedir(dir);
     return 0;
 }
+/**
+ * @brief listFiles: Recursively print LAS filenames under a directory path
+ *
+ * @param dirPath: char[] = Directory path to search
+ * @param depth: int = Number of subdirectory levels to search
+ * @return 0 if successful else, 1
+ * @note This function is deprecated since it calls itself recursively and
+ * doesn't return anything
+ */
 int listFiles(char dirPath[], int depth)
 {
     DIR *dir;
@@ -184,6 +208,12 @@ int listFiles(char dirPath[], int depth)
     return 0;
 }
 
+/**
+ * @brief countLAS: Count the number of LAS files under a directory path
+ *
+ * @param dirPath: char[] = The directory path to search
+ * @return int representing the number of LAS files found in the directory
+ */
 int countLAS(char dirPath[])
 {
     DIR *dir;
@@ -214,7 +244,18 @@ int countLAS(char dirPath[])
 }
 
 
-/** Task Type **/
+/** 
+ * @brief taskType_Create: Create a task data struct to hold information
+ * necessary to run a subprocess
+ *
+ * @note As of now, this data type is deprecated, creating the processes using
+ * a block definitions seemed to be a more generally applicable approach since
+ * it could apply to different processes
+ * @param task: #task_t = Task object to hold the process metadata
+ * @param fname: char[] = Name of the filename to process
+ * @param offset: size_t = Offset of point array to begin reading
+ * @param size: size_t = Number of points to read
+ */
 int taskType_Create(task_t* task, char fname[], size_t offset, size_t size)
 {
     strcpy(task->fname, fname);
@@ -228,15 +269,31 @@ int taskType_Create(task_t* task, char fname[], size_t offset, size_t size)
 	return 0;    
 }
 
+/** 
+ * @brief taskType_Print: Print a task object to standard output
+ *
+ * @param task: #task_t = Task object to print
+ */
 void taskType_Print(task_t *task)
 {
     fprintf(stdout, "File: %s, Start: %zu, Count: %zu\n", task->fname, task->offset, task->size);
 }
 
+/** 
+ * @brief taskType_Destroy: Free the memory used by a task object
+ *
+ * @param task: #task_t = Task object to free
+ */
 void taskType_Destroy(task_t *task) {
     free(task);
 }
 
+/**
+ * @brief getWorkingDir: Get the path to the current working directory
+ *
+ * @param pathBuf: char* = The String to hold the filepath
+ * @return Int representing the number of characters in the filepath
+ */
 int getWorkingDir(char* pathBuf)
 {
     int len;
@@ -253,6 +310,15 @@ int getWorkingDir(char* pathBuf)
     return len;
 }
 
+/** 
+ * @brief resolvePath: Clean a filepath
+ *
+ * This will escape any unprintable special characters in a filepath and 
+ * remove them. This allows for 'generally safe' processing of filenames
+ * @param path: char* = The file path to be cleaned
+ * @param verbose: int = Whether or not verbose output should be printed
+ * @return Pointer to resolve filepath
+ */
 char* resolvePath(char* path, int verbose) {
 	char actualPath[PATH_LEN];
 	char *ptr;
@@ -292,7 +358,12 @@ char* resolvePath(char* path, int verbose) {
 
 	
 
-
+/**
+ * @brief fileExists: Checks whether a file exists at a filepath
+ *
+ * @param filename: char* = The filename to check
+ * @return 0 if file exists, else 1
+ */
 int fileExists(char* filename) {
     if (access(filename, R_OK) != -1) {
         // File exists
