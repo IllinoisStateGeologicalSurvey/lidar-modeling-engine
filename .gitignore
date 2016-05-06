@@ -6,3 +6,17 @@
 
 #Ignore hdf5 files
 *.h5
+
+# Ignore Doxygen
+*.db
+*.tex
+*.sty
+*.html
+/latex
+/latex/*
+
+/docs/latex
+/docs/latex/*
+
+/docs/html
+/docs/html/*

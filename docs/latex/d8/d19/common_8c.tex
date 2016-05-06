@@ -1,0 +1,173 @@
+\hypertarget{common_8c}{}\section{/home/ncasler/apps/\+D\+S\+M\+E/src/common.c File Reference}
+\label{common_8c}\index{/home/ncasler/apps/\+D\+S\+M\+E/src/common.\+c@{/home/ncasler/apps/\+D\+S\+M\+E/src/common.\+c}}
+
+
+File containing common utility functions.  
+
+
+{\ttfamily \#include \char`\"{}mpi.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}hdf5.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}common.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}point.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}hilbert.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}header.\+h\char`\"{}}\\*
+{\ttfamily \#include $<$time.\+h$>$}\\*
+{\ttfamily \#include $<$stdio.\+h$>$}\\*
+{\ttfamily \#include $<$stdlib.\+h$>$}\\*
+{\ttfamily \#include $<$string.\+h$>$}\\*
+{\ttfamily \#include $<$math.\+h$>$}\\*
+{\ttfamily \#include $<$liblas/capi/liblas.\+h$>$}\\*
+{\ttfamily \#include $<$proj\+\_\+api.\+h$>$}\\*
+Include dependency graph for common.\+c\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{d2/dfd/common_8c__incl}
+\end{center}
+\end{figure}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+int \hyperlink{common_8c_a557143a08234730b391d82c8de6fceaa}{Proj\+\_\+load} (const char $\ast$proj4string, proj\+P\+J $\ast$proj)
+\begin{DoxyCompactList}\small\item\em Proj\+\_\+load\+: read a proj\+P\+J object from a Proj.\+4 String. \end{DoxyCompactList}\item 
+int \hyperlink{common_8c_a9e784f5c0b1559714371b8f94f72aff5}{L\+A\+S\+Proj\+\_\+get} (L\+A\+S\+Header\+H $\ast$header, proj\+P\+J $\ast$proj)
+\begin{DoxyCompactList}\small\item\em L\+A\+S\+Proj\+\_\+get\+: Retrive a proj\+P\+J projection definition from a L\+A\+S file header. \end{DoxyCompactList}\item 
+int \hyperlink{common_8c_af3b99206705dde10676fed66ed7c038b}{get\+Point\+Count} (L\+A\+S\+Header\+H header)
+\begin{DoxyCompactList}\small\item\em get\+Point\+Count\+: Read the number of points from a L\+A\+S file header \end{DoxyCompactList}\item 
+int \hyperlink{common_8c_ab5e30f4f5dc9cfaa334d47bfedef50f8}{project} (proj\+P\+J pj\+\_\+src, proj\+P\+J pj\+\_\+dst, double x, double y, double z)
+\begin{DoxyCompactList}\small\item\em project\+: Project a point from one projection to another \end{DoxyCompactList}\item 
+int \hyperlink{common_8c_a4dcaae413722189257f43b147220cb00}{create\+Dataset} (char $\ast$file, char $\ast$dataset, hsize\+\_\+t $\ast$dim)
+\begin{DoxyCompactList}\small\item\em create\+Dataset\+: Create an H\+D\+F5 dataset witha given name and size \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+File containing common utility functions. 
+
+\begin{DoxyAuthor}{Author}
+Nathan Casler 
+\end{DoxyAuthor}
+\begin{DoxyDate}{Date}
+May 6 2016 
+\end{DoxyDate}
+
+
+\subsection{Function Documentation}
+\hypertarget{common_8c_a4dcaae413722189257f43b147220cb00}{}\index{common.\+c@{common.\+c}!create\+Dataset@{create\+Dataset}}
+\index{create\+Dataset@{create\+Dataset}!common.\+c@{common.\+c}}
+\subsubsection[{create\+Dataset}]{\setlength{\rightskip}{0pt plus 5cm}int create\+Dataset (
+\begin{DoxyParamCaption}
+\item[{char $\ast$}]{file, }
+\item[{char $\ast$}]{dataset, }
+\item[{hsize\+\_\+t $\ast$}]{dim}
+\end{DoxyParamCaption}
+)}\label{common_8c_a4dcaae413722189257f43b147220cb00}
+
+
+create\+Dataset\+: Create an H\+D\+F5 dataset witha given name and size 
+
+
+\begin{DoxyParams}{Parameters}
+{\em file} & char$\ast$ = Pointer to string containing H\+D\+F5 filename \\
+\hline
+{\em dataset} & char$\ast$ = Pointer to string containing the desired dataset name \\
+\hline
+{\em dim} & hsize\+\_\+t$\ast$ = Array containing the lengths of the dataset dimensions \\
+\hline
+\end{DoxyParams}
+Create the return data type
+
+Create the color data type \hypertarget{common_8c_af3b99206705dde10676fed66ed7c038b}{}\index{common.\+c@{common.\+c}!get\+Point\+Count@{get\+Point\+Count}}
+\index{get\+Point\+Count@{get\+Point\+Count}!common.\+c@{common.\+c}}
+\subsubsection[{get\+Point\+Count}]{\setlength{\rightskip}{0pt plus 5cm}int get\+Point\+Count (
+\begin{DoxyParamCaption}
+\item[{L\+A\+S\+Header\+H}]{header}
+\end{DoxyParamCaption}
+)}\label{common_8c_af3b99206705dde10676fed66ed7c038b}
+
+
+get\+Point\+Count\+: Read the number of points from a L\+A\+S file header 
+
+
+\begin{DoxyParams}{Parameters}
+{\em header} & L\+A\+S\+Header\+H = Header object containing L\+A\+S metadata \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Int = Number of points in the file 
+\end{DoxyReturn}
+\hypertarget{common_8c_a9e784f5c0b1559714371b8f94f72aff5}{}\index{common.\+c@{common.\+c}!L\+A\+S\+Proj\+\_\+get@{L\+A\+S\+Proj\+\_\+get}}
+\index{L\+A\+S\+Proj\+\_\+get@{L\+A\+S\+Proj\+\_\+get}!common.\+c@{common.\+c}}
+\subsubsection[{L\+A\+S\+Proj\+\_\+get}]{\setlength{\rightskip}{0pt plus 5cm}int L\+A\+S\+Proj\+\_\+get (
+\begin{DoxyParamCaption}
+\item[{L\+A\+S\+Header\+H $\ast$}]{header, }
+\item[{proj\+P\+J $\ast$}]{proj}
+\end{DoxyParamCaption}
+)}\label{common_8c_a9e784f5c0b1559714371b8f94f72aff5}
+
+
+L\+A\+S\+Proj\+\_\+get\+: Retrive a proj\+P\+J projection definition from a L\+A\+S file header. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em header} & L\+A\+S\+Header\+H$\ast$ = Pointer to L\+A\+S file header \\
+\hline
+{\em proj} & proj\+P\+J$\ast$ = Pointer to proj\+P\+J object to write the projection definition \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+1 if successful, else 0 
+\end{DoxyReturn}
+\hypertarget{common_8c_a557143a08234730b391d82c8de6fceaa}{}\index{common.\+c@{common.\+c}!Proj\+\_\+load@{Proj\+\_\+load}}
+\index{Proj\+\_\+load@{Proj\+\_\+load}!common.\+c@{common.\+c}}
+\subsubsection[{Proj\+\_\+load}]{\setlength{\rightskip}{0pt plus 5cm}int Proj\+\_\+load (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{proj4string, }
+\item[{proj\+P\+J $\ast$}]{proj}
+\end{DoxyParamCaption}
+)}\label{common_8c_a557143a08234730b391d82c8de6fceaa}
+
+
+Proj\+\_\+load\+: read a proj\+P\+J object from a Proj.\+4 String. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em proj4string} & const char$\ast$ = Pointer to proj4 string \\
+\hline
+{\em proj} & proj\+P\+J$\ast$ = Pointer to projection object to write the definition \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+1 if successful, else 0 
+\end{DoxyReturn}
+\hypertarget{common_8c_ab5e30f4f5dc9cfaa334d47bfedef50f8}{}\index{common.\+c@{common.\+c}!project@{project}}
+\index{project@{project}!common.\+c@{common.\+c}}
+\subsubsection[{project}]{\setlength{\rightskip}{0pt plus 5cm}int project (
+\begin{DoxyParamCaption}
+\item[{proj\+P\+J}]{pj\+\_\+src, }
+\item[{proj\+P\+J}]{pj\+\_\+dst, }
+\item[{double}]{x, }
+\item[{double}]{y, }
+\item[{double}]{z}
+\end{DoxyParamCaption}
+)}\label{common_8c_ab5e30f4f5dc9cfaa334d47bfedef50f8}
+
+
+project\+: Project a point from one projection to another 
+
+
+\begin{DoxyParams}{Parameters}
+{\em pj\+\_\+src} & proj\+P\+J = Source projection definition \\
+\hline
+{\em pj\+\_\+dst} & proj\+P\+J = Destination projection definition \\
+\hline
+{\em x} & double = The coordinate on the X-\/axis \\
+\hline
+{\em y} & double = The coordinate on the Y-\/axis \\
+\hline
+{\em z} & double = The coordinate on the Z-\/axis \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+0 if projection succeeds, else 1 (T\+O\+D\+O\+: Should probably reverse these return values for consitency) 
+\end{DoxyReturn}

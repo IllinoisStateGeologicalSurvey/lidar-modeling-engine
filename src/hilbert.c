@@ -1,33 +1,46 @@
+/****************************************************
+ *                                                  *
+ * This file contains methods for the filter object *
+ *                                                  *
+ ***************************************************/
+
+/** 
+ * @file hilbert.c
+ * @author Nathan Casler
+ * @date May 6 2016
+ * @brief File containing point filtration methods
+ *
+ * Code copied from 
+ *   J.K. Lawder, Calculation of Mappings between One and n-dimensional Values 
+ *   Using the Hilbert Space-filling Curve, Research Report JL1/00, 
+ *   School of Computer Science and Information Systems, Birkbeck College, University of London, 2000
+ *
+ *   This code assumes the following
+ *
+ *  The macro ORDER corresponds to the order of curve and is 32,
+ *  thus coordinates are 32bit values.
+ *
+ *  A uint32_t should be a 32bit unsigned integer.
+ *
+ *  The macro DIM corresponds tot he number of dimensions in a space.
+ *
+ *  The derived-key of a Hpoint is stored in an Hcode which is an
+ *  array of uint32_t. The bottom bit of a derived-key is held in the 
+ *  bottom bit of the hcode[0] element of an Hcode and the top bit
+ *  of a derived-key is held in the top bit of the hcode[DIM-1]
+ *  element of and Hcode.
+
+ *  g_mask is a global array of masks which helps simplify some
+ *  calculations - it has DIM elements. In each element, only 
+ *  one bit is zeo valued - the top bit in element no. 0 and the
+ *  bottom bit in element no. (DIM - 1). eg.
+ *  #if DIM == 5 const uint32_t g_mask[] = {16, 8, 4, 2, 1}; #endif
+ *  #if DIM == 6 const uint32_t g_mask[] = {32, 16, 8, 4, 2, 1}; #endif
+ *  etc...
+ *
+ */
 #ifndef HILBERT_C
 #define HILBERT_C
-/* Code copied from 
-    J.K. Lawder, Calculation of Mappings between One and n-dimensional Values 
-    Using the Hilbert Space-filling Curve, Research Report JL1/00, 
-    School of Computer Science and Information Systems, Birkbeck College, University of London, 2000
-
-    This code assumes the following
-
-    The macro ORDER corresponds to the order of curve and is 32,
-    thus coordinates are 32bit values.
-
-    A uint32_t should be a 32bit unsigned integer.
-
-    The macro DIM corresponds tot he number of dimensions in a space.
-
-    The derived-key of a Hpoint is stored in an Hcode which is an
-    array of uint32_t. The bottom bit of a derived-key is held in the 
-    bottom bit of the hcode[0] element of an Hcode and the top bit
-    of a derived-key is held in the top bit of the hcode[DIM-1]
-    element of and Hcode.
-
-    g_mask is a global array of masks which helps simplify some
-    calculations - it has DIM elements. In each element, only 
-    one bit is zeo valued - the top bit in element no. 0 and the
-    bottom bit in element no. (DIM - 1). eg.
-    #if DIM == 5 const uint32_t g_mask[] = {16, 8, 4, 2, 1}; #endif
-    #if DIM == 6 const uint32_t g_mask[] = {32, 16, 8, 4, 2, 1}; #endif
-    etc...
-    */
 #include <limits.h>
 #include <stdlib.h>
 #include <stdio.h>

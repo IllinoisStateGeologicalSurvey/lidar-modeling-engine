@@ -1,0 +1,221 @@
+\hypertarget{filter_8c}{}\section{/home/ncasler/apps/\+D\+S\+M\+E/src/filter.c File Reference}
+\label{filter_8c}\index{/home/ncasler/apps/\+D\+S\+M\+E/src/filter.\+c@{/home/ncasler/apps/\+D\+S\+M\+E/src/filter.\+c}}
+
+
+File containing point filtration methods.  
+
+
+{\ttfamily \#include $<$stdlib.\+h$>$}\\*
+{\ttfamily \#include $<$stdio.\+h$>$}\\*
+{\ttfamily \#include $<$string.\+h$>$}\\*
+{\ttfamily \#include $<$mpi.\+h$>$}\\*
+{\ttfamily \#include $<$hdf5.\+h$>$}\\*
+{\ttfamily \#include $<$math.\+h$>$}\\*
+{\ttfamily \#include $<$inttypes.\+h$>$}\\*
+{\ttfamily \#include $<$limits.\+h$>$}\\*
+{\ttfamily \#include $<$proj\+\_\+api.\+h$>$}\\*
+{\ttfamily \#include $<$liblas/capi/liblas.\+h$>$}\\*
+{\ttfamily \#include \char`\"{}point.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}bound.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}filter.\+h\char`\"{}}\\*
+Include dependency graph for filter.\+c\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{d3/d3f/filter_8c__incl}
+\end{center}
+\end{figure}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hyperlink{structfilter__t}{filter\+\_\+t} $\ast$ \hyperlink{filter_8c_a544040ff233d3a5668cb4c3bf944fe07}{Filter\+\_\+\+Create} ()
+\begin{DoxyCompactList}\small\item\em Filter\+\_\+\+Create\+: Create a point filter object. \end{DoxyCompactList}\item 
+int \hyperlink{filter_8c_a8922cf2ca3820d2fe90fd368e0ee5260}{Filter\+\_\+\+Set} (\hyperlink{structfilter__t}{filter\+\_\+t} $\ast$filter, \hyperlink{structbound__dbl__t}{bound\+\_\+dbl\+\_\+t} $\ast$range, int retn, int intensity, char classification)
+\begin{DoxyCompactList}\small\item\em Filter\+\_\+\+Set\+: Setter for filter attributes. \end{DoxyCompactList}\item 
+int \hyperlink{filter_8c_a7cba35c3f7dbf4afe72324a99fcda201}{Filter\+\_\+\+Set\+Range} (\hyperlink{structfilter__t}{filter\+\_\+t} $\ast$filter, \hyperlink{structbound__dbl__t}{bound\+\_\+dbl\+\_\+t} $\ast$range)
+\begin{DoxyCompactList}\small\item\em Filter\+\_\+\+Set\+Range\+: Set the bounding box for the filter object. \end{DoxyCompactList}\item 
+int \hyperlink{filter_8c_ad7f6840636a29296e3c5107472d6b058}{Filter\+\_\+\+Set\+Return} (\hyperlink{structfilter__t}{filter\+\_\+t} $\ast$filter, int retn\+Flag)
+\begin{DoxyCompactList}\small\item\em Filter\+\_\+\+Set\+Return\+: Set the return value for the filter object. \end{DoxyCompactList}\item 
+void \hyperlink{filter_8c_a115200d003c207903d4749b7497c7e61}{Filter\+\_\+\+Destroy} (\hyperlink{structfilter__t}{filter\+\_\+t} $\ast$filter)
+\begin{DoxyCompactList}\small\item\em Filter\+\_\+\+Destroy\+: Frees memory occupied by a filter object. \end{DoxyCompactList}\item 
+int \hyperlink{filter_8c_a58d5d30e1986c01faef841b49d47534c}{Filter\+\_\+\+Range\+Check} (\hyperlink{structfilter__t}{filter\+\_\+t} $\ast$filter, L\+A\+S\+Point\+H $\ast$las\+Pnt)
+\begin{DoxyCompactList}\small\item\em Filter\+\_\+\+Range\+Check\+: Check if a point falls within bounding filter. \end{DoxyCompactList}\item 
+int \hyperlink{filter_8c_a60031cdf106a1a3e338ce4a573a22ee3}{Filter\+\_\+\+Return\+Check} (\hyperlink{structfilter__t}{filter\+\_\+t} $\ast$filter, L\+A\+S\+Point\+H $\ast$las\+Pnt)
+\begin{DoxyCompactList}\small\item\em Filter\+\_\+\+Return\+Check\+: Check if a point matches the return filter value. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+File containing point filtration methods. 
+
+\begin{DoxyAuthor}{Author}
+Nathan Casler 
+\end{DoxyAuthor}
+\begin{DoxyDate}{Date}
+May 6 2016 
+\end{DoxyDate}
+
+
+\subsection{Function Documentation}
+\hypertarget{filter_8c_a544040ff233d3a5668cb4c3bf944fe07}{}\index{filter.\+c@{filter.\+c}!Filter\+\_\+\+Create@{Filter\+\_\+\+Create}}
+\index{Filter\+\_\+\+Create@{Filter\+\_\+\+Create}!filter.\+c@{filter.\+c}}
+\subsubsection[{Filter\+\_\+\+Create}]{\setlength{\rightskip}{0pt plus 5cm}{\bf filter\+\_\+t}$\ast$ Filter\+\_\+\+Create (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}\label{filter_8c_a544040ff233d3a5668cb4c3bf944fe07}
+
+
+Filter\+\_\+\+Create\+: Create a point filter object. 
+
+\begin{DoxyReturn}{Returns}
+filter\+: \hyperlink{structfilter__t}{filter\+\_\+t} = Filter object used to parse a L\+A\+S file 
+\end{DoxyReturn}
+\hypertarget{filter_8c_a115200d003c207903d4749b7497c7e61}{}\index{filter.\+c@{filter.\+c}!Filter\+\_\+\+Destroy@{Filter\+\_\+\+Destroy}}
+\index{Filter\+\_\+\+Destroy@{Filter\+\_\+\+Destroy}!filter.\+c@{filter.\+c}}
+\subsubsection[{Filter\+\_\+\+Destroy}]{\setlength{\rightskip}{0pt plus 5cm}void Filter\+\_\+\+Destroy (
+\begin{DoxyParamCaption}
+\item[{{\bf filter\+\_\+t} $\ast$}]{filter}
+\end{DoxyParamCaption}
+)}\label{filter_8c_a115200d003c207903d4749b7497c7e61}
+
+
+Filter\+\_\+\+Destroy\+: Frees memory occupied by a filter object. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em filter} & \hyperlink{structfilter__t}{filter\+\_\+t} = The filter object to free \\
+\hline
+\end{DoxyParams}
+\hypertarget{filter_8c_a58d5d30e1986c01faef841b49d47534c}{}\index{filter.\+c@{filter.\+c}!Filter\+\_\+\+Range\+Check@{Filter\+\_\+\+Range\+Check}}
+\index{Filter\+\_\+\+Range\+Check@{Filter\+\_\+\+Range\+Check}!filter.\+c@{filter.\+c}}
+\subsubsection[{Filter\+\_\+\+Range\+Check}]{\setlength{\rightskip}{0pt plus 5cm}int Filter\+\_\+\+Range\+Check (
+\begin{DoxyParamCaption}
+\item[{{\bf filter\+\_\+t} $\ast$}]{filter, }
+\item[{L\+A\+S\+Point\+H $\ast$}]{las\+Pnt}
+\end{DoxyParamCaption}
+)}\label{filter_8c_a58d5d30e1986c01faef841b49d47534c}
+
+
+Filter\+\_\+\+Range\+Check\+: Check if a point falls within bounding filter. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em filter} & \hyperlink{structfilter__t}{filter\+\_\+t} = The filter holding a range filter \\
+\hline
+{\em las\+Pnt} & L\+A\+S\+Point\+H = Pointer to a point in a L\+A\+S file \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+1 if point is contained by the filter, else 0 
+\end{DoxyReturn}
+\begin{DoxyNote}{Note}
+\+: There is probably a more efficient/accurate method to do this 
+\end{DoxyNote}
+\hypertarget{filter_8c_a60031cdf106a1a3e338ce4a573a22ee3}{}\index{filter.\+c@{filter.\+c}!Filter\+\_\+\+Return\+Check@{Filter\+\_\+\+Return\+Check}}
+\index{Filter\+\_\+\+Return\+Check@{Filter\+\_\+\+Return\+Check}!filter.\+c@{filter.\+c}}
+\subsubsection[{Filter\+\_\+\+Return\+Check}]{\setlength{\rightskip}{0pt plus 5cm}int Filter\+\_\+\+Return\+Check (
+\begin{DoxyParamCaption}
+\item[{{\bf filter\+\_\+t} $\ast$}]{filter, }
+\item[{L\+A\+S\+Point\+H $\ast$}]{las\+Pnt}
+\end{DoxyParamCaption}
+)}\label{filter_8c_a60031cdf106a1a3e338ce4a573a22ee3}
+
+
+Filter\+\_\+\+Return\+Check\+: Check if a point matches the return filter value. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em filter} & \hyperlink{structfilter__t}{filter\+\_\+t} = Filter object with a return filter to apply \\
+\hline
+{\em las\+Pnt} & L\+A\+S\+Point\+H = Pointer to a point in an L\+A\+S file to filter \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+1 if point matches the return filter 
+\end{DoxyReturn}
+\begin{DoxyNote}{Note}
+Currently only matches first or last returns. First if the filter = 1, last if the filter = 2, no matching if filter = 0, else print error 
+\end{DoxyNote}
+\hypertarget{filter_8c_a8922cf2ca3820d2fe90fd368e0ee5260}{}\index{filter.\+c@{filter.\+c}!Filter\+\_\+\+Set@{Filter\+\_\+\+Set}}
+\index{Filter\+\_\+\+Set@{Filter\+\_\+\+Set}!filter.\+c@{filter.\+c}}
+\subsubsection[{Filter\+\_\+\+Set}]{\setlength{\rightskip}{0pt plus 5cm}int Filter\+\_\+\+Set (
+\begin{DoxyParamCaption}
+\item[{{\bf filter\+\_\+t} $\ast$}]{filter, }
+\item[{{\bf bound\+\_\+dbl\+\_\+t} $\ast$}]{range, }
+\item[{int}]{retn, }
+\item[{int}]{intensity, }
+\item[{char}]{classification}
+\end{DoxyParamCaption}
+)}\label{filter_8c_a8922cf2ca3820d2fe90fd368e0ee5260}
+
+
+Filter\+\_\+\+Set\+: Setter for filter attributes. 
+
+This will set the values for various filter classes 
+\begin{DoxyParams}{Parameters}
+{\em filter} & \hyperlink{structfilter__t}{filter\+\_\+t} = Filter object to hold settings \\
+\hline
+{\em range} & \hyperlink{structbound__dbl__t}{bound\+\_\+dbl\+\_\+t} = The bounding box to use when filtering points \\
+\hline
+{\em retn} & int = The return number to match points against \\
+\hline
+{\em intensity} & int = The intensity values to match points against \\
+\hline
+{\em classification} & char = The point classification to read from the points \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+0 
+\end{DoxyReturn}
+\begin{DoxyNote}{Note}
+Should update the return to account for errors(no point or read failure) 
+
+Should update return, intensity and classification to account for ranges of values 
+\end{DoxyNote}
+\hypertarget{filter_8c_a7cba35c3f7dbf4afe72324a99fcda201}{}\index{filter.\+c@{filter.\+c}!Filter\+\_\+\+Set\+Range@{Filter\+\_\+\+Set\+Range}}
+\index{Filter\+\_\+\+Set\+Range@{Filter\+\_\+\+Set\+Range}!filter.\+c@{filter.\+c}}
+\subsubsection[{Filter\+\_\+\+Set\+Range}]{\setlength{\rightskip}{0pt plus 5cm}int Filter\+\_\+\+Set\+Range (
+\begin{DoxyParamCaption}
+\item[{{\bf filter\+\_\+t} $\ast$}]{filter, }
+\item[{{\bf bound\+\_\+dbl\+\_\+t} $\ast$}]{range}
+\end{DoxyParamCaption}
+)}\label{filter_8c_a7cba35c3f7dbf4afe72324a99fcda201}
+
+
+Filter\+\_\+\+Set\+Range\+: Set the bounding box for the filter object. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em filter} & \hyperlink{structfilter__t}{filter\+\_\+t} = The filter object to update \\
+\hline
+{\em range} & \hyperlink{structbound__dbl__t}{bound\+\_\+dbl\+\_\+t} = The bounding box to apply to the filter \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+0 
+\end{DoxyReturn}
+\begin{DoxyNote}{Note}
+The range is set in E\+P\+S\+G\+:4326 decimal degrees 
+\end{DoxyNote}
+\hypertarget{filter_8c_ad7f6840636a29296e3c5107472d6b058}{}\index{filter.\+c@{filter.\+c}!Filter\+\_\+\+Set\+Return@{Filter\+\_\+\+Set\+Return}}
+\index{Filter\+\_\+\+Set\+Return@{Filter\+\_\+\+Set\+Return}!filter.\+c@{filter.\+c}}
+\subsubsection[{Filter\+\_\+\+Set\+Return}]{\setlength{\rightskip}{0pt plus 5cm}int Filter\+\_\+\+Set\+Return (
+\begin{DoxyParamCaption}
+\item[{{\bf filter\+\_\+t} $\ast$}]{filter, }
+\item[{int}]{retn\+Flag}
+\end{DoxyParamCaption}
+)}\label{filter_8c_ad7f6840636a29296e3c5107472d6b058}
+
+
+Filter\+\_\+\+Set\+Return\+: Set the return value for the filter object. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em filter} & \hyperlink{structfilter__t}{filter\+\_\+t} = The filter object to update \\
+\hline
+{\em retn\+Flag} & int = The return value to set \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+0 
+\end{DoxyReturn}

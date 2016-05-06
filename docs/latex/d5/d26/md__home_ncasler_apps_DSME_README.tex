@@ -1,0 +1,25 @@
+This library is intended to ease the manipulation and processing of large lidar collections through a set of parallelized methods which interface between the datasets and a H\+D\+F5 data store.
+
+\subsection*{Dependencies }
+
+Z\+L\+I\+B\+: compression library M\+P\+I\+: Message passing library H\+D\+F5\+: Hierarchical Data Format(compiled with parallel support) Lib\+L\+A\+S\+: L\+A\+S data manipulation library G\+E\+O\+S\+: Geometric Topology library Proj.\+4\+: Projection transformation library G\+D\+A\+L\+: Geograpic Data Abstraction Library (compiled with external libgeotiff) Lib\+Geo\+Tiff\+: Geographic T\+I\+F\+F driver
+
+\subsection*{Architecture }
+
+{\itshape L\+M\+E Datastore}\+: Central data repository for lidar derivatives and metadata, keeps track of datasets and user access privileges. Needed to efficiently distribute processing to system.
+
+{\itshape Li\+D\+A\+R Region}\+: A class which represents a geographic domain with Li\+D\+A\+R coverage. These regions will have administrators and user access privileges. The region will be initialized with a directory that contains Li\+D\+A\+R datasets.
+
+{\itshape Dataset}\+: A Li\+D\+A\+R dataset (typically L\+A\+S format) which is registered for processing.
+
+{\itshape Derivative}\+: A gridded dataset created by interpolating a subset of Li\+D\+A\+R points from an area. This derivative will be owned by the user that requested the data.
+
+\subsection*{Workflow }
+
+
+\begin{DoxyEnumerate}
+\item Initialize Data\+Store
+\item Register a Li\+D\+A\+R region
+\item Request subset
+\item Download result(or view a T\+M\+S online) 
+\end{DoxyEnumerate}

@@ -1,0 +1,115 @@
+\hypertarget{header_8c}{}\section{/home/ncasler/apps/\+D\+S\+M\+E/src/header.c File Reference}
+\label{header_8c}\index{/home/ncasler/apps/\+D\+S\+M\+E/src/header.\+c@{/home/ncasler/apps/\+D\+S\+M\+E/src/header.\+c}}
+
+
+File containing methods for reading header data.  
+
+
+{\ttfamily \#include \char`\"{}mpi.\+h\char`\"{}}\\*
+{\ttfamily \#include $<$hdf5.\+h$>$}\\*
+{\ttfamily \#include \char`\"{}header.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}point.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}file\+\_\+util.\+h\char`\"{}}\\*
+{\ttfamily \#include $<$time.\+h$>$}\\*
+{\ttfamily \#include $<$stdio.\+h$>$}\\*
+{\ttfamily \#include $<$stdlib.\+h$>$}\\*
+{\ttfamily \#include $<$string.\+h$>$}\\*
+{\ttfamily \#include $<$limits.\+h$>$}\\*
+{\ttfamily \#include $<$math.\+h$>$}\\*
+{\ttfamily \#include $<$inttypes.\+h$>$}\\*
+{\ttfamily \#include $<$liblas/capi/liblas.\+h$>$}\\*
+{\ttfamily \#include $<$proj\+\_\+api.\+h$>$}\\*
+Include dependency graph for header.\+c\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{df/d03/header_8c__incl}
+\end{center}
+\end{figure}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{header_8c_aa037c662039c973fe0694f298bec969f}{}int {\bfseries Proj\+\_\+\+Set} (L\+A\+S\+Header\+H header, \hyperlink{structproj__t}{proj\+\_\+t} $\ast$proj)\label{header_8c_aa037c662039c973fe0694f298bec969f}
+
+\item 
+\hypertarget{header_8c_a9237d0239308c6a69d8663b333019079}{}int {\bfseries Header\+\_\+\+Set} (uint32\+\_\+t pnt\+\_\+count, \hyperlink{structbound__t}{bound\+\_\+t} bounds, char fname, \hyperlink{structproj__t}{proj\+\_\+t} proj\+\_\+str)\label{header_8c_a9237d0239308c6a69d8663b333019079}
+
+\item 
+\hypertarget{header_8c_a0b98e45139686505241f08f03babc608}{}void {\bfseries Header\+\_\+free} (\hyperlink{structheader__t}{header\+\_\+t} $\ast$headers, int n)\label{header_8c_a0b98e45139686505241f08f03babc608}
+
+\item 
+\hypertarget{header_8c_a7ad2b6611184bfd400bdb78e3b39cf96}{}hid\+\_\+t {\bfseries Proj\+Type\+\_\+create} (herr\+\_\+t $\ast$status)\label{header_8c_a7ad2b6611184bfd400bdb78e3b39cf96}
+
+\item 
+\hypertarget{header_8c_a7a227a2b71ba6aba2aa1b0a16dd3dffe}{}void {\bfseries Proj\+Type\+\_\+destroy} (hid\+\_\+t projtype, herr\+\_\+t $\ast$status)\label{header_8c_a7a227a2b71ba6aba2aa1b0a16dd3dffe}
+
+\item 
+\hypertarget{header_8c_a8feda7283498c28f67fd7e43f7dcd2be}{}hid\+\_\+t {\bfseries Header\+Type\+\_\+create} (herr\+\_\+t $\ast$status)\label{header_8c_a8feda7283498c28f67fd7e43f7dcd2be}
+
+\item 
+\hypertarget{header_8c_ac6fe47d3dd42d1f14915387931c733cd}{}void {\bfseries Header\+Type\+\_\+destroy} (hid\+\_\+t headertype, herr\+\_\+t $\ast$status)\label{header_8c_ac6fe47d3dd42d1f14915387931c733cd}
+
+\item 
+\hypertarget{header_8c_a37241ac20ee32a58a36056ef51af8f13}{}int {\bfseries M\+P\+I\+\_\+\+Proj\+Type\+\_\+create} (M\+P\+I\+\_\+\+Datatype $\ast$mpi\+\_\+projtype)\label{header_8c_a37241ac20ee32a58a36056ef51af8f13}
+
+\item 
+int \hyperlink{header_8c_a0ab5a4a85b76b52f0aecbd8675acd0e1}{M\+P\+I\+\_\+\+Header\+Type\+\_\+create} (M\+P\+I\+\_\+\+Datatype $\ast$mpi\+\_\+headertype)
+\item 
+int \hyperlink{header_8c_ac1403287a52ddd06dc9b68efc5a855c7}{create\+Header\+Dataset} (char $\ast$file, char $\ast$dataset, hsize\+\_\+t $\ast$dims)
+\item 
+int \hyperlink{header_8c_a92ffdae1875d58f64540714ae6d2064e}{Header\+\_\+read} (char $\ast$path, \hyperlink{structheader__t}{header\+\_\+t} $\ast$header, uint32\+\_\+t id)
+\item 
+\hypertarget{header_8c_afb6e7bd488fbae6399ed7ed07f26a1d6}{}int {\bfseries read\+Header\+Block} (char paths\mbox{[}$\,$\mbox{]}, int offset, int block, \hyperlink{structheader__t}{header\+\_\+t} $\ast$headers)\label{header_8c_afb6e7bd488fbae6399ed7ed07f26a1d6}
+
+\item 
+\hypertarget{header_8c_aed2201f138398716f4be800c8a150cab}{}int {\bfseries write\+Header\+Block\+\_\+ser} (hid\+\_\+t file\+\_\+id, char $\ast$dataset, hsize\+\_\+t $\ast$offset, hsize\+\_\+t $\ast$block, \hyperlink{structheader__t}{header\+\_\+t} $\ast$headers)\label{header_8c_aed2201f138398716f4be800c8a150cab}
+
+\item 
+\hypertarget{header_8c_a2141b90acc4f4bf4c4e2d53a81c43d01}{}int {\bfseries write\+Header\+Block} (hid\+\_\+t file\+\_\+id, char $\ast$dataset, hsize\+\_\+t $\ast$offset, hsize\+\_\+t $\ast$block, \hyperlink{structheader__t}{header\+\_\+t} $\ast$headers, M\+P\+I\+\_\+\+Comm comm, M\+P\+I\+\_\+\+Info info)\label{header_8c_a2141b90acc4f4bf4c4e2d53a81c43d01}
+
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+File containing methods for reading header data. 
+
+\begin{DoxyAuthor}{Author}
+Nathan Casler 
+\end{DoxyAuthor}
+\begin{DoxyDate}{Date}
+May 6 2016 
+\end{DoxyDate}
+
+
+\subsection{Function Documentation}
+\hypertarget{header_8c_ac1403287a52ddd06dc9b68efc5a855c7}{}\index{header.\+c@{header.\+c}!create\+Header\+Dataset@{create\+Header\+Dataset}}
+\index{create\+Header\+Dataset@{create\+Header\+Dataset}!header.\+c@{header.\+c}}
+\subsubsection[{create\+Header\+Dataset}]{\setlength{\rightskip}{0pt plus 5cm}int create\+Header\+Dataset (
+\begin{DoxyParamCaption}
+\item[{char $\ast$}]{file, }
+\item[{char $\ast$}]{dataset, }
+\item[{hsize\+\_\+t $\ast$}]{dims}
+\end{DoxyParamCaption}
+)}\label{header_8c_ac1403287a52ddd06dc9b68efc5a855c7}
+Set the maximum size, should be an unlimited length 1-\/d array
+
+Set the chunking dimensions, should be tested for perfomance
+
+For T\+E\+S\+T\+I\+N\+G P\+U\+R\+P\+O\+S\+E\+S O\+N\+L\+Y \hypertarget{header_8c_a92ffdae1875d58f64540714ae6d2064e}{}\index{header.\+c@{header.\+c}!Header\+\_\+read@{Header\+\_\+read}}
+\index{Header\+\_\+read@{Header\+\_\+read}!header.\+c@{header.\+c}}
+\subsubsection[{Header\+\_\+read}]{\setlength{\rightskip}{0pt plus 5cm}int Header\+\_\+read (
+\begin{DoxyParamCaption}
+\item[{char $\ast$}]{path, }
+\item[{{\bf header\+\_\+t} $\ast$}]{header, }
+\item[{uint32\+\_\+t}]{id}
+\end{DoxyParamCaption}
+)}\label{header_8c_a92ffdae1875d58f64540714ae6d2064e}
+This function will read the necessary header data from a given L\+A\+S file \hypertarget{header_8c_a0ab5a4a85b76b52f0aecbd8675acd0e1}{}\index{header.\+c@{header.\+c}!M\+P\+I\+\_\+\+Header\+Type\+\_\+create@{M\+P\+I\+\_\+\+Header\+Type\+\_\+create}}
+\index{M\+P\+I\+\_\+\+Header\+Type\+\_\+create@{M\+P\+I\+\_\+\+Header\+Type\+\_\+create}!header.\+c@{header.\+c}}
+\subsubsection[{M\+P\+I\+\_\+\+Header\+Type\+\_\+create}]{\setlength{\rightskip}{0pt plus 5cm}int M\+P\+I\+\_\+\+Header\+Type\+\_\+create (
+\begin{DoxyParamCaption}
+\item[{M\+P\+I\+\_\+\+Datatype $\ast$}]{mpi\+\_\+headertype}
+\end{DoxyParamCaption}
+)}\label{header_8c_a0ab5a4a85b76b52f0aecbd8675acd0e1}
+T\+O\+D\+O\+: Fix this struct creation, application quits here 

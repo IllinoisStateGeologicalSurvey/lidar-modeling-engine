@@ -1,0 +1,82 @@
+\hypertarget{bound_8c}{}\section{/home/ncasler/apps/\+D\+S\+M\+E/src/bound.c File Reference}
+\label{bound_8c}\index{/home/ncasler/apps/\+D\+S\+M\+E/src/bound.\+c@{/home/ncasler/apps/\+D\+S\+M\+E/src/bound.\+c}}
+
+
+File containing methods for the bound object.  
+
+
+{\ttfamily \#include $<$mpi.\+h$>$}\\*
+{\ttfamily \#include $<$stdio.\+h$>$}\\*
+{\ttfamily \#include $<$stdlib.\+h$>$}\\*
+{\ttfamily \#include $<$hdf5.\+h$>$}\\*
+{\ttfamily \#include \char`\"{}point.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}bound.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}common.\+h\char`\"{}}\\*
+{\ttfamily \#include $<$math.\+h$>$}\\*
+{\ttfamily \#include $<$inttypes.\+h$>$}\\*
+{\ttfamily \#include $<$limits.\+h$>$}\\*
+{\ttfamily \#include $<$proj\+\_\+api.\+h$>$}\\*
+{\ttfamily \#include $<$liblas/capi/liblas.\+h$>$}\\*
+Include dependency graph for bound.\+c\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{d7/d4e/bound_8c__incl}
+\end{center}
+\end{figure}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{bound_8c_aa4d70752d75151add9f636f0114a86a4}{}int {\bfseries L\+A\+S\+Bound\+\_\+\+Get} (L\+A\+S\+Header\+H $\ast$header, \hyperlink{structbound__t}{bound\+\_\+t} $\ast$bounds)\label{bound_8c_aa4d70752d75151add9f636f0114a86a4}
+
+\item 
+\hypertarget{bound_8c_ac24265ed36340e400af8b9318b784411}{}int {\bfseries Bound\+\_\+intersects} (\hyperlink{structbound__t}{bound\+\_\+t} $\ast$bound\+\_\+1, \hyperlink{structbound__t}{bound\+\_\+t} $\ast$bound\+\_\+2)\label{bound_8c_ac24265ed36340e400af8b9318b784411}
+
+\item 
+\hypertarget{bound_8c_a775535bbe269a75ae1406e4759cf95b2}{}hid\+\_\+t {\bfseries Bound\+Type\+\_\+create} (herr\+\_\+t $\ast$status)\label{bound_8c_a775535bbe269a75ae1406e4759cf95b2}
+
+\item 
+\hypertarget{bound_8c_a552de3caa3bdee065e2a0acc5b57c21f}{}void {\bfseries Bound\+Type\+\_\+destroy} (hid\+\_\+t boundtype, herr\+\_\+t $\ast$status)\label{bound_8c_a552de3caa3bdee065e2a0acc5b57c21f}
+
+\item 
+\hypertarget{bound_8c_afce4730b026d2f2431b6ebe026bae0b4}{}int {\bfseries M\+P\+I\+\_\+\+Bound\+Type\+\_\+create} (M\+P\+I\+\_\+\+Datatype $\ast$mpi\+\_\+boundtype)\label{bound_8c_afce4730b026d2f2431b6ebe026bae0b4}
+
+\item 
+\hypertarget{bound_8c_ada897dfcbd0c04171c9f2c29555f0613}{}void {\bfseries Bound\+\_\+dbl\+\_\+\+Set} (\hyperlink{structbound__dbl__t}{bound\+\_\+dbl\+\_\+t} $\ast$bounds, double min\+X, double min\+Y, double min\+Z, double max\+X, double max\+Y, double max\+Z)\label{bound_8c_ada897dfcbd0c04171c9f2c29555f0613}
+
+\item 
+int \hyperlink{bound_8c_aeb3c5ace20a27fb04f8669fa2069b638}{Bound\+\_\+dbl\+\_\+\+Project} (\hyperlink{structbound__dbl__t}{bound\+\_\+dbl\+\_\+t} $\ast$bound, L\+A\+S\+S\+R\+S\+H srs)
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+File containing methods for the bound object. 
+
+\begin{DoxyAuthor}{Author}
+Nathan Casler 
+\end{DoxyAuthor}
+\begin{DoxyDate}{Date}
+6 May 2016 
+\end{DoxyDate}
+
+
+\subsection{Function Documentation}
+\hypertarget{bound_8c_aeb3c5ace20a27fb04f8669fa2069b638}{}\index{bound.\+c@{bound.\+c}!Bound\+\_\+dbl\+\_\+\+Project@{Bound\+\_\+dbl\+\_\+\+Project}}
+\index{Bound\+\_\+dbl\+\_\+\+Project@{Bound\+\_\+dbl\+\_\+\+Project}!bound.\+c@{bound.\+c}}
+\subsubsection[{Bound\+\_\+dbl\+\_\+\+Project}]{\setlength{\rightskip}{0pt plus 5cm}int Bound\+\_\+dbl\+\_\+\+Project (
+\begin{DoxyParamCaption}
+\item[{{\bf bound\+\_\+dbl\+\_\+t} $\ast$}]{bound, }
+\item[{L\+A\+S\+S\+R\+S\+H}]{srs}
+\end{DoxyParamCaption}
+)}\label{bound_8c_aeb3c5ace20a27fb04f8669fa2069b638}
+Bound\+\_\+dbl\+\_\+\+Project\+: Projects a boundary object to a given C\+R\+S 
+\begin{DoxyParams}{Parameters}
+{\em bound} & \hyperlink{structbound__dbl__t}{bound\+\_\+dbl\+\_\+t} = The bounds to project \\
+\hline
+{\em srs} & L\+A\+S\+S\+R\+S\+H = The desired projection for the bounds \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+\+: Int 
+\end{DoxyReturn}

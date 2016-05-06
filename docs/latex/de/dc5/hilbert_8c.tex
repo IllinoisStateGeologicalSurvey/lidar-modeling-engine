@@ -1,0 +1,125 @@
+\hypertarget{hilbert_8c}{}\section{/home/ncasler/apps/\+D\+S\+M\+E/src/hilbert.c File Reference}
+\label{hilbert_8c}\index{/home/ncasler/apps/\+D\+S\+M\+E/src/hilbert.\+c@{/home/ncasler/apps/\+D\+S\+M\+E/src/hilbert.\+c}}
+
+
+File containing point filtration methods.  
+
+
+{\ttfamily \#include $<$limits.\+h$>$}\\*
+{\ttfamily \#include $<$stdlib.\+h$>$}\\*
+{\ttfamily \#include $<$stdio.\+h$>$}\\*
+{\ttfamily \#include $<$stdint.\+h$>$}\\*
+{\ttfamily \#include $<$inttypes.\+h$>$}\\*
+{\ttfamily \#include $<$math.\+h$>$}\\*
+{\ttfamily \#include $<$hilbert.\+h$>$}\\*
+Include dependency graph for hilbert.\+c\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{d8/d59/hilbert_8c__incl}
+\end{center}
+\end{figure}
+\subsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{hilbert_8c_a89d7ab05b964fcb47cc1adacdedb16d7}{}\#define {\bfseries H\+I\+L\+B\+E\+R\+T\+\_\+\+C}\label{hilbert_8c_a89d7ab05b964fcb47cc1adacdedb16d7}
+
+\item 
+\hypertarget{hilbert_8c_ac25189db92959bff3c6c2adf4c34b50a}{}\#define {\bfseries D\+I\+M}~2\label{hilbert_8c_ac25189db92959bff3c6c2adf4c34b50a}
+
+\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{hilbert_8c_aed2497e6ce866dec2ff4d41a2727fdc5}{}uint32\+\_\+t {\bfseries calc\+\_\+\+P} (int i, \hyperlink{structHcode}{Hcode} H)\label{hilbert_8c_aed2497e6ce866dec2ff4d41a2727fdc5}
+
+\item 
+\hypertarget{hilbert_8c_a5bff2ba44cd4447e908be15e77da9344}{}uint32\+\_\+t {\bfseries calc\+\_\+\+P2} (uint32\+\_\+t S)\label{hilbert_8c_a5bff2ba44cd4447e908be15e77da9344}
+
+\item 
+\hypertarget{hilbert_8c_a68c18d125efaa872bdc210bea75acd39}{}uint32\+\_\+t {\bfseries calc\+\_\+\+J} (uint32\+\_\+t P)\label{hilbert_8c_a68c18d125efaa872bdc210bea75acd39}
+
+\item 
+\hypertarget{hilbert_8c_ac55f94c438fc03d434456acbf917f704}{}uint32\+\_\+t {\bfseries calc\+\_\+\+T} (uint32\+\_\+t P)\label{hilbert_8c_ac55f94c438fc03d434456acbf917f704}
+
+\item 
+\hypertarget{hilbert_8c_a52c238f8b861f83bcf6755fbf4f0c713}{}uint32\+\_\+t {\bfseries calc\+\_\+t\+S\+\_\+t\+T} (uint32\+\_\+t x\+J, uint32\+\_\+t val)\label{hilbert_8c_a52c238f8b861f83bcf6755fbf4f0c713}
+
+\item 
+\hypertarget{hilbert_8c_a45daeada8537bc237f0ebf6400a947f6}{}\hyperlink{structHcode}{Hpoint} {\bfseries H\+\_\+decode} (\hyperlink{structHcode}{Hcode} H)\label{hilbert_8c_a45daeada8537bc237f0ebf6400a947f6}
+
+\item 
+\hypertarget{hilbert_8c_a3ee110a1b25fe07bbdd5366d990d6f2a}{}\hyperlink{structHcode}{Hcode} {\bfseries H\+\_\+encode} (\hyperlink{structHcode}{Hpoint} pt)\label{hilbert_8c_a3ee110a1b25fe07bbdd5366d990d6f2a}
+
+\item 
+\hypertarget{hilbert_8c_a553dc49f84a0874f09d55f9e84fb31d2}{}void {\bfseries print\+Bits} (size\+\_\+t const size, void const $\ast$const ptr)\label{hilbert_8c_a553dc49f84a0874f09d55f9e84fb31d2}
+
+\item 
+\hypertarget{hilbert_8c_ad064a5ddb6f9344e748b4541b3e86f27}{}int {\bfseries combine\+Indices} (uint64\+\_\+t $\ast$out\+Idx, uint32\+\_\+t high, uint32\+\_\+t low)\label{hilbert_8c_ad064a5ddb6f9344e748b4541b3e86f27}
+
+\item 
+int \hyperlink{hilbert_8c_af28b8fb4b7618175ba6ba11b4e15a506}{less\+\_\+than} (uint64\+\_\+t a, uint64\+\_\+t b)
+\item 
+\hypertarget{hilbert_8c_a8bbe5cca8f3ca305e402546026a4ad39}{}unsigned {\bfseries create\+Mask} (unsigned start, unsigned stop)\label{hilbert_8c_a8bbe5cca8f3ca305e402546026a4ad39}
+
+\end{DoxyCompactItemize}
+\subsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{hilbert_8c_a5ab0e23ad716bd39c51f54dda5a020a2}{}const uint32\+\_\+t {\bfseries g\+\_\+mask} \mbox{[}$\,$\mbox{]} = \{2, 1\}\label{hilbert_8c_a5ab0e23ad716bd39c51f54dda5a020a2}
+
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+File containing point filtration methods. 
+
+\begin{DoxyAuthor}{Author}
+Nathan Casler 
+\end{DoxyAuthor}
+\begin{DoxyDate}{Date}
+May 6 2016 Code copied from J.\+K. Lawder, Calculation of Mappings between One and n-\/dimensional Values Using the Hilbert Space-\/filling Curve, Research Report J\+L1/00, School of Computer Science and Information Systems, Birkbeck College, University of London, 2000
+\end{DoxyDate}
+This code assumes the following
+
+The macro O\+R\+D\+E\+R corresponds to the order of curve and is 32, thus coordinates are 32bit values.
+
+A uint32\+\_\+t should be a 32bit unsigned integer.
+
+The macro D\+I\+M corresponds tot he number of dimensions in a space.
+
+The derived-\/key of a Hpoint is stored in an \hyperlink{structHcode}{Hcode} which is an array of uint32\+\_\+t. The bottom bit of a derived-\/key is held in the bottom bit of the hcode\mbox{[}0\mbox{]} element of an \hyperlink{structHcode}{Hcode} and the top bit of a derived-\/key is held in the top bit of the hcode\mbox{[}D\+I\+M-\/1\mbox{]} element of and \hyperlink{structHcode}{Hcode}.
+
+g\+\_\+mask is a global array of masks which helps simplify some calculations -\/ it has D\+I\+M elements. In each element, only one bit is zeo valued -\/ the top bit in element no. 0 and the bottom bit in element no. (D\+I\+M -\/ 1). eg. \#if D\+I\+M == 5 const uint32\+\_\+t g\+\_\+mask\mbox{[}\mbox{]} = \{16, 8, 4, 2, 1\}; \#endif \#if D\+I\+M == 6 const uint32\+\_\+t g\+\_\+mask\mbox{[}\mbox{]} = \{32, 16, 8, 4, 2, 1\}; \#endif etc... 
+
+\subsection{Function Documentation}
+\hypertarget{hilbert_8c_af28b8fb4b7618175ba6ba11b4e15a506}{}\index{hilbert.\+c@{hilbert.\+c}!less\+\_\+than@{less\+\_\+than}}
+\index{less\+\_\+than@{less\+\_\+than}!hilbert.\+c@{hilbert.\+c}}
+\subsubsection[{less\+\_\+than}]{\setlength{\rightskip}{0pt plus 5cm}int less\+\_\+than (
+\begin{DoxyParamCaption}
+\item[{uint64\+\_\+t}]{a, }
+\item[{uint64\+\_\+t}]{b}
+\end{DoxyParamCaption}
+)}\label{hilbert_8c_af28b8fb4b7618175ba6ba11b4e15a506}
+T\+O\+D\+O\+: M\+A\+K\+E T\+H\+E S\+C\+A\+L\+E C\+O\+N\+V\+E\+R\+S\+I\+O\+N W\+O\+R\+K F\+O\+R F\+L\+O\+A\+T A\+R\+R\+A\+Y void scale\+Coords(double {\itshape coords, Hpoint} pt) \{ uint32\+\_\+t lat\+Off = 90.\+0f, lon\+Off = 180.\+0f, alt\+Off = 12300.\+0f; double offsets\mbox{[}3\mbox{]} = \{180.\+0, 90.\+0, 12300.\+0\}; printf(\char`\"{}\+U\+I\+N\+T\+M\+A\+X\+: \%lf\textbackslash{}n\char`\"{}, U\+I\+N\+T\+\_\+\+M\+A\+X); printf(\char`\"{}\+Input coordinates\+: \%lf, \%lf, \%lf\textbackslash{}n\char`\"{}, coords\mbox{[}0\mbox{]}, coords\mbox{[}1\mbox{]}, coords\mbox{[}2\mbox{]}); int i; uint32\+\_\+t scales\mbox{[}3\mbox{]};
+
+for (i = 0; i $<$ 3; i++) \{ \begin{DoxyVerb}printf("Scaling coord %d\n", i);
+double range = 2.0 * offsets[i];
+double max = (double)UINT_MAX;
+double scale = max / range;
+double outCoord = scale * coords[i];
+printf("%lf / %lf = %lf\n", max, range, scale);
+printf("Out: %lf\n", outCoord);
+scales[i] = floor(max / range);
+\end{DoxyVerb}
+ printf(\char`\"{}\+Scale \%d is\+: \%u, offset\+: \%f\textbackslash{}n\char`\"{}, i, scales\mbox{[}i\mbox{]}, offsets\mbox{[}i\mbox{]});
+
+\begin{DoxyVerb}    printf("Offset coord[%d] is %f\n", i, (coords[i] + offsets[i]));
+    pt->hcode[i] = (uint32_t)((coords[i] + offsets[i]) * scales[i]);
+    printf("Coord %d has value %lu\n", i, pt->hcode[i]);
+}    
+\end{DoxyVerb}
+
+
+\} 

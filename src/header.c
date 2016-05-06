@@ -1,3 +1,19 @@
+/****************************************************
+ * Copyright (c) 2015 by CyberGIS Center            *
+ *                                                  *
+ * This file contains methods for the filter object *
+ *                                                  *
+ ***************************************************/
+
+/** 
+ * @file header.c
+ * @author Nathan Casler
+ * @date May 6 2016
+ * @brief File containing methods for reading header data
+ *
+ */
+
+
 #include "mpi.h"
 #include <hdf5.h>
 #include "header.h"

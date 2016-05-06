@@ -1,3 +1,17 @@
+/***********************************************************************
+ *   Copyright (c) 2015 CyberGIS Center for Spatial Studies            *
+ *                                                                     *
+ *                                                                     *
+ *                                                                     *
+ **********************************************************************/
+
+/**
+ * @file bound.c
+ * @author Nathan Casler
+ * @date 6 May 2016
+ * @brief File containing methods for the bound object
+ *
+ */
 #include <mpi.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -12,6 +26,12 @@
 #include <proj_api.h>
 #include <liblas/capi/liblas.h>
 
+/* LASBound_Get: Retrieve a boundary object from a LAS file header (Note: The
+ * bound object will be projected to EPSG:4326 and then offset/scaled
+ * @param header: LASHeaderH* = Pointer to the header of the LAS file
+ * @param bounds: bound_t* = Point to bound object to hold the file bounds
+ * @return 1 if successful, else 0
+ */
 int LASBound_Get(LASHeaderH *header, bound_t* bounds) {
 
 	//Need to get the projection from the LAS file
@@ -56,7 +76,11 @@ int LASBound_Get(LASHeaderH *header, bound_t* bounds) {
 	return 1;
 }
 
-
+/* Bound_intersects: Checks whether two boundary objects intersect eachother
+ * @param bound_1: bound_t* = Pointer to first boundary object
+ * @param bound_2: bound_t* = Pointer to second boundary object
+ * @return 1 if intersection is true, else 0
+ */
 int Bound_intersects(bound_t* bound_1, bound_t* bound_2) {
 	// Check if bound_1 is below bound_2
 	if (bound_1->high.y < bound_2->low.y){
@@ -88,6 +112,11 @@ int Bound_intersects(bound_t* bound_1, bound_t* bound_2) {
 	
 }
 
+/* BoundType_create: Create an H5 datatype representing the bound_t memory
+ * footprint.
+ * @param status: herr_t* = Pointer to the HDF5 error object
+ * @return hid_t = The HDF5 id, used to reference the data type
+ */
 
 hid_t BoundType_create(herr_t *status) {
     hid_t boundtype;
@@ -101,10 +130,25 @@ hid_t BoundType_create(herr_t *status) {
     return boundtype;
 }
 
+
+/* BoundType_destroy: Closes the HDF5 reference to the HDF5 representation of
+ * the bound_t datatype. (Note: Necessary for a proper close on the HDF5 file
+ * @param boundtype: hid_t = HDF5 id holding the reference of the boundary
+ * datatype
+ * @param status: herr_t* = Pointer to the HDF5 error object
+ */
+
 void BoundType_destroy(hid_t boundtype, herr_t* status) {
     *status = H5Tclose(boundtype);
     
 }
+
+/* MPI_BoundType_create: Create a MPI datatype representing the memory footprint
+ * of the bound_t data type (Note: nested datatypes cause compiling issues)
+ * @param mpi_boundtype: MPI_Datatype* = Pointer to the MPI_Datatype that will
+ * hold the definition
+ * @return Int
+ */
 
 int MPI_BoundType_create(MPI_Datatype *mpi_boundtype) {
     int nitems=2;
@@ -123,12 +167,26 @@ int MPI_BoundType_create(MPI_Datatype *mpi_boundtype) {
     return 0;
 }
 
-
+/* Bound_dbl_Set: Set the the boundary coordinates for a given bound_dbl_t
+ * object
+ * @param bounds: bound_dbl_t = Boundary object to assign the coordinates
+ * @param minX: double = Minimum coordinate in on the X-axis(Left)
+ * @param minY: double = Minimum coordinate on the Y-axis (Lower)
+ * @param minZ: double = Minimum coordinate on the Z-axis (Bottom)
+ * @param maxX: double = Maximum coordinate on the X-axis (Right)
+ * @param maxY: double = Maximum coordinate on the Y-axis (Upper)
+ * @param maxZ: double = Maximum coordinate on the Z-axis (Top)
+ */
 void Bound_dbl_Set(bound_dbl_t* bounds, double minX, double minY, double minZ, double maxX, double maxY, double maxZ) {
 	Coord_Set(&bounds->low, minX, minY, minZ);
 	Coord_Set(&bounds->high, maxX, maxY, maxZ);
 }
 
+/** Bound_dbl_Project: Projects a boundary object to a given CRS
+ *  @param bound: bound_dbl_t = The bounds to project
+ *  @param srs: LASSRSH = The desired projection for the bounds
+ *  @return: Int 
+ */
 int Bound_dbl_Project(bound_dbl_t* bound, LASSRSH srs) {
 	projPJ pj_las, pj_wgs;
 	char* projStr = (char *)malloc(sizeof(char)*PATH_MAX);
