@@ -31,6 +31,7 @@ int LASBound_Get(LASHeaderH* header, bound_t* bounds);
 
 int Bound_intersects(bound_t* bound_1, bound_t* bound_2);
 
+bound_t* Bound_Set(double minX, double minY, double maxX, double maxY);
 
 void Bound_dbl_Set(bound_dbl_t* bounds, double minX, double minY, double minZ, double maxX, double maxY, double maxZ);
 

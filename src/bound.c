@@ -129,7 +129,77 @@ hid_t BoundType_create(herr_t *status) {
     return boundtype;
 }
 
+/**
+ * @brief Bound_Set: Create a bound object with the given extent
+ * @param minX (double) = Minimum Longitude value
+ * @param minY (double) = Minimum Latitude value
+ * @param maxX (double) = Maximum Longitude value
+ * @param maxY (double) = Maximum Latitude value
+ * @return bound (bound_t) 
+ * @note Assumes coordinates are in EPSG:4326 decimal degrees
+ */
+bound_t* Bound_Set(double minX, double minY, double maxX, double maxY) {
+	coord_dbl_t ll_raw, ur_raw;
+	bound_t* bound = (bound_t *)malloc(sizeof(bound_t));
+	Coord_Set(&ll_raw, minX, minY, 0.0);
+	Coord_Set(&ur_raw, maxX, maxY, 0.0);
+	Coord_Encode(&bound->low, &ll_raw);
+	Coord_Encode(&bound->high, &ur_raw);
+	return bound;
+}
 
+/**
+ * @brief Bound_length: will return the length of the bounday object in a 
+ * given dimension. 
+ * @param bound (bount_t*) The bound object to measure
+ * @param dim (int) The index of the dimension to measure
+ * @return length (double) of the absolute distance covered by the acis
+ * @note currently assumes a flat surface and is operation on the scaled/offset
+ * data, which is NOT THE BEST PRACTICE, NOR ACCURATE. SHOULD MIGRATE TO
+ * A PROJECTED MODEL ASAP
+ */
+double Bound_length(bound_t* bound, int dim) {
+	if (dim = 0){
+		return abs(bound->maxX - bound->minX);
+	} else if (dim = 1) {
+		return abs(bound->maxY - bound->minY);
+	} else {
+		fprintf(stderr, "Error: Given dimension is not defined for this dataset\n");
+		return -1
+	}
+}
+/**
+ * @brief Bound_subdivide: will break the given bounds into a 2d array of child
+ * bounds
+ * @param bound (bound_t*): The bound object to be divided
+ * @param countX (int): The number of blocks to create along the X-axis
+ * @param countY (int): The number of blocks to create along the Y-axis
+ * @param bound_count (size_t*): The length of the bound array returned
+ * @note This should be altered soon to allow the child grids to reference the 
+ * parent context or vice versa (something quadtree like)
+ */
+bound_t* Bound_subdivide(bound_t* bound, int countX, int countY, size_t* bound_count) {
+	*bound_count = (size_t) countX * countY;
+	int i,j;
+	double stepX = Bound_length(bound, 0) / countX;
+	double stepY = Bound_length(bound, 1) / countY;
+	bound_t boundArr [countX][countY];
+	for (i = 0; i < countX-1; i++) {
+		for (j = 0; j < countY-1; j++) {
+			// calculate new min max for the bounds
+			double newMinX = bound->minX + (stepX * i);
+			double newMinY = bound->minY + (stepY * j);
+			double newMaxX = bound->minX + (stepX * (i+1));
+			double newMaxY = bound->minY + (stepY * (j+1));
+			boundArr[i][j] = Bound_Set(newMinX,newMinY, newMaxX, newMaxY);
+
+		}
+	}
+	return &boundArr;
+}
+
+	
+	// TODO: Parameterize for different projections}
 /* BoundType_destroy: Closes the HDF5 reference to the HDF5 representation of
  * the bound_t datatype. (Note: Necessary for a proper close on the HDF5 file
  * @param boundtype: hid_t = HDF5 id holding the reference of the boundary

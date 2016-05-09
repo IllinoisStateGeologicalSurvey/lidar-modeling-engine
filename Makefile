@@ -1,7 +1,7 @@
 ###############################################################
 # Copyright (c) 2015-2017 CyberInfrastructure and Geospatial  #
-# Information Laboratory (CIGI). All Rights Reserved.         #
-#                                                             #
+# Information Laboratory (CIGI). All Rights Reserved.		  #
+#															  #
 ###############################################################
 # HDF5 Makefile template
 HDF_INSTALL = /sw/hdf5-1.8.15-para
@@ -9,11 +9,12 @@ MPI_INSTALL = /sw/EasyBuild/software/MPICH/3.1.4-GCC-4.9.2-binutils-2.25
 GEOS_INSTALL = /sw/geosoft/geos
 LIBLAS_INSTALL = /gpfs_scratch/ncasler/liblas
 PROJ_INSTALL=/gpfs_scratch/ncasler/proj
+GSL_INSTALL=/sw/gsl/2.1
 #SZIP_INSTALL = /sw/EasyBuild/software/Szip/2.1-gmpolf-2015
-EXTLIB		= -L$(HDF_INSTALL)/lib -L$(MPI_INSTALL)/lib -L$(LIBLAS_INSTALL)/lib -L$(PROJ_INSTALL)/lib
+EXTLIB		= -L$(HDF_INSTALL)/lib -L$(MPI_INSTALL)/lib -L$(LIBLAS_INSTALL)/lib -L$(PROJ_INSTALL)/lib -L$(GSL_INSTALL)/lib
 CC			= mpicc
 CFLAGS		= -g -Wall
-LIB			=  -lz -lm -lrt -lmpich -lpthread -ldl -llas -llas_c -lproj
+LIB			=  -lz -lm -lrt -lmpich -lpthread -ldl -llas -llas_c -lproj -lgsl -lgslcblas 
 
 SOURCEDIR	= src
 BUILDDIR	= bin
@@ -21,7 +22,7 @@ OBJDIR		= obj
 TESTDIR		= test
 INCLUDE		= -I./include 
 GEOS_INCLUDE = $(GEOS_INSTALL)/include
-EXTINCLUDE	= $(INCLUDE) -I$(MPI_INSTALL)/include -I$(HDF_INSTALL)/include -I$(LIBLAS_INSTALL)/include -I$(GEOS_INCLUDE) -I$(PROJ_INSTALL)/include
+EXTINCLUDE	= $(INCLUDE) -I$(MPI_INSTALL)/include -I$(HDF_INSTALL)/include -I$(LIBLAS_INSTALL)/include -I$(GEOS_INCLUDE) -I$(PROJ_INSTALL)/include -I$(GSL_INSTALL)/include
 #-I$(SZIP_INSTALL)/include
 LIBGEOS		=  $(GEOS_INSTALL)/lib/libgeos_c.so
 LIBSHDF		=  $(HDF_INSTALL)/lib/libhdf5.a $(MPI_INSTALL)/lib/libmpi.a 
@@ -56,8 +57,12 @@ all: $(BUILDDIR)/initLME \
 	$(BUILDDIR)/readLas \
 	$(BUILDDIR)/headerRead \
 	$(BUILDDIR)/testRange \
-	$(BUILDDIR)/checkCatalog
+	$(BUILDDIR)/checkCatalog \
+	$(BUILDDIR)/getGrid
 	
+$(BUILDDIR)/getGrid: $(TESTDIR)/getGrid.c
+	$(CC) $(CFLAGS) -o $@ $(TESTDIR)/getGrid.c $(SOURCES) $(EXTINCLUDE) $(EXTLIBS)
+
 $(BUILDDIR)/checkCatalog: $(TESTDIR)/checkCatalog.c
 	$(CC) $(CFLAGS) -o $@ $(TESTDIR)/checkCatalog.c $(SOURCES) $(EXTINCLUDE) $(EXTLIBS)
 
