@@ -1,3 +1,8 @@
+###############################################################
+# Copyright (c) 2015-2017 CyberInfrastructure and Geospatial  #
+# Information Laboratory (CIGI). All Rights Reserved.         #
+#                                                             #
+###############################################################
 # HDF5 Makefile template
 HDF_INSTALL = /sw/hdf5-1.8.15-para
 MPI_INSTALL = /sw/EasyBuild/software/MPICH/3.1.4-GCC-4.9.2-binutils-2.25

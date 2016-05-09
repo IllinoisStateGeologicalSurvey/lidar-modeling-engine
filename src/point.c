@@ -1,3 +1,16 @@
+/***************************************************************
+ * Copyright (c) 2015-2017 CyberInfrastructure and Geospatial  *
+ * Information Laboratory (CIGI). All Rights Reserved.         *
+ *                                                             *
+ ***************************************************************/
+
+/** 
+ * @file point.c
+ * @author Nathan Casler
+ * @date May 6 2016
+ * @brief File containing point related functions
+ *
+ */
 #include <assert.h>
 #include <hdf5.h>
 #include <mpi.h>

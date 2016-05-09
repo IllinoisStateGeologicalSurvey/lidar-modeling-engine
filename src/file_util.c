@@ -1,3 +1,16 @@
+/***************************************************************
+ * Copyright (c) 2015-2017 CyberInfrastructure and Geospatial  *
+ * Information Laboratory (CIGI). All Rights Reserved.         *
+ *                                                             *
+ ***************************************************************/
+
+/** 
+ * @file file_util.c
+ * @author Nathan Casler
+ * @date May 6 2016
+ * @brief File containing common filesystem related functions
+ *
+ */
 #ifndef FILE_UTIL_C
 #define FILE_UTIL_C
 

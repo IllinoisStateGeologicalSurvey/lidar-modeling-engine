@@ -1,3 +1,16 @@
+/***************************************************************
+ * Copyright (c) 2015-2017 CyberInfrastructure and Geospatial  *
+ * Information Laboratory (CIGI). All Rights Reserved.         *
+ *                                                             *
+ ***************************************************************/
+
+/** 
+ * @file reader.c
+ * @author Nathan Casler
+ * @date May 6 2016
+ * @brief File containing data reading functions
+ *
+ */
 #include "mpi.h"
 #include "reader.h"
 #include "header.h"

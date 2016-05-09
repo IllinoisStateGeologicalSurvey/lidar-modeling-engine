@@ -1,9 +1,8 @@
-/****************************************************
- * Copyright (c) 2015 by CyberGIS Center            *
- *                                                  *
- * This file contains methods for the filter object *
- *                                                  *
- ***************************************************/
+/***************************************************************
+ * Copyright (c) 2015-2017 CyberInfrastructure and Geospatial  *
+ * Information Laboratory (CIGI). All Rights Reserved.         *
+ *                                                             *
+ ***************************************************************/
 
 /** 
  * @file filter.c

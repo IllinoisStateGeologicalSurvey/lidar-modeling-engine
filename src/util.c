@@ -1,3 +1,16 @@
+/***************************************************************
+ * Copyright (c) 2015-2017 CyberInfrastructure and Geospatial  *
+ * Information Laboratory (CIGI). All Rights Reserved.         *
+ *                                                             *
+ ***************************************************************/
+
+/** 
+ * @file util.c
+ * @author Nathan Casler
+ * @date May 6 2016
+ * @brief File containing common utility functions
+ *
+ */
 #ifndef UTIL_C
 #define UTIL_C
 /** Utility functions neede by the LAS HDF read/write functions **/
