@@ -1,9 +1,16 @@
-/*****************************************
- *  readPoints.c
+/***************************************************************
+ * Copyright (c) 2015-2017 CyberInfrastructure and Geospatial  *
+ * Information Laboratory (CIGI). All Rights Reserved.         *
+ *                                                             *
+ ***************************************************************/
+
+/** 
+ * @file readPoints.c
+ * @author Nathan Casler
+ * @date May 6 2016
+ * @brief Test will read points from a list of LAS files using filter
+ * parameters, point data is then saved to HDF5
  *
- *  This utility will readpoints from a list of
- *  LAS files using a list of parameters to filter the
- *  data. The data will then be saved to HDF5
  */
 
 

@@ -1,3 +1,16 @@
+/***************************************************************
+ * Copyright (c) 2015-2017 CyberInfrastructure and Geospatial  *
+ * Information Laboratory (CIGI). All Rights Reserved.         *
+ *                                                             *
+ ***************************************************************/
+
+/** 
+ * @file fileopen.c
+ * @author Nathan Casler
+ * @date May 6 2016
+ * @brief Test to check if file opening/closing is functional
+ *
+ */
 #include <unistd.h>
 #include <limits.h>
 #include <ctype.h>

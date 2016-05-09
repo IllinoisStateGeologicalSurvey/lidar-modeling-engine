@@ -1,3 +1,16 @@
+/***************************************************************
+ * Copyright (c) 2015-2017 CyberInfrastructure and Geospatial  *
+ * Information Laboratory (CIGI). All Rights Reserved.         *
+ *                                                             *
+ ***************************************************************/
+
+/** 
+ * @file register.c
+ * @author Nathan Casler
+ * @date May 6 2016
+ * @brief Deprecated: Registers a region path with a given LME datastore
+ *
+ */
 #include <stdlib.h>
 #include <stdio.h>
 #include <dirent.h>

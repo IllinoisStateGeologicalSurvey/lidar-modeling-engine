@@ -1,3 +1,16 @@
+/***************************************************************
+ * Copyright (c) 2015-2017 CyberInfrastructure and Geospatial  *
+ * Information Laboratory (CIGI). All Rights Reserved.         *
+ *                                                             *
+ ***************************************************************/
+
+/** 
+ * @file file-test.c
+ * @author Nathan Casler
+ * @date May 6 2016
+ * @brief Test which will check if the file reading utilities are functional
+ *
+ */
 //This is a test to check that the file reading utilities work
 
 #include <stdlib.h>

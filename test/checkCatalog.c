@@ -1,3 +1,16 @@
+/***************************************************************
+ * Copyright (c) 2015-2017 CyberInfrastructure and Geospatial  *
+ * Information Laboratory (CIGI). All Rights Reserved.         *
+ *                                                             *
+ ***************************************************************/
+
+/** 
+ * @file checkCatalog.c
+ * @author Nathan Casler
+ * @date May 6 2016
+ * @brief Function which will read metadata from the LME datastore
+ *
+ */
 #include <stdlib.h>
 #include <stdio.h>
 #include <dirent.h>

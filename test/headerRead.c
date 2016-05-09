@@ -1,3 +1,16 @@
+/***************************************************************
+ * Copyright (c) 2015-2017 CyberInfrastructure and Geospatial  *
+ * Information Laboratory (CIGI). All Rights Reserved.         *
+ *                                                             *
+ ***************************************************************/
+
+/** 
+ * @file headerRead.c
+ * @author Nathan Casler
+ * @date May 6 2016
+ * @brief Function will test if reading from the header dataset is functional
+ *
+ */
 #include "header.h"
 #include "reader.h"
 #include "point.h"

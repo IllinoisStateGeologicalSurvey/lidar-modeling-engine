@@ -1,3 +1,16 @@
+/***************************************************************
+ * Copyright (c) 2015-2017 CyberInfrastructure and Geospatial  *
+ * Information Laboratory (CIGI). All Rights Reserved.         *
+ *                                                             *
+ ***************************************************************/
+
+/** 
+ * @file addRegionPar.c
+ * @author Nathan Casler
+ * @date May 6 2016
+ * @brief Function which will add a region to the LME datastore in parallel via MPI
+ *
+ */
 #include <stdlib.h>
 #include <stdio.h>
 #include <dirent.h>

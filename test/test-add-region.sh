@@ -1,3 +1,16 @@
+###############################################################
+# Copyright (c) 2015-2017 CyberInfrastructure and Geospatial  #
+# Information Laboratory (CIGI). All Rights Reserved.         #
+#                                                             #
+###############################################################
+
+## 
+# @file test-add-region.sh
+# @author Nathan Casler
+# @date May 6 2016
+# @brief Script to run region addition test
+#
+#
 #!/bin/bash
 
 TESTDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd)"

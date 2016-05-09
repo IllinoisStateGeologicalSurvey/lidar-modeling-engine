@@ -1,3 +1,16 @@
+/***************************************************************
+ * Copyright (c) 2015-2017 CyberInfrastructure and Geospatial  *
+ * Information Laboratory (CIGI). All Rights Reserved.         *
+ *                                                             *
+ ***************************************************************/
+
+/** 
+ * @file test-bounds.c
+ * @author Nathan Casler
+ * @date May 6 2016
+ * @brief Deprecated: Test to check if bbox queries are functional 
+ *
+ */
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>

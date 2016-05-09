@@ -1,3 +1,16 @@
+/***************************************************************
+ * Copyright (c) 2015-2017 CyberInfrastructure and Geospatial  *
+ * Information Laboratory (CIGI). All Rights Reserved.         *
+ *                                                             *
+ ***************************************************************/
+
+/** 
+ * @file hilbert-test.c
+ * @author Nathan Casler
+ * @date May 6 2016
+ * @brief Test to check if the hilbert indexing is functional
+ *
+ */
 #include "hilbert.h"
 #include "point.h"
 #include <stdlib.h>

@@ -1,3 +1,16 @@
+/***************************************************************
+ * Copyright (c) 2015-2017 CyberInfrastructure and Geospatial  *
+ * Information Laboratory (CIGI). All Rights Reserved.         *
+ *                                                             *
+ ***************************************************************/
+
+/** 
+ * @file addRegion.c
+ * @author Nathan Casler <ncasler@illinois.edu>
+ * @date May 6 2016
+ * @brief Function which will add a region to the LME datastore
+ *
+ */
 #include <stdlib.h>
 #include <stdio.h>
 #include <dirent.h>
