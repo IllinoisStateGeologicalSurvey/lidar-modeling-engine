@@ -113,7 +113,7 @@ void Header_free(header_t* headers, int n) {
 }
 
 
-
+/*
 hid_t ProjType_create(herr_t* status) {
     hid_t projtype;
     projtype = H5Tcopy(H5T_C_S1);
@@ -124,6 +124,7 @@ hid_t ProjType_create(herr_t* status) {
 void ProjType_destroy(hid_t projtype, herr_t* status) {
     *status = H5Tclose(projtype);
 }
+*/
 /*
 hid_t BoundType_create(herr_t *status) {
     hid_t boundtype;
@@ -180,6 +181,7 @@ int MPI_BoundType_create(MPI_Datatype *mpi_boundtype) {
     return 0;
 }
 */
+/*
 int MPI_ProjType_create(MPI_Datatype *mpi_projtype) {
     int nitems=1;
     int blocklength = PATH_LEN;
@@ -199,7 +201,8 @@ int MPI_ProjType_create(MPI_Datatype *mpi_projtype) {
 
     return 0;
 }
-
+*/
+/*
 int MPI_HeaderType_create(MPI_Datatype *mpi_headertype) {
     int nitems=5;
     int strLen = PATH_LEN;
@@ -238,7 +241,6 @@ int MPI_HeaderType_create(MPI_Datatype *mpi_headertype) {
     //offsets[3] = offsetof(header_t, path);
     //offsets[4] = offsetof(header_t, proj);
     printf("Creating mpi_header_struct\n");
-    /** TODO: Fix this struct creation, application quits here **/
     mpi_err = MPI_Type_create_struct(nitems, blocklengths, offsets, types, mpi_headertype);
     printf("MPI_ERR %i\n", mpi_err);
     if (mpi_err != MPI_SUCCESS) {
@@ -261,7 +263,7 @@ int MPI_HeaderType_create(MPI_Datatype *mpi_headertype) {
 
     return 0;
 }
-
+*/
 
 int createHeaderDataset(char* file, char* dataset, hsize_t* dims)
 {

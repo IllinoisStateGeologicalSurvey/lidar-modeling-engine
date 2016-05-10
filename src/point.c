@@ -22,24 +22,19 @@
 #include <proj_api.h>
 #include <liblas/capi/liblas.h>
 #include "point.h"
+#include "coord.h"
+#include "retn.h"
+#include "color.h"
 #include "common.h"
 
-const double offsets[3] = {180.0, 90.0, 12300.0};
-const double max = (double)UINT_MAX;
 
 
-double Scale_init(double offset, double max)
-{
-    double range = 2.0 * offset;
-    double scale = max / range;
-    return scale;
+
+void LMEpointCode_setIdx(LMEpointCode* p) {
+	LMEidx_set(&p->idx, &p->code);
 }
 
-void Point_SetIndex(Point *p, idx_t* idx) {
-    p->idx = *idx;
-}
-
-void Point_IndexCoords(Point *p) {
+/*void Point_IndexCoords(Point *p) {
     //uint64_t x, y;
     Hpoint *pt;
     Hcode idx;
@@ -60,17 +55,25 @@ void Point_IndexCoords(Point *p) {
     Point_SetIndex(p, &idxFull);
     free(pt);
 
-}
+}*/
 
 
-void Point_SetCoords(Point* p, coord_t* coords)
+/*void Point_SetCoords(Point* p, coord_t* coords)
 {
     p->coords.x = coords->x;
     p->coords.y = coords->y;
     p->coords.z = coords->z;
 }
+*/
 
-void Coord_Set(coord_dbl_t* coords, double x, double y, double z)
+void LMEpointCode_setCoord(LMEpointCode *p, const * LMEcoordCode code) {
+	LMEcoordCode_set(&p->code, LMEcoordCode_getX(code), LMEcoordCode_getY(code), LMEcoordCode_getZ(code));
+}
+
+void LMEpoint_setCoord(LMEpoint* p, const * LMEcoord coord) {
+	LMEcoord_set(&p->coord, LMEcoord_getX(coord), LMEcoord_getY(coord), LMEcoord_getZ(coord));
+}
+/*void Coord_Set(coord_dbl_t* coords, double x, double y, double z)
 {
     coords->x = x;
     coords->y = y;
@@ -83,20 +86,14 @@ void Coord_Get(double coord_arr[3], coord_dbl_t* coords) {
     coord_arr[2] = coords->z;
     
 }
-
-void Coord_SetCode(coord_t* coords, uint32_t x, uint32_t y, uint32_t z)
-{
-    coords->x = x;
-    coords->y = y;
-    coords->z = z;
-}
+*/
 
 /** Coord_Encode: Applies scale and offset to a given coordinate set
     
     @param coord_raw: Structure holding 3 double precision coordinates
     @param coord_code: Structure holding 3 unsigned 32bit integer coordinate codes
 **/
-void Coord_Encode(coord_t* coord_code, coord_dbl_t* coord_raw)
+/*void Coord_Encode(coord_t* coord_code, coord_dbl_t* coord_raw)
 {
     double scales[3];
     int i;
@@ -118,7 +115,8 @@ void Coord_Encode(coord_t* coord_code, coord_dbl_t* coord_raw)
     Coord_SetCode(coord_code, (uint32_t)rawCoords[0], (uint32_t)rawCoords[1], (uint32_t)rawCoords[2]);
     
 }
-
+*/
+/*
 void Coord_Decode(coord_dbl_t* coords, coord_t* coord_code) {
     double scales[3];
     int i;
@@ -137,52 +135,51 @@ void Coord_Decode(coord_dbl_t* coords, coord_t* coord_code) {
     }
     Coord_Set(coords, outCoords[0], outCoords[1], outCoords[2]);
 }
-
-void Point_SetReturns(Point* p, int returnNum, int returnCnt) {
-    p->retns.rNum = returnNum;
-    p->retns.rTot = returnCnt;
+*/
+void LMEpoint_setReturn(LMEpoint* p, int returnNum, int returnCnt) {
+	LMEreturn_set(&p->retn, returnNum, returnCnt);
 }
 
-void Point_SetColor(Point* p, int r, int g, int b) {
-    p->color.r = r;
-    p->color.g = g;
-    p->color.b = b;
+void LMEpointCode_setReturn(LMEpointCode* p, int returnNum, int returnCnt) {
+	LMEreturn_set(&p->retn, returnNum, returnCnt);
 }
 
-void Point_SetIntensity(Point* p, int intens) {
-    p->i = intens;
+void LMEpoint_setColor(LMEpoint* p, int r, int g, int b) {
+    LMEcolor_set(&p->color, r, g, b);
 }
 
-void Point_SetClassification(Point* p, unsigned char clss) {
-    p->clss = clss;
-}
-Point* Point_new(idx_t *idx, double coords[3], int i, short retns[2], unsigned char clss, short rgb[3])
-{
-    Point* p = malloc(sizeof(Point));
-    assert(p != NULL);
-    Point_SetIndex(p, idx);
-    p->coords.x = coords[0];
-    p->coords.y = coords[1];
-    p->coords.z = coords[2];
-    p->i = i;
-    p->retns.rNum = retns[0];
-    p->retns.rTot = retns[1];
-    p->clss = clss;
-    p->color.r = rgb[0];
-    p->color.g = rgb[1];
-    p->color.b = rgb[2];
-
-    return p;
+void LMEpointCode_setColor(LMEpointCode* p, int r, int g, int b) {
+	LMEcolor_set(&p->color, r, g, b);
 }
 
-void Point_destroy(struct Point *p)
+void LMEpoint_setIntensity(LMEpoint* p, int intens) {
+	p->i = intens;
+}
+
+void LMEpointCode_setIntensity(LMEpointCode* p, int intens) {
+	p->i = intens;
+}
+//void Point_SetIntensity(Point* p, int intens) {
+//    p->i = intens;
+//}
+
+void LMEpoint_setClassification(LMEpoint* p, unsigned char clss) {
+	p->clss = clss;
+}
+void LMEpointCode_setClassification(LMEpointCode* p, unsigned char clss) {
+	p->clss = clss;
+}
+//void Point_SetClassification(Point* p, unsigned char clss) {
+//    p->clss = clss;
+//}
+
+/*void Point_destroy(struct Point *p)
 {
     assert(p != NULL);
     free(p);
-}
-
+}*/
+/**
 hid_t CoordType_create(herr_t* status) {
-    /** Create the coordinate data type **/
     hid_t coordtype;
     coordtype = H5Tcreate(H5T_COMPOUND, sizeof(coord_t));
     *status = H5Tinsert(coordtype, "x", HOFFSET (coord_t, x), H5T_NATIVE_UINT32);
@@ -197,10 +194,9 @@ void CoordType_destroy(hid_t coordtype, herr_t* status) {
     *status = H5Tclose(coordtype);
 
 }
-
-
+*/
+/*
 hid_t ReturnType_create(herr_t* status) { 
-    /** Create the return data type **/
     hid_t returntype;
     returntype = H5Tcreate(H5T_COMPOUND, sizeof(return_t));
     *status = H5Tinsert(returntype, "rNum", HOFFSET (return_t, rNum), H5T_NATIVE_SHORT);
@@ -210,8 +206,8 @@ hid_t ReturnType_create(herr_t* status) {
 
 void ReturnType_destroy(hid_t returntype, herr_t* status) {
     *status = H5Tclose(returntype);
-}
-
+}*/
+/*
 hid_t ColorType_create(herr_t* status) {
     hid_t colortype;
     colortype = H5Tcreate(H5T_COMPOUND, sizeof(color_t));
@@ -224,24 +220,24 @@ hid_t ColorType_create(herr_t* status) {
 void ColorType_destroy(hid_t colortype, herr_t* status) {
     *status = H5Tclose(colortype);
 }
-
+*/
 hid_t PointType_create(herr_t* status) {
     hid_t coordtype, returntype, colortype, pointtype;
     coordtype = CoordType_create(status);
     returntype = ReturnType_create(status);
     colortype = ColorType_create(status);
-    printf("Coord has size %lu\n", sizeof(coord_t));
+    printf("Coord has size %lu\n", sizeof(LMEcoordCode));
     printf("Intensity has size %lu\n", sizeof(int));
-    printf("Returns have size %lu\n", sizeof(return_t));
+    printf("Returns have size %lu\n", sizeof(LMEreturn));
 
-    printf("Point has size %lu\n", sizeof(Point));
-    pointtype = H5Tcreate(H5T_COMPOUND, sizeof(Point));
-    *status = H5Tinsert(pointtype, "idx", HOFFSET(Point, idx), H5T_STD_U64BE);
-    *status = H5Tinsert(pointtype, "coords", HOFFSET(Point, coords), coordtype);
-    *status = H5Tinsert(pointtype, "intensity", HOFFSET(Point, i), H5T_NATIVE_INT);
-    *status = H5Tinsert(pointtype, "returns", HOFFSET(Point, retns), returntype);
-    *status = H5Tinsert(pointtype, "class", HOFFSET(Point, clss), H5T_NATIVE_UCHAR);
-    *status = H5Tinsert(pointtype, "color", HOFFSET(Point, color), colortype);
+    printf("Point has size %lu\n", sizeof(LMEpointCode));
+    pointtype = H5Tcreate(H5T_COMPOUND, sizeof(LMEpointCode));
+    *status = H5Tinsert(pointtype, "idx", HOFFSET(LMEpointCode, idx), H5T_STD_U64BE);
+    *status = H5Tinsert(pointtype, "coords", HOFFSET(LMEpointCode, coords), coordtype);
+    *status = H5Tinsert(pointtype, "intensity", HOFFSET(LMEpointCode, i), H5T_NATIVE_INT);
+    *status = H5Tinsert(pointtype, "returns", HOFFSET(LMEpointCode, retns), returntype);
+    *status = H5Tinsert(pointtype, "class", HOFFSET(LMEpointCode, clss), H5T_NATIVE_UCHAR);
+    *status = H5Tinsert(pointtype, "color", HOFFSET(LMEpointCode, color), colortype);
     //printf("Point Type created with size, %d\n", H5T_get_size(pointtype)); 
     *status = H5Tclose(coordtype);
     *status = H5Tclose(returntype);
@@ -253,9 +249,8 @@ hid_t PointType_create(herr_t* status) {
 void PointType_destroy(hid_t pointtype, herr_t* status) {
     *status = H5Tclose(pointtype);
 }
-
+/*
 int MPI_CoordType_create(MPI_Datatype *mpi_coordtype) {
-    /* Create an MPI type for Coordinates */
     int nitems=3;
     int blocklengths[3] = {1,1,1}; //TODO: the number of each element
     MPI_Datatype types[3] = {MPI_UNSIGNED, MPI_UNSIGNED, MPI_UNSIGNED};
@@ -267,10 +262,9 @@ int MPI_CoordType_create(MPI_Datatype *mpi_coordtype) {
     MPI_Type_commit(mpi_coordtype);
 
     return 0;
-}
-
+}*/
+/*
 int MPI_ReturnType_create(MPI_Datatype *mpi_returntype) {
-    /* Create an MPI Type for returns */
     int nitems=2;
     int blocklengths[2] = {1,1};
     MPI_Datatype types[2] = {MPI_SHORT, MPI_SHORT};
@@ -281,10 +275,9 @@ int MPI_ReturnType_create(MPI_Datatype *mpi_returntype) {
     MPI_Type_commit(mpi_returntype);
 
     return 0;
-}
-
+}*/
+/*
 int MPI_ColorType_create(MPI_Datatype *mpi_colortype) {
-    /* Create an MPU Type for color data */
     int nitems=3;
     int blocklengths[3] = {1, 1, 1};
     MPI_Datatype types[3] = {MPI_UNSIGNED_CHAR, MPI_UNSIGNED_CHAR, MPI_UNSIGNED_CHAR};
@@ -296,10 +289,9 @@ int MPI_ColorType_create(MPI_Datatype *mpi_colortype) {
     MPI_Type_commit(mpi_colortype);
     
     return 0;
-}
-
+}*/
+/**
 int MPI_PointType_create(MPI_Datatype *mpi_pointtype) {
-    /* Create an MPI type for points */
     int nitems=6;
     int blocklengths[6] = {1,1,1,1,1,1};
     MPI_Datatype types[6];
@@ -322,20 +314,31 @@ int MPI_PointType_create(MPI_Datatype *mpi_pointtype) {
 
     return 0;
 }
+*/
 
 
-
-void Point_print(struct Point *p)
+void Point_print(const * LMEPointCode p)
 {
     printf("ID: %lu\n",  p->idx);
-    printf("X:%i, Y:%i, Z: %i\n", p->coords.x, p->coords.y, p->coords.z);
+    printf("X:%i, Y:%i, Z: %i\n", p->code[0], p->code[1], p->code[2]);
     printf("Intensity: %d\n", p->i);
     printf("Return: %d of %d\n", p->retns.rNum, p->retns.rTot);
     printf("Class: %hhu\n", p->clss);
 };
 
+int LMEpoint_fromLAS(LMEpoint* p, double *x, double *y, double *z, const * LASPointH lasPnt) {
+	LMEreturn_fromLAS(&p->retns, lasPnt);
+	*x = LASPoint_GetX(*lasPnt);
+	*y = LASPoint_GetY(*lasPnt);
+	*z = LASPoint_GetZ(*lasPnt);
+	LMEcoord_set(&p->coord, *x, *y, *z);
+	LMEpoint_setIntensity(p, LASPoint_GetIntensity(*lasPnt));
+	LMEpoint_setClassification(p, LASPoint_GetClassification(*lasPnt));
+	LMEcolor_fromLAS(&p->color, lasPnt);
+	return 0;
+}
 
-int LASPoint_read(LASPointH* lasPnt, Point* pnt, double* x, double* y, double* z)  {
+/*int LASPoint_read(LASPointH* lasPnt, Point* pnt, double* x, double* y, double* z)  {
     // Check that the point is a last return
     LASColorH color;
     //if (LASPoint_GetReturnNumber(*lasPnt) == LASPoint_GetNumberOfReturns(*lasPnt)){
@@ -351,10 +354,10 @@ int LASPoint_read(LASPointH* lasPnt, Point* pnt, double* x, double* y, double* z
 
     return 0;
 }
+*/
 
 
-
-int LASPoint_project(LASHeaderH* header, hsize_t* count, double* x, double* y, double* z, Point* pnts, int mpi_rank) {
+int LASPoint_project(LASHeaderH* header, const * hsize_t count, double* x, double* y, double* z, Point* pnts, int mpi_rank) {
     fprintf(stdout, "[%d] LASpoint_project called\n", mpi_rank);
     projPJ pj_src, pj_wgs;
     int i;
