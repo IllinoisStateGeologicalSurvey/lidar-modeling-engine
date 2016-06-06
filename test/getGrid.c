@@ -63,14 +63,17 @@ int main(int argc, char* argv[]) {
 	char* h5_file = (char *)malloc(sizeof(char)* 4096);
 	getDataStore(h5_file);
 	parseArgs(argc, argv, &res[0], &res[1], &verbose);
-	bound_t* bounds = Bound_Set(-88.26681,41.98540, -88.25840, 41.99156);
+	LMEcoord ll, ur;
+	LMEcoord_set(&ll, -88.26681, 41.98540, -1000);
+	LMEcoord_set(&ur, -88.25840, 41.99156, 5000);
+	LMEbound bounds;
+	LMEbound_set(&bounds, &ll, &ur);
 	int dims[2] = {1000,1000};
-	grid_t* grid = Grid_Create(bounds, dims, res);
+	LMEgrid* grid = Grid_Create(&bounds, dims, res);
 
 	printf("Grid created.\n");
 	printf("Cleaning up\n");
 	Grid_Destroy(grid);
-	free(bounds);
 	free(h5_file);
 	printf("Exiting\n");
 	return 0;

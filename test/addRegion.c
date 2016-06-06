@@ -148,24 +148,24 @@ int main(int argc, char* argv[]) {
 	h5_region_prepare(&region_id, lasCount, &headertype, &plist_id, &dataspace_id, &dataset_id, &h5_status);
 	// READ
 	// Allocate space for headers
-	header_t* sub_headers = malloc(sizeof(header_t) * t_blocks[mpi_rank]);
+	LMEheader* sub_headers = malloc(sizeof(LMEheader) * t_blocks[mpi_rank]);
 
 	// Read the filenames
 	if (mpi_rank == 0) {
 		// Allocate memory for headers
 		char *outPaths = malloc(sizeof(char) * ((size_t)lasCount * PATH_LEN));
-		header_t* headers = malloc(sizeof(header_t) * lasCount);
+		LMEheader* headers = malloc(sizeof(LMEheader) * lasCount);
 		// Read file paths from folder path
 		buildArray(rPath, outPaths, lasCount);
 		// Stat the file paths for summary info
-		if (!readHeaderBlock(&outPaths[0], 0, lasCount, headers)) {
+		if (!LMEheaderBlock_read(&outPaths[0], 0, lasCount, headers)) {
 			fprintf(stderr, "IO Error: Failed to read header data");
 			return 1;
 		}
 		free(outPaths);
 		// Send header values to each process
 		for (i = 1; i < mpi_size; i++) {
-			mpi_err = MPI_Send(&headers[t_offsets[i]], t_blocks[i] * sizeof(header_t), MPI_BYTE, i, 1, comm);
+			mpi_err = MPI_Send(&headers[t_offsets[i]], t_blocks[i] * sizeof(LMEheader), MPI_BYTE, i, 1, comm);
 			MPI_check_error(mpi_err);
 			printf("Sent header[%i]-[%i] to %i\n", t_offsets[i], (t_offsets[i] + t_blocks[i]), i);
 		}
@@ -175,7 +175,7 @@ int main(int argc, char* argv[]) {
 		free(headers);
 
 	} else {
-		mpi_err = MPI_Recv(&sub_headers[0], t_blocks[mpi_rank] * sizeof(header_t), MPI_BYTE, 0, 1, MPI_COMM_WORLD, &status);
+		mpi_err = MPI_Recv(&sub_headers[0], t_blocks[mpi_rank] * sizeof(LMEheader), MPI_BYTE, 0, 1, MPI_COMM_WORLD, &status);
 		MPI_check_error(mpi_err);
 	}
 	MPI_Barrier(comm);
@@ -187,7 +187,7 @@ int main(int argc, char* argv[]) {
 	plist_id = H5Pcreate(H5P_FILE_ACCESS);
 	H5Pset_fapl_mpio(plist_id, comm, info);
 
-	writeHeaderBlock(region_id, "headers", &hOffset, &hBlock, sub_headers, comm, info); 
+	LMEheaderBlock_write(region_id, "headers", &hOffset, &hBlock, sub_headers, comm, info); 
 
 
 	H5Dclose(dataset_id);

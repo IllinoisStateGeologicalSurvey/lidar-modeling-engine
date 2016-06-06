@@ -24,9 +24,9 @@ int createDataset(char* file, char* dataset, hsize_t* dim);
 
 //int createHeaderDataset(char* file, char* dataset, hsize_t dims[2]);
 
-int readBlock(LASReaderH reader, int offset, int count, Point* points);
+int readBlock(LASReaderH reader, int offset, int count, LMEpoint* points);
 
-int writeBlock(char* file, char* dataset, hsize_t* offset, hsize_t* block, Point* points, MPI_Comm comm, MPI_Info info);
+int writeBlock(char* file, char* dataset, hsize_t* offset, hsize_t* block, LMEpoint* points, MPI_Comm comm, MPI_Info info);
 
 // Type creation functions
 

@@ -18,7 +18,7 @@
 #include "point.h"
 #include "bound.h"
 #include "common.h"
-
+#include "coord.h"
 #include <math.h>
 #include <inttypes.h>
 #include <limits.h>
@@ -31,7 +31,7 @@
  * @param bounds: bound_t* = Point to bound object to hold the file bounds
  * @return 1 if successful, else 0
  */
-int LMEboundCode_fromLAS(LMEBoundCode* bounds, const * LASHeaderH header) {
+int LMEboundCode_fromLAS(LMEboundCode* bounds, LASHeaderH * const header) {
 
 	//Need to get the projection from the LAS file
 	double x[2],y[2],z[2];
@@ -63,10 +63,10 @@ int LMEboundCode_fromLAS(LMEBoundCode* bounds, const * LASHeaderH header) {
 		y[i] *= RAD_TO_DEG;
 	}
 	//printf("Degree Converted : (%f,%f,%f),(%f,%f,%f)\n", x[0],y[0],z[0],x[1],y[1],z[1]);
-	LMEcoord_Set(&ll, x[0], y[0], z[0]);
-	LMEcoord_Set(&ur, x[1], y[1], z[1]);
+	LMEcoord_set(&ll, x[0], y[0], z[0]);
+	LMEcoord_set(&ur, x[1], y[1], z[1]);
 	LMEcoord_encode(&bounds->low, &ll);
-	LMEcoord_Encode(&bounds->high, &ur);
+	LMEcoord_encode(&bounds->high, &ur);
 
 	//Bound_dbl_Set(bounds, x[0],y[0],z[0],x[1],y[1],z[1]);
 	pj_free(pj_las);
@@ -75,16 +75,21 @@ int LMEboundCode_fromLAS(LMEBoundCode* bounds, const * LASHeaderH header) {
 	return 1;
 }
 
-void LMEbound_Set(LMEbound* bounds, const * LMEcoord low, const * LMEcoord high) {
-	LMEcoord_Set(&bounds->low, LMEcoord_getX(low), LMEcoord_getY(low), LMEcoord_getZ(low));
-	LMEcoord_Set(&bounds->high, LMEcoord_getX(high), LMEcoord_getY(high), LMEcoord_getZ(high));
+int LMEbound_copy(LMEbound* dstBound, LMEbound * const srcBound) {
+	LMEcoord_copy(&dstBound->low, &srcBound->low);
+	LMEcoord_copy(&dstBound->high, &srcBound->high);
+	return 1;
+}
+void LMEbound_set(LMEbound* bounds, LMEcoord * const low, LMEcoord * const high) {
+	LMEcoord_set(&bounds->low, LMEcoord_getX(low), LMEcoord_getY(low), LMEcoord_getZ(low));
+	LMEcoord_set(&bounds->high, LMEcoord_getX(high), LMEcoord_getY(high), LMEcoord_getZ(high));
 }
 /* @brief LMEbound_intersects: Checks whether two boundary objects intersect eachother
  * @param bound_1: (const LMEbound*) = Pointer to first boundary object
  * @param bound_2: (const LMEbound*) = Pointer to second boundary object
  * @return 1 if intersection is true, else 0
  */
-int LMEbound_intersects(const * LMEbound bound_1, const * LMEbound bound_2) {
+int LMEbound_intersects(LMEbound * const bound_1, LMEbound * const bound_2) {
 	// Check if bound_1 is below bound_2
 	if (LMEcoord_getY(&bound_1->high) < LMEcoord_getY(&bound_2->low)){
 		//Bound 1 is below
@@ -110,7 +115,7 @@ int LMEbound_intersects(const * LMEbound bound_1, const * LMEbound bound_2) {
  * @param bound_2 (const * LMEboundCode): Pointer to second boundary object
  * @return 1 if intersection is true, else 0
  */
-int LMEboundCode_intersects(const * LMEboundCode  bound_1, const * LMEboundCode bound_2) {
+int LMEboundCode_intersects(LMEboundCode * const bound_1, LMEboundCode * const bound_2) {
 	// Check if bound_1 is below bound_2
 	if (LMEcoordCode_getY(&bound_1->high) < LMEcoordCode_getY(&bound_2->low)){
 		//Bound 1 is below
@@ -137,7 +142,7 @@ int LMEboundCode_intersects(const * LMEboundCode  bound_1, const * LMEboundCode 
  * @param low (const * LMEcoordCode): Low value encoded coordinate
  * @param high (const * LMEcoordCode): High value encoded coordinate
  */
-void LMEboundCord_set(LMEboundCode* code, const * LMEcoordCode low, const * LMEcoordCode high) {
+void LMEboundCoord_set(LMEboundCode* code, LMEcoordCode * const  low, LMEcoordCode * const high) {
 	LMEcoordCode_set(&code->low, LMEcoordCode_getX(low), LMEcoordCode_getY(low), LMEcoordCode_getZ(low));
 	LMEcoordCode_set(&code->high, LMEcoordCode_getX(low), LMEcoordCode_getY(low), LMEcoordCode_getZ(low));
 }
@@ -150,10 +155,12 @@ void LMEboundCord_set(LMEboundCode* code, const * LMEcoordCode low, const * LMEc
 hid_t BoundType_create(herr_t *status) {
     hid_t boundtype;
     hid_t coordtype;
+	int bound_rank = 1;
+	hsize_t bound_dim = 2;
     coordtype = CoordType_create(status);
-    boundtype = H5Tcreate(H5T_COMPOUND, sizeof(bound_t));
-    *status = H5Tinsert(boundtype, "low", HOFFSET(LMEboundCode, low), coordtype);
-    *status = H5Tinsert(boundtype, "high", HOFFSET(LMEboundCode, high), coordtype);
+    boundtype = H5Tarray_create2(coordtype, bound_rank, &bound_dim);
+    //*status = H5Tinsert(boundtype, "low", HOFFSET(LMEboundCode, low), coordtype);
+    //*status = H5Tinsert(boundtype, "high", HOFFSET(LMEboundCode, high), coordtype);
     *status = H5Tclose(coordtype);
 	
     return boundtype;
@@ -188,14 +195,16 @@ hid_t BoundType_create(herr_t *status) {
  * NOR ACCURATE. SHOULD MIGRATE TO GREAT CIRCLE distance ASAP
  */
 double LMEbound_length(LMEbound* bound, int dim) {
-	if (dim = 0){
-		return abs(bound->maxX - bound->minX);
-	} else if (dim = 1) {
-		return abs(bound->maxY - bound->minY);
+	double out;
+	if (dim == 0){
+		out = abs(LMEcoord_getX(&bound->high) - LMEcoord_getX(&bound->low));
+	} else if (dim == 1) {
+		out =  abs(LMEcoord_getY(&bound->high) - LMEcoord_getY(&bound->low));
 	} else {
 		fprintf(stderr, "Error: Given dimension is not defined for this dataset\n");
-		return -1
+		out = -1;
 	}
+	return out;
 }
 /**
  * @brief Bound_subdivide: will break the given bounds into a 2d array of child
@@ -207,42 +216,52 @@ double LMEbound_length(LMEbound* bound, int dim) {
  * @note This should be altered soon to allow the child grids to reference the 
  * parent context or vice versa (something quadtree like)
  */
-LMEbound* Bound_subdivide(LMEbound * bound, int countX, int countY, size_t* bound_count) {
+int LMEbound_subdivide(LMEbound ** boundArr, LMEbound * const bound, int countX, int countY, size_t* bound_count) {
 	*bound_count = (size_t) countX * countY;
 	int i,j;
-	double stepX = Bound_length(bound, 0) / countX;
-	double stepY = Bound_length(bound, 1) / countY;
-	LMEbound boundArr [countX][countY];
+	LMEcoord ll, ur;
+	double stepX = LMEbound_length(bound, 0) / countX;
+	double stepY = LMEbound_length(bound, 1) / countY;
+	// This function assumes that boundArr is a 2d array of bound objects with
+	// dimensions [countX][countY]
+	//LMEbound boundArr [countX][countY];
 	for (i = 0; i < countX-1; i++) {
 		for (j = 0; j < countY-1; j++) {
 			// calculate new min max for the bounds
-			double newMinX = bound->minX + (stepX * i);
-			double newMinY = bound->minY + (stepY * j);
-			double newMaxX = bound->minX + (stepX * (i+1));
-			double newMaxY = bound->minY + (stepY * (j+1));
-			boundArr[i][j] = LMEbound_Set(newMinX,newMinY, LMEcoord_getZ(&bound->low), newMaxX, newMaxY, LMEcoord_getZ(&bound->high));
+			double newMinX = LMEcoord_getX(&bound->low) + (stepX * i);
+			double newMinY = LMEcoord_getY(&bound->low) + (stepY * j);
+			double newMaxX = LMEcoord_getX(&bound->low) + (stepX * (i+1));
+			double newMaxY = LMEcoord_getY(&bound->low) + (stepY * (j+1));
+			LMEcoord_set(&ll, newMinX, newMinY, LMEcoord_getZ(&bound->low));
+			LMEcoord_set(&ur, newMaxX, newMaxY, LMEcoord_getZ(&bound->high));
+			LMEbound_set(&boundArr[i][j], &ll, &ur);
 
 		}
 	}
-	return &boundArr;
+	return (countX * countY);
 }
 
-LMEcoord LMEbound_Centroid(const * LMEbound bounds) {
+LMEcoord LMEbound_Centroid(LMEbound * const bounds) {
 	double x,y,z;
-	x = (LMEcoord_getX(&bounds->ur) - LMEcoord_getX(&bounds->ll)) / 2;
-	y = (LMEcoord_getY(&bounds->ur) - LMEcoord_getY(&bounds->ll)) / 2;
-	z = (LMEcoord_getZ(&bounds->ur) - LMEcoord_getZ(&bounds->ll)) / 2;
+	x = (LMEcoord_getX(&bounds->high) - LMEcoord_getX(&bounds->low)) / 2;
+	y = (LMEcoord_getY(&bounds->high) - LMEcoord_getY(&bounds->low)) / 2;
+	z = (LMEcoord_getZ(&bounds->high) - LMEcoord_getZ(&bounds->low)) / 2;
 	LMEcoord coord;
 	LMEcoord_set(&coord, x, y, z);
 	return coord;
 }
 
-int LMEbound_fromLAS(LMEbound* bounds, const * LASHeader header) {
+int LMEbound_fromLAS(LMEbound* bounds, LASHeaderH * const header) {
 	LMEcoord ll, ur;
-	LMEcoord_set(&ll, LASHeader_getMinX(*header), LASHeader_getMinY(*header), LASHeader_getMinZ(*header));
-	LMEcoord_set(&ur, LASHeader_getMaxX(*header), LASHeader_getMaxY(*header), LASHeader_getMaxZ(*header));
-	LMEbound_set(&bounds, &ll, &ur);
+	LMEcoord_set(&ll, LASHeader_GetMinX(*header), LASHeader_GetMinY(*header), LASHeader_GetMinZ(*header));
+	LMEcoord_set(&ur, LASHeader_GetMaxX(*header), LASHeader_GetMaxY(*header), LASHeader_GetMaxZ(*header));
+	LMEbound_set(bounds, &ll, &ur);
 	return 1;
+}
+
+void LMEbound_print(LMEbound * const bounds) {
+	LMEcoord_print(&(bounds->low));
+	LMEcoord_print(&(bounds->high));
 }
 	
 	// TODO: Parameterize for different projections}
@@ -265,7 +284,7 @@ void BoundType_destroy(hid_t boundtype, herr_t* status) {
  * @return Int
  */
 
-int MPI_BoundType_create(MPI_Datatype *mpi_boundtype) {
+/*int MPI_BoundType_create(MPI_Datatype *mpi_boundtype) {
     int nitems=2;
     int blocklengths[2] = {1,1};
     MPI_Datatype types[2];
@@ -273,14 +292,14 @@ int MPI_BoundType_create(MPI_Datatype *mpi_boundtype) {
     MPI_CoordType_create(&types[0]);
     MPI_CoordType_create(&types[1]);
     MPI_Aint offsets[2];
-    offsets[0] = offsetof(bound_t, low);
-    offsets[1] = offsetof(bound_t, high);
+    offsets[0] = offsetof(LMEbound, low);
+    offsets[1] = offsetof(LMEbound, high);
     MPI_Type_create_struct(nitems, blocklengths, offsets, types, mpi_boundtype);
     MPI_Type_commit(mpi_boundtype);
    // printf("Bound type created\n");
     
     return 0;
-}
+}*/
 
 /* Bound_dbl_Set: Set the the boundary coordinates for a given bound_dbl_t
  * object
@@ -298,15 +317,15 @@ void Bound_dbl_Set(bound_dbl_t* bounds, double minX, double minY, double minZ, d
 	Coord_Set(&bounds->high, maxX, maxY, maxZ);
 }
 */
-int LMEbound_project(LMEbound* bound, char* srcPrj, char* dstPrj) {
+int LMEbound_project(LMEbound* bound, LMEcrs * const srcPrj, LMEcrs * const dstPrj) {
 	projPJ pj_src, pj_dst;
 	LMEcoord low, high;
-	if (!Proj_load(srcProj, &pj_src)) {
+	if (!LMEcrs_init(srcPrj, &pj_src)) {
 		fprintf(stderr, "Failed to load source projection definition\n");
 		return 0;
 	}
-	if (!Proj_load(projStr,&pj_las)) {
-		fprintf(stderr, "Failed to load projection from source\n");
+	if (!LMEcrs_init(dstPrj,&pj_dst)) {
+		fprintf(stderr, "Failed to load destination projection definition\n");
 		return 0;
 	}
 	double x[2],y[2],z[2];
@@ -334,7 +353,7 @@ int LMEbound_project(LMEbound* bound, char* srcPrj, char* dstPrj) {
 	//printf("Post-Test: Coords (%f,%f,%f)\n",x[1],y[1],z[1]);
 	LMEcoord_set(&low, x[0],y[0],z[0]);
 	LMEcoord_set(&high, x[1],y[1],z[1]);
-	LMEbound_Set(bound, &low, &high);
+	LMEbound_set(bound, &low, &high);
 
 	//printf("New Bounds: (%f,%f), (%f,%f)\n", bound->low.x, bound->low.y, bound->high.x, bound->high.y);
 	pj_free(pj_src);
@@ -347,7 +366,7 @@ int LMEbound_project(LMEbound* bound, char* srcPrj, char* dstPrj) {
  *  @param srs: LASSRSH = The desired projection for the bounds
  *  @return: Int 
  */
-int LMEbound_fromLAS(LMEbound* bound, LASSRSH srs) {
+int LMEbound_fromLASSRS(LMEbound* bound, LASSRSH srs) {
 	projPJ pj_las, pj_wgs;
 	LMEcoord low, high;
 	char* projStr = (char *)malloc(sizeof(char)*PATH_MAX);
@@ -368,7 +387,7 @@ int LMEbound_fromLAS(LMEbound* bound, LASSRSH srs) {
 	LMEcoord_get(cc, &bound->low);
 
 	LMEcoord_toRadians(&bound->high);
-	Coord_Get(cc, &bound->high);
+	LMEcoord_get(cc, &bound->high);
 
 	if (!Proj_load("+proj=longlat +ellps=WGS84 +datum=WGS84 +vunits=m +no_defs", &pj_wgs)) {	
 		fprintf(stderr, "Failed to load WGS84 projection\n");

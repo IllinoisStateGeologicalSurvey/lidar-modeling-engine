@@ -66,11 +66,11 @@ void LMEpointCode_setIdx(LMEpointCode* p) {
 }
 */
 
-void LMEpointCode_setCoord(LMEpointCode *p, const * LMEcoordCode code) {
+void LMEpointCode_setCoord(LMEpointCode *p, LMEcoordCode * const code) {
 	LMEcoordCode_set(&p->code, LMEcoordCode_getX(code), LMEcoordCode_getY(code), LMEcoordCode_getZ(code));
 }
 
-void LMEpoint_setCoord(LMEpoint* p, const * LMEcoord coord) {
+void LMEpoint_setCoord(LMEpoint* p, LMEcoord * const coord) {
 	LMEcoord_set(&p->coord, LMEcoord_getX(coord), LMEcoord_getY(coord), LMEcoord_getZ(coord));
 }
 /*void Coord_Set(coord_dbl_t* coords, double x, double y, double z)
@@ -137,11 +137,11 @@ void Coord_Decode(coord_dbl_t* coords, coord_t* coord_code) {
 }
 */
 void LMEpoint_setReturn(LMEpoint* p, int returnNum, int returnCnt) {
-	LMEreturn_set(&p->retn, returnNum, returnCnt);
+	LMEreturn_set(&p->retns, returnNum, returnCnt);
 }
 
 void LMEpointCode_setReturn(LMEpointCode* p, int returnNum, int returnCnt) {
-	LMEreturn_set(&p->retn, returnNum, returnCnt);
+	LMEreturn_set(&p->retns, returnNum, returnCnt);
 }
 
 void LMEpoint_setColor(LMEpoint* p, int r, int g, int b) {
@@ -233,7 +233,7 @@ hid_t PointType_create(herr_t* status) {
     printf("Point has size %lu\n", sizeof(LMEpointCode));
     pointtype = H5Tcreate(H5T_COMPOUND, sizeof(LMEpointCode));
     *status = H5Tinsert(pointtype, "idx", HOFFSET(LMEpointCode, idx), H5T_STD_U64BE);
-    *status = H5Tinsert(pointtype, "coords", HOFFSET(LMEpointCode, coords), coordtype);
+    *status = H5Tinsert(pointtype, "code", HOFFSET(LMEpointCode, code), coordtype);
     *status = H5Tinsert(pointtype, "intensity", HOFFSET(LMEpointCode, i), H5T_NATIVE_INT);
     *status = H5Tinsert(pointtype, "returns", HOFFSET(LMEpointCode, retns), returntype);
     *status = H5Tinsert(pointtype, "class", HOFFSET(LMEpointCode, clss), H5T_NATIVE_UCHAR);
@@ -317,23 +317,22 @@ int MPI_PointType_create(MPI_Datatype *mpi_pointtype) {
 */
 
 
-void Point_print(const * LMEPointCode p)
+void LMEpointCode_print(LMEpointCode * const p)
 {
-    printf("ID: %lu\n",  p->idx);
-    printf("X:%i, Y:%i, Z: %i\n", p->code[0], p->code[1], p->code[2]);
+    printf("ID: %lu\n",  p->idx.val);
+    printf("X:%i, Y:%i, Z: %i\n", p->code.dims[0], p->code.dims[1], p->code.dims[2]);
     printf("Intensity: %d\n", p->i);
     printf("Return: %d of %d\n", p->retns.rNum, p->retns.rTot);
     printf("Class: %hhu\n", p->clss);
 };
 
-int LMEpoint_fromLAS(LMEpoint* p, double *x, double *y, double *z, const * LASPointH lasPnt) {
+int LMEpoint_fromLAS(LMEpointCode* p, double *x, double *y, double *z, LASPointH * const  lasPnt) {
 	LMEreturn_fromLAS(&p->retns, lasPnt);
 	*x = LASPoint_GetX(*lasPnt);
 	*y = LASPoint_GetY(*lasPnt);
 	*z = LASPoint_GetZ(*lasPnt);
-	LMEcoord_set(&p->coord, *x, *y, *z);
-	LMEpoint_setIntensity(p, LASPoint_GetIntensity(*lasPnt));
-	LMEpoint_setClassification(p, LASPoint_GetClassification(*lasPnt));
+	LMEpointCode_setIntensity(p, LASPoint_GetIntensity(*lasPnt));
+	LMEpointCode_setClassification(p, LASPoint_GetClassification(*lasPnt));
 	LMEcolor_fromLAS(&p->color, lasPnt);
 	return 0;
 }
@@ -357,7 +356,7 @@ int LMEpoint_fromLAS(LMEpoint* p, double *x, double *y, double *z, const * LASPo
 */
 
 
-int LASPoint_project(LASHeaderH* header, const * hsize_t count, double* x, double* y, double* z, Point* pnts, int mpi_rank) {
+int LASPoint_project(LASHeaderH* header, hsize_t * const  count, double* x, double* y, double* z, LMEpointCode* pnts, int mpi_rank) {
     fprintf(stdout, "[%d] LASpoint_project called\n", mpi_rank);
     projPJ pj_src, pj_wgs;
     int i;
@@ -371,8 +370,8 @@ int LASPoint_project(LASHeaderH* header, const * hsize_t count, double* x, doubl
 		return 0;
 	}
 	//Allocate space for coordinates
-    coord_dbl_t* rawCoords = malloc(sizeof(coord_dbl_t));
-    coord_t* cc = malloc(sizeof(coord_dbl_t));
+    LMEcoord* rawCoords = (LMEcoord *)malloc(sizeof(LMEcoord));
+    LMEcoordCode* cc = (LMEcoordCode * )malloc(sizeof(LMEcoordCode));
 
    // printf("[%d] Sample coordinates 0 of %i: %f, %f, %f\n", mpi_rank,(int)*count, x[0], y[0], z[0]);
     pj_transform(&pj_src, &pj_wgs, *count, 1, x, y, z);
@@ -386,11 +385,13 @@ int LASPoint_project(LASHeaderH* header, const * hsize_t count, double* x, doubl
         if (i % 1000 == 0) {
 			//printf("[%d], Projecting point %i\n", mpi_rank, (int)i);
 		}
-        Coord_Set(rawCoords, (x[i] * RAD_TO_DEG), (y[i] * RAD_TO_DEG), (z[i] * RAD_TO_DEG));
+        LMEcoord_set(rawCoords, (x[i] * RAD_TO_DEG), (y[i] * RAD_TO_DEG), (z[i] * RAD_TO_DEG));
 		        
-        Coord_Encode(cc, rawCoords);
-        Point_SetCoords(&pnts[i], cc);
-        Point_IndexCoords(&pnts[i]);
+		//TODO: Find way to convert from points to pointCodes without blowing
+		//stack
+        LMEcoord_encode(cc, rawCoords);
+        LMEpointCode_setCoord(&pnts[i], cc);
+        LMEpointCode_setIdx(&pnts[i]);
     }
     
    // printf("[%d] Project finished!\n", mpi_rank);

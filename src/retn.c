@@ -25,7 +25,7 @@ int LMEreturn_isFirst(LMEreturn* retn) {
 	}
 }
 
-int LMEreturn_fromLAS(LMEreturn* retn, const * LASPointH lasPnt) {
+int LMEreturn_fromLAS(LMEreturn* retn, LASPointH * const lasPnt) {
 	LMEreturn_set(retn, LASPoint_GetReturnNumber(*lasPnt), LASPoint_GetNumberOfReturns(*lasPnt));	
 	return 1;
 }

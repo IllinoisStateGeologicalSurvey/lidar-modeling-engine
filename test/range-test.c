@@ -62,11 +62,11 @@ void usage()
 	fprintf(stderr, "-----------------------------------------------------------\n");
 }
 
-void parseArgs(int argc, char* argv[], bound_t* bound_1, char* rName, int* verbose) {
+void parseArgs(int argc, char* argv[], LMEboundCode* bound_1, char* rName, int* verbose) {
 	int i,j;
 	/* Check the number of processors */
-	coord_dbl_t*  ll_raw = malloc(sizeof(coord_dbl_t));
-	coord_dbl_t*   ur_raw = malloc(sizeof(coord_dbl_t));
+	LMEcoord*  ll_raw = malloc(sizeof(LMEcoord));
+	LMEcoord*   ur_raw = malloc(sizeof(LMEcoord));
 	
 
 	for (i = 1; i < argc; i++)
@@ -96,16 +96,16 @@ void parseArgs(int argc, char* argv[], bound_t* bound_1, char* rName, int* verbo
 			sscanf(argv[i], "%lf", &x);
 			sscanf(argv[j], "%lf", &y);
 			printf("Setting coords to %f,%f,%f\n", x, y,0.0);
-			Coord_Set(ll_raw, x, y, 0.0);
+			LMEcoord_set(ll_raw, x, y, 0.0);
 			i = i+2;
 			j = i+1;
 			sscanf(argv[i], "%lf", &x);
 			sscanf(argv[j], "%lf", &y);
-			printf("Set low coord to %f,%f\n", ll_raw->x, ll_raw->y);
-			Coord_Set(ur_raw, x, y, 0.0);
+			printf("Set low coord to %f,%f\n", LMEcoord_getX(ll_raw), LMEcoord_getY(ll_raw));
+			LMEcoord_set(ur_raw, x, y, 0.0);
 			printf("Coordinates set for first bound, encoding\n");
-			Coord_Encode(&bound_1->low, ll_raw);
-			Coord_Encode(&bound_1->high, ur_raw);
+			LMEcoord_encode(&bound_1->low, ll_raw);
+			LMEcoord_encode(&bound_1->high, ur_raw);
 			i = i+1;
 		}
 		else if (strcmp(argv[i], "-r") == 0 ||
@@ -129,7 +129,7 @@ void parseArgs(int argc, char* argv[], bound_t* bound_1, char* rName, int* verbo
 
 int main(int argc, char* argv[]) {
 	//Accept a range of coordinates , test for intersection 
-	bound_t bound_1;
+	LMEboundCode bound_1;
 	int i, intcount = 0;
 	uint32_t pntCounter = 0;
 	int verbose;
@@ -139,7 +139,7 @@ int main(int argc, char* argv[]) {
 	parseArgs(argc, argv, &bound_1, rName, &verbose);
 	hid_t file_id, region_group_id, region_id, plist_id;
 	hsize_t nHeaders;
-	header_t* headers;
+	LMEheader* headers;
 	plist_id = H5Pcreate(H5P_FILE_ACCESS);
 	file_id = H5Fopen(h5_file, H5F_ACC_RDONLY | H5F_ACC_DEBUG, plist_id);
 	plist_id = H5Pcreate(H5P_GROUP_ACCESS);
@@ -152,13 +152,13 @@ int main(int argc, char* argv[]) {
 		exit(1);
 	}
 	nHeaders = Headers_count(region_id);
-	headers = malloc(sizeof(header_t)*(int)nHeaders);
+	headers = malloc(sizeof(LMEheader)*(int)nHeaders);
 	Headers_read(headers, region_id);
 	// Hard coded for now: CHANGE ASAP
 	FILE* fp = fopen("/home/ncasler/apps/DSME/data/files.txt", "w");
 	fprintf(stderr, "File opened successfully\n");
 	for (i=0; i < nHeaders; i++) {
-		if (Bound_intersects(&bound_1, &headers[i].bounds)) {
+		if (LMEboundCode_intersects(&bound_1, &headers[i].bounds)) {
 			//coord_dbl_t ll,ur;
 			//printf("Filter Bounds: \n\n\n");
 			//Coord_Decode(&ll,&bound_1.low);

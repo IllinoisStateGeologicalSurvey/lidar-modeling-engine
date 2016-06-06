@@ -5,9 +5,11 @@
  ***************************************************************/
 
 /** 
- * @file common.c
+ * @file readLas.c
  * @author Nathan Casler
  * @date May 6 2016
+ * @deprecated This function no longer fits with the H5 architecture of the
+ * program, some heavy refactoring will be needed to update it.
  * @brief Test to check if a parallel point reading of an LAS file is functional
  *
  */
@@ -59,10 +61,11 @@ void ptime(const char *const msg)
 
 int main (int argc, char* argv[])
 {
-    int i,j;
+    int i;
+	//int i,j;
     int verbose = FALSE;
     char* file_name_in = 0;
-
+	hid_t file_id;
     int fileCount = 0;
     LASReaderH reader = NULL;
     LASHeaderH header = NULL;
@@ -150,15 +153,27 @@ int main (int argc, char* argv[])
     }
     printf("[%i] Block size is %d\n", mpi_rank, block_len);
     ptime("Block created");
-    Point* points;
+    LMEpointCode* points;
     if (mpi_rank == 0) {
-        points = malloc(sizeof(Point) * pntCount);
+        points = malloc(sizeof(LMEpointCode) * pntCount);
     }   
 
-    Point* sub_points = malloc(sizeof(Point) * block_len);
-    Point* point =  malloc(sizeof(Point));
-    MPI_Datatype* mpi_pointtype = NULL;
-    
+    LMEpointCode* sub_points = (LMEpointCode*)malloc(sizeof(LMEpointCode) * block_len);
+    LMEpointCode* point =  (LMEpointCode*)malloc(sizeof(LMEpointCode));
+    //MPI_Datatype* mpi_pointtype = NULL;
+    char * h5path = (char *)malloc(sizeof(char) * PATH_MAX);
+	LMEheader lmeHeader;
+	// TODO: Placeholder for now, should switch this so that the header is a table
+	// dataset with a primary index which could have a link to point datasets
+	uint32_t header_id = 9999
+	/* TODO: Make file reading for headers and point less convoluted process.
+	 * Could make the functions pass the h_id tp each other, make a dataset
+	 * creation metaclass */
+	getDataStore(h5Path);
+	plist_id = H5Pcreate(H5P_FILE_ACCESS);
+	H5Fopen(h5_path, H5F_ACC_RDWR | H5F_ACC_DEBUG, *plist_id);
+	Header_read(file_name_in, LMEheader, header_id);
+	
     
     /** CAN WE MAKE THIS A 1-D array **/
     hsize_t* psize = malloc(sizeof(hsize_t));
@@ -169,7 +184,7 @@ int main (int argc, char* argv[])
     *offset = mpi_rank * block_len;
     printf("[%i] Creating point type for MPI\n", mpi_rank);
     // Todo: Find out why mpi struct creation causes segfaults
-    mpi_err = MPI_Scatter(points, (sizeof(Point) *  block_len), MPI_BYTE, sub_points, (sizeof(Point) * block_len), MPI_BYTE, 0, comm);
+    mpi_err = MPI_Scatter(points, (sizeof(LMEpointCode) *  block_len), MPI_BYTE, sub_points, (sizeof(LMEpointCode) * block_len), MPI_BYTE, 0, comm);
     //MPI_PointType_create(mpi_pointtype);
     printf("[%i] Scattering points to processes\n", mpi_rank);
     
@@ -180,8 +195,8 @@ int main (int argc, char* argv[])
     if (!LASFile_read(reader, offset, block, sub_points, mpi_rank)) {
 		fprintf(stderr, "IO Error: Failed to read %s\n", file_name_in);
 		LASReader_Destroy(reader);
-		Point_destroy(sub_points);
-		Point_destroy(point);
+		LMEpointCode_destroy(sub_points);
+		LMEpointCode_destroy(point);
 		if (mpi_rank == 0) {
 			free(points);
 		}
@@ -192,14 +207,19 @@ int main (int argc, char* argv[])
 	ptime("Points read");
    
     if (mpi_rank == 0) {
-        createDataset("test.h5", "/pts", psize);
+        // Should rename this function to specify the type of dataset
+		// NEED TO READ THE Header data into a LMEheader object, before writing
+		
+		createDataset("test.h5", "/pts", psize);
         printf("[%i] Dataset created\n", mpi_rank);
         ptime("Dataset created.");
     }
     printf("[%i] writing points\n", mpi_rank);
     MPI_Barrier(comm);
+
     //MPI_Gather(&sub_points, 1, MPI_FLOAT, points, 1, MPI_FLOAT, 0, MPI_COMM_WORLD);
-    PointSet_write("test.h5", "/pts", offset, block, sub_points, comm, info);
+    
+	PointSet_write("test.h5", "/pts", offset, block, sub_points, comm, info);
 	ptime("Points written");
 	printf("[%i] Points written, cleaning up\n", mpi_rank);
 
@@ -210,8 +230,8 @@ int main (int argc, char* argv[])
 //    for (i = 0; i < *block; i++) {
 //        Point_destroy(&sub_points[i]);
 //    }
-    Point_destroy(sub_points);
-    Point_destroy(point);
+    LMEpointCode_destroy(sub_points);
+    LMEpointCode_destroy(point);
     //free(mpi_pointtype);
     if (mpi_rank == 0) {
   //      for (i = 0; i < pntCount; i++) {

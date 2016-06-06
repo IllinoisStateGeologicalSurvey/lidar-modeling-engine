@@ -8,17 +8,17 @@
 #include <gsl/gsl_matrix.h>
 #include <inttypes.h>
 
-typedef struct grid_t {
-	bound_t *extent;
+typedef struct LMEgrid {
+	LMEbound *extent;
 	double res[2];
 	int dims[2];
 	double nodata;
 	gsl_matrix* data;
-} grid_t;
+} LMEgrid;
 
-grid_t* Grid_Create(bound_t *extent, int dims[], double res[]);
+LMEgrid* Grid_Create(LMEbound *extent, int dims[], double res[]);
 
-void Grid_Destroy(grid_t *grid);
+void Grid_Destroy(LMEgrid *grid);
 
 
 #endif

@@ -23,12 +23,15 @@
 #include <liblas/capi/liblas.h>
 #include <proj_api.h>
 #include "common.h"
+#include <hdf5_hl.h>
 #include "point.h"
 #include "file_util.h"
+#include "bound.h"
 #include "util.h"
 #include "header.h"
 #include "reader.h"
 #include "filter.h"
+#include "point_set.h"
 #define LAS_FORMAT_10 0
 #define LAS_FORMAT_11 1
 #define LAS_FORMAT_12 2
@@ -82,14 +85,15 @@ void parse_args(int argc, char* argv[], char* file_list, LMEbound* bounds, int* 
 			i++;
 			double coords[4];
 			int j = 0;
-			LMEcoord ll, ur;
+			LMEcoord low, high;
 			for (j = 0; j < 4; j++) {
 				int counter = j+i;
 				sscanf(argv[counter], "%lf", &coords[j]);
 			}
-			LMEcoord_set(&ll, coords[0], coords[1], 0.0);
-			LMEcoord_set(&ur, coords[2], coords[3], 0.0);
-			LMEbound_set(bounds, &ll, &ur);
+			LMEcoord_set(&low, coords[0],coords[1], 0.0);
+			LMEcoord_set(&high, coords[2],coords[3], 0.0);
+
+			LMEbound_set(bounds, &low, &high);
 			i = i+4;
 		} else 
 		{
@@ -100,9 +104,28 @@ void parse_args(int argc, char* argv[], char* file_list, LMEbound* bounds, int* 
 	}
 }
 
+int h5_user_region_init(char * const rName, hid_t *plist_id, hid_t *file_id, hid_t *user_region_id, hid_t *user_id, MPI_Comm comm, MPI_Info info) {
+	char *h5_file = (char *)malloc(sizeof(char) * PATH_LEN);
+	getDataStore(h5_file);
+	*plist_id = H5Pcreate(H5P_FILE_ACCESS);
+	H5Pset_fapl_mpio(*plist_id, comm, info);
+	*file_id = H5Fopen(h5_file, H5F_ACC_RDWR |
+		H5F_ACC_DEBUG, *plist_id);
+	
+	*user_region_id = H5Gopen(*file_id, "users", H5P_DEFAULT);
+	// Check if group exists
+	if(H5Lexists(*user_region_id, rName, H5P_DEFAULT)) {
+		*user_id = H5Gopen(*user_region_id, rName, H5P_DEFAULT);
+	} else {
+		*user_id = H5Gcreate(*user_region_id, rName, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+	}
+	free(h5_file);
+	return 0;
+}
+
 int main(int argc, char* argv[])
 {
-	int i, j;
+	int i;
 	int verbose = FALSE;
 	char* file_list = (char *)malloc(sizeof(char) * PATH_LEN);
 	LMEbound* bounds =  (LMEbound *)malloc(sizeof(LMEbound));
@@ -124,19 +147,22 @@ int main(int argc, char* argv[])
 	// Timing objects
 	double starttime, endtime;
 
+
+
 	parse_args(argc, argv, file_list, bounds, &verbose);
 	char line[PATH_LEN];
+	//LAS variables
 	LASReaderH reader;
 	LASHeaderH header;
 	LASSRSH srs;
+	// Counters
 	uint32_t pntCount;
 	int fileCount = 0;
 	//Create filter object
-	LMEfilter* filter = (LMEfilter *)malloc(sizeof(LMEfilter));
-	LMEcrs srcCRS, dstCRS;
-	LMEcrs_setWGS(&srcCRS);
+	LMEfilter* filter = (LMEfilter*)malloc(sizeof(LMEfilter));;
 	LMEfilter_create(filter);
 	// Open task file
+	// Should make this something done in HDF5
 	FILE* fp = fopen(file_list, "r");
 	while(!feof(fp)){
 		char ch;
@@ -149,17 +175,29 @@ int main(int argc, char* argv[])
 	printf("Reading %i files\n", fileCount);
 	char paths[fileCount][PATH_LEN];
 	fseek(fp, 0, SEEK_SET);
-	for (i = 0; i < fileCount; i++) {
+	for (i = 0; i < (fileCount -1); i++) {
 		fgets(line, sizeof(line), fp);
 		// Remove trailing new lines
 		resolvePath(line, 1);
 		strcpy(paths[i], line);
 	}
 	fclose(fp);
+
 	printf("[%i] File Count: %i\n", mpi_rank, fileCount);
+	
+	/** Initialize access to H5 file, really should 
+	 * encapsulate this into a class, it gets tiresome 
+	 * having to redo this logic for every script, also
+	 * would be nice to have some intelligent file
+	 * organization/management.
+	 */
+	char* rName = (char *)malloc(sizeof(char)*PATH_LEN);
+	rName = "test";
+	hid_t plist_id, file_id, user_region_id, user_id;
+	h5_user_region_init(rName, &plist_id, &file_id, &user_region_id, &user_id, comm, info);
+	
 
-
-	printf("(%f, %f, %f), (%f,%f,%f)\n", LMEcoord_getX(&bounds->low), LMEcoord_getY(&bounds->low), LMEcoord_getZ(&bounds->low), LMEcoord_getX(&bounds->high), LMEcoord_getY(&bounds->high), LMEcoord_getZ(&bounds->high));
+	LMEbound_print(bounds);
 	//Filter_SetRange(filter, bounds);
 	// Get the task division
 	starttime = MPI_Wtime();
@@ -169,31 +207,36 @@ int main(int argc, char* argv[])
 		int counter = t_offsets[mpi_rank] + i;
 		LMEfilter_setRange(filter, bounds);
 		LMEfilter_setReturn(filter, 2);
+		
 		printf("[%i] Reading %s\n", mpi_rank, paths[counter]);
 		openLAS(&reader,&header, &srs, &pntCount, paths[counter]);
 		LMEpointCode* points = (LMEpointCode *)malloc(sizeof(LMEpointCode) * pntCount);
 		// Put the bounds into LAS file's projection
-		LMEcrs_fromLAS(&dstCRS, &header);
-		LMEbound_project(&filter->range, &srcCRS, &dstCRS);
-		//printf("File has Bounds: (%f,%f,%f,%f)\n",LASHeader_GetMinX(header), LASHeader_GetMinY(header), LASHeader_GetMaxX(header), LASHeader_GetMaxY(header));
-		//printf("FilterBounds: (%f,%f,%f,%f)\n",filter->range.low.x,filter->range.low.y,filter->range.high.x,filter->range.high.y);
+		
+		LMEbound_fromLAS(&filter->range, &header);
 		printf("[%i] Filtering file\n", mpi_rank);
+		
 		bufCount = filterLAS(&header, &reader, &pntCount, filter, points, mpi_rank);
 		// Need to add the points to something
 		// Can write to HDF, but will require a collective call. 
-		// Could also call a write after the number of points hits a certain
+		// Could also call a write after the number of points hits a certainl
 		// number to protect the heap. 
-		// TODO: NEED TO IMPLEMENT A THRESHOLD FOR THE NUMBER OF POINTS A PROCESS CAN
-		// HANDLE, it looks like the process is choking on a buffer of 1325556
-		// points
-		if (bufCount > 0) {	
+		if (bufCount > 0) {
 			totPoints = bufCount + totPoints;
 			printf("[%i] Found %"PRIu32" points to process\n", mpi_rank, bufCount);
-			printf("[%i] POint [%i] Is (%d,%d,%d)\n", mpi_rank, 1, LMEcoordCode_getX(&points[1].code), LMEcoordCode_getY(&points[1].code), LMEcoordCode_getZ(&points[1].code));
+			LMEpointCode_print(&points[1]);
 		}
 			// TODO: Find method to aggregate points for writing without
 			// overflowing buffer
+		/** This will create the dataset and write
+		 * initial data. Need to generate logic for
+		 * buffered writing to handle parallel writes
+		 */
+		
+		LMEpointSet_createDataset(file_id, &points[0], bufCount);
+
 		closeLAS(&reader, &header, &srs, &pntCount, points);
+
 		endtime = MPI_Wtime();
 		free(points);
 		printf("[%i] File processed in %f seconds\n", mpi_rank, endtime-starttime);
@@ -202,9 +245,15 @@ int main(int argc, char* argv[])
 	endtime = MPI_Wtime();
 	printf("[%i] Process finished in %f seconds\n", mpi_rank, endtime-starttime);
 	printf("[%i] Cleaning up\n", mpi_rank);
+	H5Pclose(user_id);
+	H5Pclose(user_region_id);
+	H5Pclose(plist_id);
+	H5Fclose(file_id);
+	free(rName);
 	LMEfilter_destroy(filter);
 	free(bounds);
 	free(file_list);
+	free(filter);
 	MPI_Finalize();
 	return 0;
 }

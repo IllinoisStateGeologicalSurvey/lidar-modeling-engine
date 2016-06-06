@@ -30,23 +30,26 @@
 /** 
  * @brief Filter_Create: Create a point filter object
  *
- * @return filter: #filter_t = Filter object used to parse a LAS file
+ * @return filter: #LMEfilter = Filter object used to parse a LAS file
  */
-filter_t* Filter_Create() {
-	filter_t* filter = (filter_t*)malloc(sizeof(filter_t));
+
+int LMEfilter_create(LMEfilter* filter) {
 	filter->retn = 0;
 	filter->intens =  0;
 	filter->clas = (char)0;
-	Bound_dbl_Set(&filter->range, -180.0, -90.0, 0.0, 180.0, 90.0, 0.0);
+	LMEcoord ll, ur;
+	LMEcoord_set(&ll, -180.0, -90.0, 0.0);
+	LMEcoord_set(&ur, 180.0, 90.0, 0.0);
+	LMEbound_set(&filter->range, &ll, &ur);
 	
-	return filter;
+	return 0;
 }
 
 /**
  * @brief Filter_Set: Setter for filter attributes
  *
  * This will set the values for various filter classes
- * @param filter: #filter_t = Filter object to hold settings
+ * @param filter: #LMEfilter = Filter object to hold settings
  * @param range: #bound_dbl_t = The bounding box to use when filtering points
  * @param retn: int = The return number to match points against
  * @param intensity: int = The intensity values to match points against
@@ -58,7 +61,7 @@ filter_t* Filter_Create() {
  * @note Should update return, intensity and classification to account for
  * ranges of values
  */
-int Filter_Set(filter_t* filter, bound_dbl_t* range, int retn, int intensity, char classification) {
+int LMEfilter_set(LMEfilter* filter, LMEbound* range, int retn, int intensity, char classification) {
 	filter->range = *range;
 	filter->retn = retn;
 	filter->intens = intensity;
@@ -68,12 +71,12 @@ int Filter_Set(filter_t* filter, bound_dbl_t* range, int retn, int intensity, ch
 /**
  * @brief Filter_SetRange: Set the bounding box for the filter object
  *
- * @param filter: #filter_t = The filter object to update
+ * @param filter: #LMEfilter = The filter object to update
  * @param range: #bound_dbl_t = The bounding box to apply to the filter
  * @return 0
  * @note The range is set in EPSG:4326 decimal degrees
  */
-int Filter_SetRange(filter_t* filter, bound_dbl_t* range) {
+int LMEfilter_setRange(LMEfilter* filter, LMEbound* range) {
 	filter->range.low = range->low;
 	filter->range.high = range->high;
 	return 0;
@@ -82,32 +85,32 @@ int Filter_SetRange(filter_t* filter, bound_dbl_t* range) {
 /** 
  * @brief Filter_SetReturn: Set the return value for the filter object
  *
- * @param filter: #filter_t = The filter object to update
+ * @param filter: #LMEfilter = The filter object to update
  * @param retnFlag: int = The return value to set
  * @return 0
  */
-int Filter_SetReturn(filter_t* filter, int retnFlag) {
+int LMEfilter_setReturn(LMEfilter* filter, int retnFlag) {
 	filter->retn = retnFlag;
 	return 0;
 }
 /** 
  * @brief Filter_Destroy: Frees memory occupied by a filter object
  *
- * @param filter: #filter_t = The filter object to free
+ * @param filter: #LMEfilter = The filter object to free
  */
-void Filter_Destroy(filter_t* filter) {
+void LMEfilter_destroy(LMEfilter* filter) {
 	free(filter);
 }
 
 /**
  * @brief Filter_RangeCheck: Check if a point falls within bounding filter
  *
- * @param filter: #filter_t = The filter holding a range filter
+ * @param filter: #LMEfilter = The filter holding a range filter
  * @param lasPnt: LASPointH = Pointer to a point in a LAS file
  * @return 1 if point is contained by the filter, else 0
  * @note: There is probably a more efficient/accurate method to do this
  */
-int Filter_RangeCheck(filter_t* filter, LASPointH* lasPnt) {
+int LMEfilter_rangeCheck(LMEfilter* filter, LASPointH* lasPnt) {
 	double x,y;
 	x = LASPoint_GetX(*lasPnt);
 	y = LASPoint_GetY(*lasPnt);
@@ -115,19 +118,19 @@ int Filter_RangeCheck(filter_t* filter, LASPointH* lasPnt) {
 	//z = LASPoint_GetZ(*lasPnt);
 	//printf("Is (%f,%f) in (%f,%f)(%f,%f)\n", x, y, filter->range.low.x, filter->range.low.y, filter->range.high.x, filter->range.high.y);	
 	//printf("Is %f < %f or %f < %f\n", x, filter->range.low.x, y, filter->range.low.y);
-	if (x < filter->range.low.x) {
+	if (x < LMEcoord_getX(&filter->range.low)) {
 		//printf("Left\n");
 		return 0;
 	}
-	else if (y < filter->range.low.y) {
+	else if (y < LMEcoord_getY(&filter->range.low)) {
 		//Point is below/left of box
 		//printf("Point Y: %f < %f Bound Low Y\n", y, filter->range.low.y);
 	//	printf("Below\n");
 		return 0;
-	} else if (x > filter->range.high.x) {
+	} else if (x > LMEcoord_getX(&filter->range.high)) {
 		//printf("Right\n");
 		return 0;
-	} else if (y > filter->range.high.y) {
+	} else if (y > LMEcoord_getY(&filter->range.high)) {
 		//Point is above/right of box
 		//printf("Above\n");
 		return 0;
@@ -140,13 +143,13 @@ int Filter_RangeCheck(filter_t* filter, LASPointH* lasPnt) {
 /**
  * @brief Filter_ReturnCheck: Check if a point matches the return filter value
  *
- * @param filter: #filter_t = Filter object with a return filter to apply
+ * @param filter: #LMEfilter = Filter object with a return filter to apply
  * @param lasPnt: LASPointH = Pointer to a point in an LAS file to filter
  * @return 1 if point matches the return filter
  * @note Currently only matches first or last returns. First if the filter
  * = 1, last if the filter = 2, no matching if filter = 0, else print error
  */
-int Filter_ReturnCheck(filter_t* filter, LASPointH* lasPnt) {
+int LMEfilter_returnCheck(LMEfilter* filter, LASPointH* lasPnt) {
 	// TODO: Make this check more robust
 	// FOR NOW: 0 => Don't filter returns
 	// 1 => First Returns

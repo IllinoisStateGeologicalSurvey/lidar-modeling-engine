@@ -11,16 +11,17 @@
 #include <proj_api.h>
 #include <liblas/capi/liblas.h>
 #include "point.h"
+#include "coord.h"
 
 typedef struct LMEbound {
 	LMEcoord low;
 	LMEcoord high;
-} LME_bound;
+} LMEbound;
 
 typedef struct LMEboundCode {
 	LMEcoordCode low;
 	LMEcoordCode high;
-} LME_boundCode;
+} LMEboundCode;
 
 
 hid_t BoundType_create(herr_t* status);
@@ -28,26 +29,30 @@ hid_t BoundType_create(herr_t* status);
 void BoundType_destroy(hid_t boundtype, herr_t* status);
 
 
-int LMEbound_intersects(const * LMEbound bound_1, const * LMEbound  bound_2);
-void LMEbound_set(LMEbound* bounds, const * LMEcoord low, const * LMEcoord high);
+int LMEbound_intersects(LMEbound * const bound_1, LMEbound * const bound_2);
+void LMEbound_set(LMEbound* bounds, LMEcoord * const low, LMEcoord * const high);
 
-int LMEboundCode_fromLAS(const * LASHeaderH header, LMEboundCode* bounds);
-int LMEboundCode_intersects(const * LMEboundCode code_1, const* LMEboundCode code_2);
-void LMEboundCode_set(LMEboundCode* code, const * LMEcoordCode low, const * LMEcoordCode high);
+int LMEbound_copy(LMEbound* dstBounds, LMEbound * const srcBounds);
 
-double LMEbound_length(const * LMEbound bound, int dim);
+int LMEboundCode_fromLAS(LMEboundCode* bounds, LASHeaderH * const header);
 
-LMEbound* LMEbound_subdivide(const * LMEbound bound, int countX, int countY, size_t* bound_count);
+int LMEbound_fromLAS(LMEbound* bounds, LASHeaderH * const header);
+int LMEboundCode_intersects(LMEboundCode * const code_1, LMEboundCode * const code_2);
+void LMEboundCode_set(LMEboundCode* code, LMEcoordCode * const low, LMEcoordCode * const high);
 
+double LMEbound_length(LMEbound * const bound, int dim);
 
+int LMEbound_subdivide(LMEbound ** boundArr, LMEbound * const bound, int countX, int countY, size_t* bound_count);
 
-void LMEbound_encode(LMEboundCode* code, const * LMEbound bounds);
+void LMEbound_encode(LMEboundCode* code, LMEbound * const bounds);
 
-void LMEbound_decode(LMEbound* bounds, const * LMEboundCode* code);
+void LMEbound_decode(LMEbound* bounds, LMEboundCode * const code);
 
-int LMEbound_project(LMEbound* bounds, char* srcProj, char* dstProj);
+int LMEbound_project(LMEbound* bounds, LMEcrs * const srcProj, LMEcrs * const dstProj);
 
-int LMEbound_fromLAS(LMEbound* bounds, LASSRSH srs);
+int LMEbound_fromLASSRS(LMEbound* bounds, LASSRSH srs);
+
+void LMEbound_print(LMEbound * const bounds);
 
 
 #endif

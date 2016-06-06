@@ -12,27 +12,31 @@
 #include <proj_api.h>
 #include <liblas/capi/liblas.h>
 #include "point.h"
-
-typedef struct filter_t {
-	bound_dbl_t range;
+#include "bound.h"
+typedef struct LMEfilter {
+	LMEbound range;
 	int retn;
 	int intens;
 	char clas;
-} filter_t;
+} LMEfilter;
 
-filter_t* Filter_Create();
+/** @brief Constructor argument to generate a filter
+ * This will create a default filter definition to use
+ * @param filter (LMEfilter*): A pointer to an allocated LMEfilter object
+ */
+int LMEfilter_create(LMEfilter* filter);
 
-int Filter_Set(filter_t* filter, bound_dbl_t* range, int retn, int intensity, char classification);
+int LMEfilter_set(LMEfilter* filter, LMEbound* range, int retn, int intensity, char classification);
 
-int Filter_SetRange(filter_t* filter, bound_dbl_t* range);
+int LMEfilter_setRange(LMEfilter* filter, LMEbound* range);
 
-int Filter_SetReturn(filter_t* filter, int retnFlag);
+int LMEfilter_setReturn(LMEfilter* filter, int retnFlag);
 
-void Filter_Destroy(filter_t* filter);
+void LMEfilter_destroy(LMEfilter* filter);
 
-int Filter_RangeCheck(filter_t* filter, LASPointH* lasPnt);
+int LMEfilter_rangeCheck(LMEfilter* filter, LASPointH* lasPnt);
 
-int Filter_ReturnCheck(filter_t* filter, LASPointH* lasPnt);
+int LMEfilter_returnCheck(LMEfilter* filter, LASPointH* lasPnt);
 
 #endif // FILTER_H
 

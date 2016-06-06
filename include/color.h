@@ -18,4 +18,6 @@ hid_t ColorType_create(herr_t* status);
 
 void ColorType_destroy(hid_t colortype, herr_t* status);
 
+int LMEcolor_fromLAS(LMEcolor* color, LASPointH * const lasPnt);
+
 #endif

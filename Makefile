@@ -25,11 +25,12 @@ GEOS_INCLUDE = $(GEOS_INSTALL)/include
 EXTINCLUDE	= $(INCLUDE) -I$(MPI_INSTALL)/include -I$(HDF_INSTALL)/include -I$(LIBLAS_INSTALL)/include -I$(GEOS_INCLUDE) -I$(PROJ_INSTALL)/include -I$(GSL_INSTALL)/include
 #-I$(SZIP_INSTALL)/include
 LIBGEOS		=  $(GEOS_INSTALL)/lib/libgeos_c.so
-LIBSHDF		=  $(HDF_INSTALL)/lib/libhdf5.a $(MPI_INSTALL)/lib/libmpi.a 
+LIBSHDF		=  $(HDF_INSTALL)/lib/libhdf5_hl.a $(HDF_INSTALL)/lib/libhdf5.a
+LIBSMPI		=  $(MPI_INSTALL)/lib/libmpi.a 
 LIBSLAS		=  $(LIBLAS_INSTALL)/lib/liblas_c.so $(LIBLAS_INSTALL)/lib/liblas_c.so.3
 LIBSPROJ	=  $(PROJ_INSTALL)/lib/libproj.a
 #$(SZIP_INSTALL)/lib/libsz.a
-EXTLIBS		= $(LIBSHDF) $(LIBGEOS) $(LIBSLAS) $(LIBSPROJ) $(EXTLIB) $(LIB)
+EXTLIBS		= $(LIBSHDF) $(LIBGEOS) $(LIBSLAS) $(LIBSPROJ) $(LIBSMPI) $(EXTLIB) $(LIB)
 
 SOURCES		  := $(wildcard $(SOURCEDIR)/*.c)
 OBJECTS		  := $(subst $(SOURCEDIR),$(BUILDDIR),$(SOURCES:%.c=%.o))
@@ -52,14 +53,21 @@ OBJECTS		  := $(subst $(SOURCEDIR),$(BUILDDIR),$(SOURCES:%.c=%.o))
 
 all: $(BUILDDIR)/initLME \
 	$(BUILDDIR)/addRegion \
+	$(BUILDDIR)/quadTest \
 	$(BUILDDIR)/addRegionPar \
 	$(BUILDDIR)/readPoints \
-	$(BUILDDIR)/readLas \
+	$(BUILDDIR)/gridPoints \
 	$(BUILDDIR)/headerRead \
 	$(BUILDDIR)/testRange \
 	$(BUILDDIR)/checkCatalog \
 	$(BUILDDIR)/getGrid
 	
+$(BUILDDIR)/gridPoints: $(TESTDIR)/gridPoints.c
+	$(CC) $(CFLAGS) -o $@ $(TESTDIR)/gridPoints.c $(SOURCES) $(EXTINCLUDE) $(EXTLIBS)
+
+$(BUILDDIR)/quadTest: $(TESTDIR)/quadTest.c
+	$(CC) $(CFLAGS) -o $@ $(TESTDIR)/quadTest.c $(SOURCES) $(EXTINCLUDE) $(EXTLIBS)
+
 $(BUILDDIR)/getGrid: $(TESTDIR)/getGrid.c
 	$(CC) $(CFLAGS) -o $@ $(TESTDIR)/getGrid.c $(SOURCES) $(EXTINCLUDE) $(EXTLIBS)
 
@@ -78,8 +86,8 @@ $(BUILDDIR)/addRegionPar: $(TESTDIR)/addRegionPar.c
 $(BUILDDIR)/readPoints: $(TESTDIR)/readPoints.c
 	$(CC) $(CFLAGS) -o $@ $(TESTDIR)/readPoints.c $(SOURCES) $(EXTINCLUDE) $(EXTLIBS)
 
-$(BUILDDIR)/readLas: $(TESTDIR)/readLas.c
-	$(CC) $(CFLAGS) -o $@ $(TESTDIR)/readLas.c $(SOURCES) $(EXTINCLUDE) $(EXTLIBS)
+#$(BUILDDIR)/readLas: $(TESTDIR)/readLas.c
+#	$(CC) $(CFLAGS) -o $@ $(TESTDIR)/readLas.c $(SOURCES) $(EXTINCLUDE) $(EXTLIBS)
 
 $(BUILDDIR)/headerRead: $(TESTDIR)/headerRead.c
 	$(CC) $(CFLAGS) -o $@  $(TESTDIR)/headerRead.c $(SOURCES) $(EXTINCLUDE) $(EXTLIBS)

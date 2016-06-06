@@ -13,6 +13,7 @@
 #include <proj_api.h>
 #include "file_util.h"
 #include "bound.h"
+#include "crs.h"
 
 typedef struct proj_t {
     char proj4[4096];
@@ -24,51 +25,29 @@ typedef struct proj_t {
 //} bound_t;
 
 
-typedef struct header_t {
-    uint32_t id;
-    uint32_t pnt_count;
-    bound_t bounds;
-    char path[4096];
-    proj_t proj;
-} header_t;
+typedef struct LMEheader {
+	uint32_t id;
+	uint32_t pnt_count;
+	LMEboundCode bounds;
+	LMEcrs crs;
+	char path[4096];
+	
+} LMEheader;
 
 int createHeaderDataset(char* file, char* dataset, hsize_t* dims);
 
-hid_t ProjType_create(herr_t* status);
-
-void ProjType_destroy(hid_t projtype, herr_t* status);
-
-int Proj_Set(LASHeaderH header, proj_t* proj);
-
-
-//hid_t BoundType_create(herr_t* status);
-
-//void BoundType_destroy(hid_t boundtype, herr_t* status);
-
-//int Bound_Set(LASHeaderH header, bound_t* bounds);
 
 hid_t HeaderType_create(herr_t* status);
 
 void HeaderType_destroy(hid_t headertype, herr_t* status);
 
-hid_t PointType_create(herr_t* status);
 
-void PointType_destroy(hid_t pointtype, herr_t* status);
+int LMEheaderBlock_read(char paths[], int offset, int block, LMEheader* headers);
 
-int MPI_CoordType_create(MPI_Datatype* mpi_coordtype);
+int LMEheaderBlock_writeSer(hid_t file_id, char* dataset, hsize_t* offset, hsize_t* block, LMEheader* headers);
 
-//int MPI_BoundType_create(MPI_Datatype* mpi_boundtype);
+int LMEheaderBlock_write(hid_t file_id, char* dataset, hsize_t* offset, hsize_t* block, LMEheader* headers, MPI_Comm comm, MPI_Info);
 
-int MPI_ProjType_create(MPI_Datatype* mpi_projtype);
-
-int MPI_HeaderType_create(MPI_Datatype* mpi_headertype);
-
-int readHeaderBlock(char paths[], int offset, int block, header_t* headers);
-
-int writeHeaderBlock_ser(hid_t file_id, char* dataset, hsize_t* offset, hsize_t* block, header_t* headers);
-
-int writeHeaderBlock(hid_t file_id, char* dataset, hsize_t* offset, hsize_t* block, header_t* headers, MPI_Comm comm, MPI_Info);
-
-int Header_read(char* path, header_t* header, uint32_t id);
+int LMEheader_read(char* path, LMEheader* header, uint32_t id);
 
 #endif

@@ -11,6 +11,11 @@
 #include <inttypes.h>
 #include <liblas/capi/liblas.h>
 #include "coord.h"
+#include "retn.h"
+#include "color.h"
+#include "crs.h"
+#include "idx.h"
+
 const double offsets[3];
 const double scales[3];
 /*
@@ -69,9 +74,9 @@ typedef struct LMEpoint {
 //double Scale_init(double offset, double max);
 void LMEpointCode_setIdx(LMEpointCode* p);
 
-void LMEpointCode_setCoord(LMEpointCode* p, const * LMEcoordCode code);
+void LMEpointCode_setCoord(LMEpointCode* p, LMEcoordCode * const code);
 
-void LMEpoint_setCoord(LMEpoint* p, const * LMEcoord coord);
+void LMEpoint_setCoord(LMEpoint* p, LMEcoord * const coord);
 
 void LMEpoint_setReturn(LMEpoint* p, int returnNum, int returnCnt);
 
@@ -96,13 +101,13 @@ void PointType_destroy(hid_t pointtype, herr_t* status);
 
 //int MPI_PointType_create(MPI_Datatype* mpi_pointtype);
 
-void Point_print(const * LMEpointCode p);
+void LMEpointCode_print(LMEpointCode * const p);
 
-int LMEpoint_fromLAS(LMEpoint* p, double *x, double * y, double *z, const * LASPointH lasPnt);
+int LMEpoint_fromLAS(LMEpointCode* p, double *x, double * y, double *z, LASPointH * const lasPnt);
 
-int LASPoint_read(LASPointH* lasPnt, Point* pnt, double* x, double* y, double* z);
+int LASPoint_read(LASPointH* lasPnt, LMEpointCode* pnt, double* x, double* y, double* z);
 
-int LASPoint_project(LASHeaderH* header, hsize_t* count, double* x, double* y, double* z, Point* pnts, int mpi_rank);
+int LASPoint_project(LASHeaderH* header, hsize_t* count, double* x, double* y, double* z, LMEpointCode* pnts, int mpi_rank);
 
 //void Bound_dbl_Set(bound_dbl_t* bounds, double minX, double minY, double minZ, double maxX, double maxY, double maxZ);
 

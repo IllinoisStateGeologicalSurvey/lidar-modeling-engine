@@ -28,13 +28,8 @@
 #include <liblas/capi/liblas.h>
 #include <proj_api.h>
 
-//size_t strlen(const char *str) {
-//	const char *s;
-//	for (s = str; *s; ++s);
-//	return(s - str);
-//}
 
-int Proj_Set(LASHeaderH header, proj_t* proj) {
+/*int Proj_Set(LASHeaderH header, proj_t* proj) {
     //printf("Proj_Set called\n");
     LASSRSH srs = NULL;
 	srs = LASHeader_GetSRS(header);
@@ -59,101 +54,35 @@ int Proj_Set(LASHeaderH header, proj_t* proj) {
 		LASSRS_Destroy(srs);
 	}
     return 0;
-}
+}*/
 
-/*
-int Bound_Set(LASHeaderH header, bound_t* bounds) {
-    //coord_t *low, *high;
-    //coord_t *low = malloc(sizeof(coord_t));
-    //coord_t *high = malloc(sizeof(coord_t));
-    coord_dbl_t* ur = malloc(sizeof(coord_dbl_t));
-    coord_dbl_t* ll = malloc(sizeof(coord_dbl_t));
-
-    Coord_Set(ll, LASHeader_GetMinX(header), LASHeader_GetMinY(header), LASHeader_GetMinZ(header));
-    Coord_Set(ur, LASHeader_GetMaxX(header), LASHeader_GetMaxY(header), LASHeader_GetMaxZ(header));
-    Coord_Encode(&bounds->low, ll);
-    Coord_Encode(&bounds->high, ur);
-    //printf("LL.x is %"PRIu32"\n", &bounds.low.x);
-    //bounds->low = low;
-    free(ur);
-    free(ll);
-    //bounds->high = high;
-    return 0;
-}
-
-int Bound_intersects(bound_t* bound_1, bound_t* bound_2) {
-	if ((bound_1->high.x < bound_2->low.x) ||(bound_1->high.y < bound_2->low.y)) {
-		// Bound 2 is above/right of bound 1
-		return 0;
-	} 
-	else if ((bound_2->high.x < bound_2->low.x) || (bound_2->high.y < bound_1->low.y))
-	{
-		// Bound 1 is above right of bound 2
-		return 0;
-	} else {
-		//Bounds intersect!
-		return 1;
-	}
-}
-*/
-int Header_Set(uint32_t pnt_count, bound_t bounds, char fname, proj_t proj_str) {
+int Header_Set(uint32_t pnt_count, LMEboundCode bounds, char fname, proj_t proj_str) {
 	return 0;
 }
 
-void Header_free(header_t* headers, int n) {
+void Header_free(LMEheader* headers, int n) {
     int i;
     for (i = 0; i < n; i++) {
         free(&headers[i].id);
         free(&headers[i].pnt_count);
         free(&headers[i].bounds);
         free(&headers[i].path);
-        free(&headers[i].proj);
+        free(&headers[i].crs);
     }
     free(headers);
 }
 
-
-/*
-hid_t ProjType_create(herr_t* status) {
-    hid_t projtype;
-    projtype = H5Tcopy(H5T_C_S1);
-    *status = H5Tset_size(projtype, PATH_LEN);
-    return projtype;
-}
-
-void ProjType_destroy(hid_t projtype, herr_t* status) {
-    *status = H5Tclose(projtype);
-}
-*/
-/*
-hid_t BoundType_create(herr_t *status) {
-    hid_t boundtype;
-    hid_t coordtype;
-    coordtype = CoordType_create(status);
-    boundtype = H5Tcreate(H5T_COMPOUND, sizeof(bound_t));
-    *status = H5Tinsert(boundtype, "low", HOFFSET(bound_t, low), coordtype);
-    *status = H5Tinsert(boundtype, "high", HOFFSET(bound_t, high), coordtype);
-    *status = H5Tclose(coordtype);
-	
-    return boundtype;
-}
-
-void BoundType_destroy(hid_t boundtype, herr_t* status) {
-    *status = H5Tclose(boundtype);
-    
-}
-*/
 hid_t HeaderType_create(herr_t* status) {
     hid_t coordtype, boundtype, projtype, headertype;
     coordtype = CoordType_create(status);
     boundtype = BoundType_create(status);
     projtype = ProjType_create(status);
-    headertype = H5Tcreate(H5T_COMPOUND, sizeof(header_t));
-    *status = H5Tinsert(headertype, "id", HOFFSET(header_t, id), H5T_NATIVE_UINT);
-    *status = H5Tinsert(headertype, "bounds", HOFFSET(header_t, bounds), boundtype);
-    *status = H5Tinsert(headertype, "name", HOFFSET(header_t, path), projtype);
-    *status = H5Tinsert(headertype, "proj", HOFFSET(header_t, proj), projtype);
-    *status = H5Tinsert(headertype, "pnt_count", HOFFSET(header_t, pnt_count), H5T_NATIVE_UINT);
+    headertype = H5Tcreate(H5T_COMPOUND, sizeof(LMEheader));
+    *status = H5Tinsert(headertype, "id", HOFFSET(LMEheader, id), H5T_NATIVE_UINT);
+    *status = H5Tinsert(headertype, "bounds", HOFFSET(LMEheader, bounds), boundtype);
+    *status = H5Tinsert(headertype, "name", HOFFSET(LMEheader, path), projtype);
+    *status = H5Tinsert(headertype, "crs", HOFFSET(LMEheader, crs), projtype);
+    *status = H5Tinsert(headertype, "pnt_count", HOFFSET(LMEheader, pnt_count), H5T_NATIVE_UINT);
     BoundType_destroy(boundtype, status);
     ProjType_destroy(projtype, status);
     CoordType_destroy(coordtype, status);
@@ -164,49 +93,10 @@ void HeaderType_destroy(hid_t headertype, herr_t* status) {
     *status = H5Tclose(headertype);
 }
 /*
-int MPI_BoundType_create(MPI_Datatype *mpi_boundtype) {
-    int nitems=2;
-    int blocklengths[2] = {1,1};
-    MPI_Datatype types[2];
-    // Set the member types
-    MPI_CoordType_create(&types[0]);
-    MPI_CoordType_create(&types[1]);
-    MPI_Aint offsets[2];
-    offsets[0] = offsetof(bound_t, low);
-    offsets[1] = offsetof(bound_t, high);
-    MPI_Type_create_struct(nitems, blocklengths, offsets, types, mpi_boundtype);
-    MPI_Type_commit(mpi_boundtype);
-    printf("Bound type created\n");
-    
-    return 0;
-}
-*/
-/*
-int MPI_ProjType_create(MPI_Datatype *mpi_projtype) {
-    int nitems=1;
-    int blocklength = PATH_LEN;
-    int mpi_err, mpi_err_class, resultlen;
-    char err_buffer[MPI_MAX_ERROR_STRING];
-    MPI_Datatype type = MPI_CHAR;
-    MPI_Aint offset = offsetof(proj_t, proj4);
-    mpi_err = MPI_Type_create_struct(nitems, &blocklength, &offset, &type, mpi_projtype);
-    if (mpi_err != MPI_SUCCESS) {
-        MPI_Error_class(mpi_err, &mpi_err_class);
-        MPI_Error_string(mpi_err, err_buffer, &resultlen);
-        fprintf(stderr, err_buffer);
-        MPI_Finalize();
-    }
-    MPI_Type_commit(mpi_projtype);
-    printf("Proj type created\n");
-
-    return 0;
-}
-*/
-/*
 int MPI_HeaderType_create(MPI_Datatype *mpi_headertype) {
     int nitems=5;
     int strLen = PATH_LEN;
-    header_t header;
+    LMEheader header;
     //int blocklengths[5] = { 1, 1, 1, strLen, 1};
     int blocklengths[5] = {1, 1, 6, strLen, strLen};
     MPI_Datatype types[5];
@@ -237,9 +127,9 @@ int MPI_HeaderType_create(MPI_Datatype *mpi_headertype) {
     fprintf(stderr, "Blocklengths: [ %i, %i, %i, %i, %i]\n", blocklengths[0], blocklengths[1], blocklengths[2], blocklengths[3], blocklengths[4]);
     fprintf(stderr, "Offsets: [ %i, %i, %i, %i, %i]\n", (int)offsets[0], (int)offsets[1], (int)offsets[2], (int)offsets[3], (int)offsets[4]);
     fprintf(stderr, "Types: [%i, %i, %i, %i, %i]\n", types[0], types[1], types[2], types[3], types[4]);
-    //offsets[2] = offsetof(header_t, bounds);
-    //offsets[3] = offsetof(header_t, path);
-    //offsets[4] = offsetof(header_t, proj);
+    //offsets[2] = offsetof(LMEheader, bounds);
+    //offsets[3] = offsetof(LMEheader, path);
+    //offsets[4] = offsetof(LMEheader, proj);
     printf("Creating mpi_header_struct\n");
     mpi_err = MPI_Type_create_struct(nitems, blocklengths, offsets, types, mpi_headertype);
     printf("MPI_ERR %i\n", mpi_err);
@@ -320,7 +210,7 @@ int createHeaderDataset(char* file, char* dataset, hsize_t* dims)
 }
 
 /** This function will read the necessary header data from a given LAS file **/
-int Header_read(char* path, header_t* header, uint32_t id) {
+int Header_read(char* path, LMEheader* header, uint32_t id) {
 	LASReaderH LASreader = NULL;
 	LASHeaderH LASheader = NULL;
 	//zero-fill the path buffer to get rid of any remaining paths
@@ -344,7 +234,7 @@ int Header_read(char* path, header_t* header, uint32_t id) {
 		return 0;
 	}
 	header->pnt_count = LASHeader_GetPointRecordsCount(LASheader);
-	if (!LASBound_Get(&LASheader, &header->bounds)) {
+	if (!LMEboundCode_fromLAS(&header->bounds, &LASheader)) {
 		fprintf(stderr, "Bound Error: Failed to read Bound from source\n");
 		if (LASheader != NULL) {
 			LASHeader_Destroy(LASheader);
@@ -357,7 +247,7 @@ int Header_read(char* path, header_t* header, uint32_t id) {
 		return 0;
 	}
 	//printf("Bounds set for idx: %i \n", id);
-	Proj_Set(LASheader, &header->proj);
+	LMEcrs_fromLAS(&header->crs, &LASheader);
 	//printf("Projection set for id: %i \n", id);
 	if (LASheader != NULL) {
 		LASHeader_Destroy(LASheader);
@@ -370,7 +260,7 @@ int Header_read(char* path, header_t* header, uint32_t id) {
 	return 1;
 }
 
-int readHeaderBlock(char paths[], int offset, int block, header_t* headers)
+int LMEheaderBlock_read(char paths[], int offset, int block, LMEheader* headers)
 {
     int i; // counter
     int strLen = PATH_LEN;
@@ -397,33 +287,8 @@ int readHeaderBlock(char paths[], int offset, int block, header_t* headers)
     }
     return 1;
 }
-/*int readHeaderBlock(char paths[], int offset, int block, header_t* headers, MPI_Comm comm, int mpi_rank)
-{
-    int i; // counter
-    int strLen = PATH_LEN;
-    char fpath[strLen];
 
-    int blockInt = block;
-    uint32_t headerId;
-    fprintf(stderr, "[%i] Reading %i files\n", mpi_rank, blockInt);
-    for (i = 0; i < (blockInt); i++) {
-        // Set reader and header null to allow for error checking 
-        //printf("[%i]Last file is %s\n", mpi_rank, &paths[(blockInt - 1) * PATH_LEN]);
-        memset(&fpath[0], 0, PATH_LEN);
-        strncpy(&fpath[0], &paths[PATH_LEN * i], PATH_LEN);
-	//snprintf(&fpath[0], PATH_LEN, &paths[PATH_LEN * i]);
-        printf("[%i] Reading file %i/%i: %s \n", mpi_rank, i, blockInt, &fpath[0]);
-        
-        headerId = offset + i;
-        
-        Header_read(&fpath[0], &headers[i], headerId, mpi_rank);
-        
-    }
-    return 0;
-}
-*/
-
-int writeHeaderBlock_ser(hid_t file_id, char* dataset, hsize_t* offset, hsize_t* block, header_t* headers)
+int LMEheaderBlock_writeSer(hid_t file_id, char* dataset, hsize_t* offset, hsize_t* block, LMEheader* headers)
 {
     hid_t dset_id, fspace_id, headertype, memspace_id, plist_id;
     herr_t status;
@@ -463,7 +328,7 @@ int writeHeaderBlock_ser(hid_t file_id, char* dataset, hsize_t* offset, hsize_t*
     HeaderType_destroy(headertype, &status);
     return EXIT_SUCCESS;
 }
-int writeHeaderBlock(hid_t file_id, char* dataset, hsize_t* offset, hsize_t* block, header_t* headers, MPI_Comm comm, MPI_Info info)
+int LMEheaderBlock_write(hid_t file_id, char* dataset, hsize_t* offset, hsize_t* block, LMEheader* headers, MPI_Comm comm, MPI_Info info)
 {
     hid_t dset_id, fspace_id, headertype, memspace_id, plist_id;
     herr_t status;

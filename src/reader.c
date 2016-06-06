@@ -12,10 +12,7 @@
  *
  */
 #include "mpi.h"
-#include "reader.h"
-#include "header.h"
 #include <errno.h>
-#include "point.h"
 #include <time.h>
 #include <string.h>
 #include <stdio.h>
@@ -25,8 +22,10 @@
 #include <hdf5.h>
 #include <proj_api.h>
 #include <liblas/capi/liblas.h>
-#include "point.h"
 #include "filter.h"
+#include "point.h"
+#include "reader.h"
+#include "header.h"
 /* Tests to run: 
    check that file exists
    check the number of points to be read
@@ -59,7 +58,7 @@ hsize_t Headers_count(hid_t region_id) {
 
 }
 /** This function will read all of the headers from a given HDF file **/
-int Headers_read(header_t* headers, hid_t region_id) {
+int Headers_read(LMEheader* headers, hid_t region_id) {
 	hid_t dset_id, fspace_id, plist_id, headertype;
 	herr_t status;
 	
@@ -83,14 +82,14 @@ int Headers_read(header_t* headers, hid_t region_id) {
 	return EXIT_SUCCESS;
 }
 /** This will read a hyperslab of headers from an HDF file **/
-int HeaderSet_read(int start, int numHeaders, header_t* headers, char* filename)
+int HeaderSet_read(int start, int numHeaders, LMEheader* headers, char* filename)
 {
     hid_t file_id, dset_id, fspace_id, plist_id, headertype;
     herr_t status;
     hsize_t offset, block, stride, count;
-    //header_t* headers;
+    //LMEheader* headers;
     /* Allocate memory to hold the headers */
-    //headers=malloc(sizeof(header_t)*numHeaders);
+    //headers=malloc(sizeof(LMEheader)*numHeaders);
     // For now give these hard coded values 
     stride = 1;
     count = 1;
@@ -131,14 +130,14 @@ int HeaderSet_read(int start, int numHeaders, header_t* headers, char* filename)
     return EXIT_SUCCESS;
 }
 
-int HeaderPoint_get(header_t* header, char* dset_name) {
+int HeaderLMEpoint_get(LMEheader* header, char* dset_name) {
     printf("Header id: %i, path: %s", header->id, header->path);
     sprintf(dset_name, "/pt_%08d", header->id);
     printf(" Dataset name: %s\n", dset_name); 
 
     return EXIT_SUCCESS;
 }
-/*  PointSet_prepare:
+/*  LMEpointSet_prepare:
  *  This function will get the designated dataset name from the index
  *  of the Header in the H5 file.This will also retrieve the LAS filepath 
  *  and the number of points to read from the file.
@@ -147,11 +146,11 @@ int HeaderPoint_get(header_t* header, char* dset_name) {
  *  @param LASpath: a character array to hold the LAS file path
  *  @param pointBlock: an integer to hold the count of points to read
  */
-int PointSet_prepare(header_t* header, char* LASpath, hsize_t* pointBlock) {
+int LMEpointSet_prepare(LMEheader* header, char* LASpath, hsize_t* pointBlock) {
     //char* dset_name = malloc(sizeof(char) * (PATH_MAX+1));
     // Get the name for the h5 dataset(based on header index)
     //printf("HEADER_POINT_GET called on : %s", header->path);
-    //HeaderPoint_get(header, dset_name);
+    //HeaderLMEpoint_get(header, dset_name);
     // Get the name and point count for the file (used for reading with libLAS)
     strcpy(LASpath, header->path);
     *pointBlock = (hsize_t)header->pnt_count;
@@ -160,7 +159,7 @@ int PointSet_prepare(header_t* header, char* LASpath, hsize_t* pointBlock) {
 }
     
 
-int PointSet_create(header_t* header, hid_t group_id)
+int LMEpointSet_create(LMEheader* header, hid_t group_id)
 {
     /** TODO: create some type of name for the dataset that will 
       let it be easily referenced **/
@@ -190,7 +189,7 @@ int PointSet_create(header_t* header, hid_t group_id)
     dataspace_id = H5Screate_simple(rank, dim, dim);
     
     //Extract the dataset name to use for the points
-    //HeaderPoint_get(header, dataset_name);
+    //HeaderLMEpoint_get(header, dataset_name);
     fprintf(stderr, "Header[%i]: DATASET NAME: %s\n", header->id, dataset_name);
     //sprintf(dataset_name, "pt_%08d", header->id);
 
@@ -221,17 +220,15 @@ int PointSet_create(header_t* header, hid_t group_id)
     return EXIT_SUCCESS;
 }
 
-int PointSet_write(hid_t file_id, char* dataset, hsize_t* offset, hsize_t* block, Point* points, MPI_Comm comm, MPI_Info info) {
-    hid_t dset_id, fspace_id, pointtype, memspace_id, plist_id;
+int LMEpointSet_write(hid_t file_id, char* dataset, hsize_t* offset, hsize_t* block, LMEpointCode* points, MPI_Comm comm, MPI_Info info) {
+    hid_t dset_id, pointtype, fspace_id, memspace_id, plist_id;
     herr_t status;
     int rank = 1;
-    hsize_t stride = 1;
-    hsize_t count = 1;
     int mpi_rank;
     MPI_Comm_rank(comm, &mpi_rank);
     
     // Open the file
-    printf("[%i] PointSet_write called\n", mpi_rank);
+    printf("[%i] LMEpointSet_write called\n", mpi_rank);
     //plist_id = H5Pcreate(H5P_FILE_ACCESS);
     //printf("Creating parallel file access flag\n");
     //H5Pset_fapl_mpio(plist_id, comm, info); // TODO: Find out why this is erroring
@@ -250,22 +247,24 @@ int PointSet_write(hid_t file_id, char* dataset, hsize_t* offset, hsize_t* block
     memspace_id = H5Screate_simple(rank, block, NULL);
     printf("[%i] FileSpace Created\n", mpi_rank);
     
-    // Create the HDF Point datatype
+    // Create the HDF LMEpoint datatype
     pointtype = PointType_create(&status); // Get the hyperslab to write the data into status = H5Sselect_hyperslab(fspace_id, H5S_SELECT_SET, offset, &stride, &count, block); printf("[%i] Hyperslab selected\n", mpi_rank); Set up the dataset for parallel writing plist_id = H5Pcreate(H5P_DATASET_XFER); H5Pset_dxpl_mpio(plist_id, H5FD_MPIO_COLLECTIVE); Write the data status = H5Dwrite(dset_id, pointtype, memspace_id, fspace_id, plist_id, points); printf("[%i] Dataset written\n", mpi_rank); Free the point data type status = H5Dclose(dset_id); status = H5Sclose(fspace_id); status = H5Sclose(memspace_id);
     status = H5Pclose(plist_id);
+	status = H5Sclose(memspace_id);
+	status = H5Sclose(fspace_id);
     PointType_destroy(pointtype, &status);
     //checkOrphans(file_id, mpi_rank);
 	MPI_Barrier(comm);
     return EXIT_SUCCESS;
 }
 
-int PointSet_copy(char* LASpath, char* dataset_name, hsize_t* pointBlock, hid_t group_id,  MPI_Comm comm, MPI_Info info) {
-    Point* points;
+int LMEpointSet_copy(char* LASpath, char* dataset_name, hsize_t* pointBlock, hid_t group_id,  MPI_Comm comm, MPI_Info info) {
+    LMEpointCode* points;
     hsize_t pointCnt = *pointBlock;
     hsize_t pointOffset=0;
     printf("Allocating space for %i points\n", (int)pointCnt);
-    printf("Allocating %zu bytes\n", (size_t)(sizeof(Point) * pointCnt));
-    points = malloc(sizeof(Point) * pointCnt);
+    printf("Allocating %zu bytes\n", (size_t)(sizeof(LMEpoint) * pointCnt));
+    points = malloc(sizeof(LMEpoint) * pointCnt);
     printf("Finished allocating points\n");
     LASReaderH lasReader;
     int mpi_rank;
@@ -287,13 +286,13 @@ int PointSet_copy(char* LASpath, char* dataset_name, hsize_t* pointBlock, hid_t 
     printf("[%d] Successfully read file: %s\n", mpi_rank, LASpath);
     MPI_Barrier(comm);
     //printf("[%d] POINT_SET_WRITE called on: %s\n", mpi_rank, h5_dset);
-    PointSet_write(group_id, dataset_name, &pointOffset, pointBlock, points, comm, info);
+    LMEpointSet_write(group_id, dataset_name, &pointOffset, pointBlock, points, comm, info);
     free(points);
     return 1;
 }
 
 
-int LASFile_read(LASReaderH reader, hsize_t* offset, hsize_t* count, Point* points, int mpi_rank)
+int LASFile_read(LASReaderH reader, hsize_t* offset, hsize_t* count, LMEpointCode* points, int mpi_rank)
 {
     hsize_t i; // counter
     LASPointH p = NULL;
@@ -310,7 +309,7 @@ int LASFile_read(LASReaderH reader, hsize_t* offset, hsize_t* count, Point* poin
     int end = (int)(*offset + pntCnt);
     printf("[%i] End:%i = %i", mpi_rank, end, LASHeader_GetPointRecordsCount(header));
     if (end > LASHeader_GetPointRecordsCount(header)) {
-        fprintf(stdout, "ERROR: Point list out of file bounds\n");
+        fprintf(stdout, "ERROR: LMEpoint list out of file bounds\n");
         exit(1);
     }
     double *x, *y, *z;
@@ -320,12 +319,12 @@ int LASFile_read(LASReaderH reader, hsize_t* offset, hsize_t* count, Point* poin
     z = malloc(sizeof(double) * pntCnt);
     
 
-    // Run GetPointAt outside loop as it is considerably slower than getNextPoint
+    // Run GetLMEpointAt outside loop as it is considerably slower than getNextLMEpoint
     /* TODO: Update flow control so that i doesnt increment when the return is < returnTotal,
        This will prevent empty rows from being written */
     printf("[%d] Reading points\n",mpi_rank);
     for (i = 0; i < pntCnt; i++)  {
-        //printf("Point:%d\n", i);
+        //printf("LMEpoint:%d\n", i);
         if (i == 0) {
             p = LASReader_GetPointAt(reader, off);
             if (!p) {
@@ -336,11 +335,11 @@ int LASFile_read(LASReaderH reader, hsize_t* offset, hsize_t* count, Point* poin
             p = LASReader_GetNextPoint(reader);
         }
         // For now read only last returna
-        LASPoint_read(&p, &points[i], &x[i], &y[i], &z[i]);
+        LMEpoint_fromLAS(&points[i], &x[i], &y[i], &z[i], &p);
     }
 
     //printf("%9.6f, %9.6f, %9.6f\n", x[0], y[0], z[0]);
-    printf("[%d] Projecting Points\n", mpi_rank);
+    printf("[%d] Projecting LMEpoints\n", mpi_rank);
     // Projecting points is faster if they are done at the same time, using an array and count
     /* Initialize projection parameters */
 	
@@ -354,7 +353,7 @@ int LASFile_read(LASReaderH reader, hsize_t* offset, hsize_t* count, Point* poin
 		return 0;
 	}
 	printf("[%d] Cleaning up\n", mpi_rank); 
-    //Point_print(&points[0]);
+    //LMEpoint_print(&points[0]);
 
     free(x);
     free(y);
@@ -413,7 +412,7 @@ int checkOrphans(hid_t file_id, int mpi_rank) {
 	return EXIT_SUCCESS;
 }
 
-int filterLAS(LASHeaderH* header, LASReaderH* reader, uint32_t* pntCount, filter_t* filter, Point* points, int mpi_rank) {
+int filterLAS(LASHeaderH* header, LASReaderH* reader, uint32_t* pntCount, LMEfilter* filter, LMEpointCode* points, int mpi_rank) {
 	uint32_t i;
 	// Placeholder for parallel reading in future
 	int off = 0;
@@ -436,12 +435,12 @@ int filterLAS(LASHeaderH* header, LASReaderH* reader, uint32_t* pntCount, filter
 		if (!p) {
 			LASError_Print("Could not read point at index\n");
 		}
-		else if (Filter_RangeCheck(filter, &p) && Filter_ReturnCheck(filter, &p)) {
+		else if (LMEfilter_rangeCheck(filter, &p) && LMEfilter_returnCheck(filter, &p)) {
 			// TODO: Accumulate points here to serve
 			// TODO: Setup  method to project points to minimize number of
 			// transformations necessary to create a grid from points with
 			// different projections.
-			LASPoint_read(&p, &points[counter], &x[counter], &y[counter], &z[counter]);
+			LMEpoint_fromLAS(&points[counter], &x[counter], &y[counter], &z[counter], &p);
 			counter++;
 		}
 	}
@@ -461,7 +460,7 @@ int filterLAS(LASHeaderH* header, LASReaderH* reader, uint32_t* pntCount, filter
 	return counter;
 }
 
-int closeLAS(LASReaderH* reader, LASHeaderH* header, LASSRSH* srs, uint32_t* pntCount, Point* points) {
+int closeLAS(LASReaderH* reader, LASHeaderH* header, LASSRSH* srs, uint32_t* pntCount, LMEpointCode* points) {
 		LASSRS_Destroy(*srs);
 		srs = NULL;
 		LASHeader_Destroy(*header);

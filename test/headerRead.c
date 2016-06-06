@@ -16,6 +16,7 @@
 #include "point.h"
 #include "common.h"
 #include "file_util.h"
+#include "point_set.h"
 #include <hdf5.h>
 #include <math.h>
 #include <mpi.h>
@@ -115,8 +116,8 @@ int main(int argc, char* argv[])
     hsize_t headerBlock, pointBlock, headerOffset;
     int remainder;
     //Point* points;
-    header_t* sub_headers;
-    header_t* headers;
+    LMEheader* sub_headers;
+    LMEheader* headers;
     /* Initialize MPI */
     MPI_Init(&argc, &argv);
     MPI_Comm_size(comm, &mpi_size);
@@ -129,7 +130,7 @@ int main(int argc, char* argv[])
     printf("File count is %d\n", fileCount);
     // Allocate space for headers
     //if (mpi_rank == 0) {
-    headers = malloc(sizeof(header_t) * fileCount); // Buffer to hold the header data
+    headers = malloc(sizeof(LMEheader) * fileCount); // Buffer to hold the header data
     //}
     if (mpi_size > 1) {
         headerBlock = floor(fileCount / mpi_size);
@@ -137,7 +138,7 @@ int main(int argc, char* argv[])
         if (remainder) {
             headerBlock++;
         }
-        sub_headers = malloc(sizeof(header_t) * headerBlock);
+        sub_headers = malloc(sizeof(LMEheader) * headerBlock);
         headerOffset =(mpi_rank * headerBlock); 
         printf("[%i] Offset: %i, Block: %i, Remainder: %i\n", mpi_rank, (int)headerOffset, (int)headerBlock, remainder);
     } else {
@@ -196,7 +197,7 @@ int main(int argc, char* argv[])
                 // Retrieve the length of the h5 dataset
                 //pointBlock = sub_headers[i].pnt_count;
                 //Creates the hdf5 dataset in file
-                PointSet_create(&headers[i], group_id);
+                LMEpointSet_create(&headers[i], group_id);
                 printf("[%i] Point set created successfully\n", mpi_rank);
                 current = MPI_Wtime();
                 printf("[%i] Elapsed time: %f\n", mpi_rank, (current - start));
@@ -217,8 +218,8 @@ int main(int argc, char* argv[])
             //printf("[%d] Outside conditional\n", mpi_rank);
             // Allocate space to hold the points for the LAS file
             sprintf(dataset_name, "%i", (int)headers[j].id);
-            printf("[%i], writing dataset %i of %i, with name %s, pntCount=%zu\n", mpi_rank, i, headerBlock, dataset_name, pointBlock);
-            PointSet_copy(headers[j].path, dataset_name, &pointBlock, group_id, comm, info);
+            printf("[%i], writing dataset %i of %i, with name %s, pntCount=%zu\n", mpi_rank, i, (int)headerBlock, dataset_name, (size_t)pointBlock);
+            LMEpointSet_copy(headers[j].path, dataset_name, &pointBlock, group_id, comm, info);
             current = MPI_Wtime();
             printf("[%i] Elapsed time: %f\n", mpi_rank, (current - start));
         }

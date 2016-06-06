@@ -150,7 +150,7 @@ int main(int argc, char* argv[]) {
 	// Allocate space for headers
 	char* subPaths = malloc(sizeof(char) * t_blocks[mpi_rank]* PATH_LEN);
 	//Allocate space for headers
-	header_t* headers = (header_t*) malloc(sizeof(header_t) * t_blocks[mpi_rank]);
+	LMEheader* headers = (LMEheader *) malloc(sizeof(LMEheader) * t_blocks[mpi_rank]);
 
 	// Read the filenames
 	if (mpi_rank == 0) {
@@ -179,7 +179,7 @@ int main(int argc, char* argv[]) {
 		// Stat the file paths for summary info
 		printf("[%i] Has File: %s\n", mpi_rank, &subPaths[0]);
 
-		if (!readHeaderBlock(&subPaths[0], 0, t_blocks[mpi_rank], headers)) {
+		if (!LMEheaderBlock_read(&subPaths[0], 0, t_blocks[mpi_rank], headers)) {
 			fprintf(stderr, "IO Error: Failed to read header data");
 			return 1;
 		}
@@ -198,7 +198,7 @@ int main(int argc, char* argv[]) {
 	plist_id = H5Pcreate(H5P_FILE_ACCESS);
 	H5Pset_fapl_mpio(plist_id, comm, info);
 
-	writeHeaderBlock(region_id, "headers", &hOffset, &hBlock, headers, comm, info); 
+	LMEheaderBlock_write(region_id, "headers", &hOffset, &hBlock, headers, comm, info); 
 
 
 	H5Dclose(dataset_id);

@@ -10,10 +10,11 @@ void LMEcolor_set(LMEcolor* color, int r, int g, int b) {
 	color->b = (short) b;
 }
 
-int LMEcolor_fromLAS(LMEcolor* color, const * LASPointH lasPnt) {
+int LMEcolor_fromLAS(LMEcolor* color, LASPointH * const lasPnt) {
 	LASColorH lasclr = LASPoint_GetColor(*lasPnt);
 	LMEcolor_set(color, LASColor_GetRed(lasclr), LASColor_GetGreen(lasclr), LASColor_GetBlue(lasclr));
-	}
+	return 0;	
+}
 
 hid_t ColorType_create(herr_t* status) {
 	hid_t colortype;
@@ -26,6 +27,7 @@ hid_t ColorType_create(herr_t* status) {
 
 
 
-hid_t ColorType_destroy(hid_t colortype, herr_t* status) {
+void ColorType_destroy(hid_t colortype, herr_t* status) {
 	*status = H5Tclose(colortype);
+	
 }

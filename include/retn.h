@@ -22,4 +22,6 @@ hid_t ReturnType_create(herr_t* status);
 
 void ReturnType_destroy(hid_t returntype, herr_t* status);
 
+int LMEreturn_fromLAS(LMEreturn* retn, LASPointH * const lasPnt);
+
 #endif

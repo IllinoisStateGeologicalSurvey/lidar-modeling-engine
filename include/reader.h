@@ -16,31 +16,33 @@
 #include <math.h>
 #include <inttypes.h>
 #include <proj_api.h>
+
 /* Returns the total of existing headers */
 hsize_t Headers_count(hid_t file_id);
 /* Reads all available headers */
-int Headers_read(header_t* headers, hid_t file_id);
+int Headers_read(LMEheader* headers, hid_t file_id);
 
-int HeaderSet_read(int start, int numHeaders, header_t* headers, char* filename);
+int HeaderSet_read(int start, int numHeaders, LMEheader* headers, char* filename);
 
-int HeaderPoint_get(header_t* header, char* dset_name);
+int HeaderLMEpoint_get(LMEheader* header, char* dset_name);
 
-int PointSet_create(header_t* header, hid_t group_id);
+int LMEpointSet_create(LMEheader* header, hid_t group_id);
 
-int PointSet_prepare(header_t* header, char* LASpath, hsize_t* pointBlock);
+int LMEpointSet_prepare(LMEheader* header, char* LASpath, hsize_t* pointBlock);
 
-int PointSet_write(hid_t group_id, char* dataset_name, hsize_t* offset, hsize_t* block, Point* points, MPI_Comm comm, MPI_Info info);
 
-int PointSet_copy(char* LASpath, char* dataset_name, hsize_t* pointBlock, hid_t group_id, MPI_Comm comm, MPI_Info info);
+int LMEpointSet_write(hid_t group_id, char* dataset_name, hsize_t* offset, hsize_t* block, LMEpointCode* points, MPI_Comm comm, MPI_Info info);
 
-int LASFile_read(LASReaderH reader, hsize_t* offset, hsize_t* count, Point* points, int mpi_rank);
+int LMEpointSet_copy(char* LASpath, char* dataset_name, hsize_t* pointBlock, hid_t group_id, MPI_Comm comm, MPI_Info info);
+
+int LASFile_read(LASReaderH reader, hsize_t* offset, hsize_t* count, LMEpointCode* points, int mpi_rank);
 
 int checkOrphans(hid_t file_id, int mpi_rank);
 
 int openLAS(LASReaderH* reader, LASHeaderH* header, LASSRSH* srs, uint32_t* pntCount, char* path);
 
-int filterLAS(LASHeaderH* header, LASReaderH* reader, uint32_t* pntCount, filter_t* filter, Point* points, int mpi_rank);
+int filterLAS(LASHeaderH* header, LASReaderH* reader, uint32_t* pntCount, LMEfilter* filter, LMEpointCode* points, int mpi_rank);
 
-int closeLAS(LASReaderH* reader, LASHeaderH* header, LASSRSH* srs, uint32_t* pntCount, Point* points);
+int closeLAS(LASReaderH* reader, LASHeaderH* header, LASSRSH* srs, uint32_t* pntCount, LMEpointCode* points);
 
 #endif //READER_H
