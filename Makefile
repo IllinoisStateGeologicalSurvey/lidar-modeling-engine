@@ -58,9 +58,14 @@ all: $(BUILDDIR)/initLME \
 	$(BUILDDIR)/readPoints \
 	$(BUILDDIR)/gridPoints \
 	$(BUILDDIR)/headerRead \
+	$(BUILDDIR)/headerTest \
 	$(BUILDDIR)/testRange \
 	$(BUILDDIR)/checkCatalog \
-	$(BUILDDIR)/getGrid
+	$(BUILDDIR)/getGrid \
+	$(BUILDDIR)/fileCheck \
+
+$(BUILDDIR)/fileCheck: $(TESTDIR)/test-file.c
+	$(CC) $(CFLAGS) -o $@ $(TESTDIR)/test-file.c $(SOURCES) $(EXTINCLUDE) $(EXTLIBS)
 	
 $(BUILDDIR)/gridPoints: $(TESTDIR)/gridPoints.c
 	$(CC) $(CFLAGS) -o $@ $(TESTDIR)/gridPoints.c $(SOURCES) $(EXTINCLUDE) $(EXTLIBS)
@@ -88,6 +93,8 @@ $(BUILDDIR)/readPoints: $(TESTDIR)/readPoints.c
 
 #$(BUILDDIR)/readLas: $(TESTDIR)/readLas.c
 #	$(CC) $(CFLAGS) -o $@ $(TESTDIR)/readLas.c $(SOURCES) $(EXTINCLUDE) $(EXTLIBS)
+$(BUILDDIR)/headerTest: $(TESTDIR)/test-headers.c
+	$(CC) $(CFLAGS) -o $@ $(TESTDIR)/test-headers.c $(SOURCES) $(EXTINCLUDE) $(EXTLIBS)
 
 $(BUILDDIR)/headerRead: $(TESTDIR)/headerRead.c
 	$(CC) $(CFLAGS) -o $@  $(TESTDIR)/headerRead.c $(SOURCES) $(EXTINCLUDE) $(EXTLIBS)

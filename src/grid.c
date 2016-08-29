@@ -42,6 +42,57 @@ LMEgrid* Grid_Create(LMEbound *extent, int dims[2], double res[2]) {
 /**
  * @brief Generate_grid: Create a grid dataset in HDF5 to hold the points
  */
+int LMEgrid_createDataset(hid_t group_id, LMEgrid* grid) {
+	hid_t plist_id, dataset_id, dataspace_id;
+	hid_t pixel_type;
+	hsize_t cols = grid->dims[0];
+	hsize_t rows = grid->dims[1];
+	herr_t status;
+	// ROGER uses little endian encoding for data, so force consistency
+	pixel_type = H5Tcopy(H5T_IEEE_F32LE);
+	// Specify the dataset dimensions from the GRID struct
+	hsize_t dims[] = {rows, cols};
+	hsize_t max_dims[] = {rows, cols};
+	hsize_t chunk_dims[] = {2500,2500};
+	// Grid is a 2d array so rank = 2;
+	int rank = 2;
+	plist_id = H5Pcreate(H5P_GROUP_ACCESS);
+	// Create a dataspace for the dataset
+	dataspace_id = H5Screate_simple(rank, &dims[0], &max_dims[0]);
+	plist_id = H5Pcreate(H5P_DATASET_CREATE);
+	// Set the chunking dims for the dataset
+	H5Pset_chunk(plist_id, rank, &chunk_dims[0]);
+	dataset_id = H5Dcreate(group_id, "testGrid", pixel_type, dataspace_id, H5P_DEFAULT, plist_id, H5P_DEFAULT);
+
+	// Close up the handles
+	/* End access to property list id */
+	status = H5Pclose(plist_id);
+
+	/* End access to the dataset */
+	status = H5Dclose(dataset_id);
+
+	/* Terminate access to dataset */
+	status = H5Sclose(dataspace_id);
+	status = H5Tclose(pixel_type);
+	
+	return 1;
+}
+
+/** 
+ * \brief LMEgrid_write: Write points to a gridded dataset. 
+ *
+ * This should be a collective
+ * call as H5 requires writes to be collective. This will not perform any
+ * interpolation, but will fit points into their corresponding cells. If
+ * multiple points fall in a cell, the average elevation will be used.
+ */
+
+
+int LMEgrid_write(hid_t group_id, LMEgrid*, int colStart, int rowStart, int colCount, int rowCount, )
+{
+	return 0;
+}
+
 int generateGridDataset(char* file, char* dataset_name, hsize_t* cols, hsize_t* rows) 
 {
 	// @note most of this can be refactored out into a catalog operation

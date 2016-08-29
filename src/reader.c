@@ -36,6 +36,10 @@
    Sort datasets
    Grid datasets
 */
+/**
+ * \brief Headers_count: 
+ * This function will count the number of headers within a given region
+ */
 hsize_t Headers_count(hid_t region_id) {
 	hid_t dset_id, fspace_id, plist_id, headertype;
 	herr_t status;
@@ -57,7 +61,9 @@ hsize_t Headers_count(hid_t region_id) {
 	return nVals;
 
 }
-/** This function will read all of the headers from a given HDF file **/
+/** 
+ * \brief Headers_read: This function will read all of the headers from a given HDF file 
+ */
 int Headers_read(LMEheader* headers, hid_t region_id) {
 	hid_t dset_id, fspace_id, plist_id, headertype;
 	herr_t status;
@@ -81,7 +87,10 @@ int Headers_read(LMEheader* headers, hid_t region_id) {
 	
 	return EXIT_SUCCESS;
 }
-/** This will read a hyperslab of headers from an HDF file **/
+/**
+ * \brief HeaderSet_read: This will read a hyperslab of headers from 
+ * an LME data store.
+ **/
 int HeaderSet_read(int start, int numHeaders, LMEheader* headers, char* filename)
 {
     hid_t file_id, dset_id, fspace_id, plist_id, headertype;
@@ -130,14 +139,19 @@ int HeaderSet_read(int start, int numHeaders, LMEheader* headers, char* filename
     return EXIT_SUCCESS;
 }
 
+/** 
+ * /brief HeaderLMEpoint_get: 
+ * This function will retrieve a point dataset name from a header entry.
+ */
 int HeaderLMEpoint_get(LMEheader* header, char* dset_name) {
-    printf("Header id: %i, path: %s", header->id, header->path);
-    sprintf(dset_name, "/pt_%08d", header->id);
+    printf("Header id: 0x%"PRIx64", path: %s", header->id, header->path);
+    sprintf(dset_name, "/pt_0x%"PRIx64 "", header->id);
     printf(" Dataset name: %s\n", dset_name); 
 
     return EXIT_SUCCESS;
 }
-/*  LMEpointSet_prepare:
+/**
+ *  LMEpointSet_prepare:
  *  This function will get the designated dataset name from the index
  *  of the Header in the H5 file.This will also retrieve the LAS filepath 
  *  and the number of points to read from the file.
@@ -158,7 +172,12 @@ int LMEpointSet_prepare(LMEheader* header, char* LASpath, hsize_t* pointBlock) {
     return EXIT_SUCCESS;
 }
     
-
+/** 
+ * \brief LMEpointSet_create: Creates a Point Set dataset instance within
+ * the HDF5 dataset. This generates a place for point data to be written.
+ * \note: As of yet, this is being deprecated as the point Table format 
+ * provides more versatility in terms of query.
+ */
 int LMEpointSet_create(LMEheader* header, hid_t group_id)
 {
     /** TODO: create some type of name for the dataset that will 
@@ -175,7 +194,7 @@ int LMEpointSet_create(LMEheader* header, hid_t group_id)
     int rank = 1; 
     *dim = header->pnt_count;
 	char dataset_name[12];
-	sprintf(dataset_name, "%i", (int)header->id);
+	sprintf(dataset_name, "0x%"PRIx64, header->id);
 
     /* Open an existing HDF5 file, error if doesn't exist */
     //plist_id = H5Pcreate(H5P_FILE_ACCESS);
@@ -190,7 +209,7 @@ int LMEpointSet_create(LMEheader* header, hid_t group_id)
     
     //Extract the dataset name to use for the points
     //HeaderLMEpoint_get(header, dataset_name);
-    fprintf(stderr, "Header[%i]: DATASET NAME: %s\n", header->id, dataset_name);
+    fprintf(stderr, "Header[0x%"PRIx64"]: DATASET NAME: %s\n", header->id, dataset_name);
     //sprintf(dataset_name, "pt_%08d", header->id);
 
     //TESTING: set deflate compression for points, may need to modifty read/write for compression
@@ -220,6 +239,10 @@ int LMEpointSet_create(LMEheader* header, hid_t group_id)
     return EXIT_SUCCESS;
 }
 
+/**
+ * \brief LMEpointSet_write: Writes a point set from memory to the LME 
+ * data store. 
+ */
 int LMEpointSet_write(hid_t file_id, char* dataset, hsize_t* offset, hsize_t* block, LMEpointCode* points, MPI_Comm comm, MPI_Info info) {
     hid_t dset_id, pointtype, fspace_id, memspace_id, plist_id;
     herr_t status;
@@ -258,6 +281,10 @@ int LMEpointSet_write(hid_t file_id, char* dataset, hsize_t* offset, hsize_t* bl
     return EXIT_SUCCESS;
 }
 
+/**
+ * \brief LMEpointSet_copy: Creates a copy of a pointset from the LME 
+ * data store
+ */
 int LMEpointSet_copy(char* LASpath, char* dataset_name, hsize_t* pointBlock, hid_t group_id,  MPI_Comm comm, MPI_Info info) {
     LMEpointCode* points;
     hsize_t pointCnt = *pointBlock;
@@ -291,7 +318,11 @@ int LMEpointSet_copy(char* LASpath, char* dataset_name, hsize_t* pointBlock, hid
     return 1;
 }
 
-
+/**
+ * \brief LASFile_read: This function will read through an LAS file.
+ * \note This can be used for parallelized reading in case MPI is being
+ * used to read the file.
+ */
 int LASFile_read(LASReaderH reader, hsize_t* offset, hsize_t* count, LMEpointCode* points, int mpi_rank)
 {
     hsize_t i; // counter
@@ -365,6 +396,11 @@ int LASFile_read(LASReaderH reader, hsize_t* offset, hsize_t* count, LMEpointCod
     return 1;
 }
 
+/**
+ * \brief openLAS This function will open an LAS file for reading
+ * \note This will return a 0 exit code if the file cannot be opened or
+ * the header is corrupted
+ */
 int openLAS(LASReaderH* reader, LASHeaderH* header, LASSRSH* srs, uint32_t* pntCount, char* path) {
 	// Need to correct for symlinks on GPFS
 	// For some reason, this returns the right path, but also a file not found
@@ -412,6 +448,11 @@ int checkOrphans(hid_t file_id, int mpi_rank) {
 	return EXIT_SUCCESS;
 }
 
+/**
+ * \brief filterLAS: This function will apply various attribute 
+ * constraints to a LAS file 
+ * \note This will be parallelized in the future for proper
+ */
 int filterLAS(LASHeaderH* header, LASReaderH* reader, uint32_t* pntCount, LMEfilter* filter, LMEpointCode* points, int mpi_rank) {
 	uint32_t i;
 	// Placeholder for parallel reading in future

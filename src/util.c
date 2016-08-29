@@ -26,6 +26,8 @@
 #include <libgen.h>
 #include <sys/time.h>
 #include "util.h"
+#include <hdf5.h>
+#include "hdf5_hl.h"
 #include "file_util.h"
 #include "header.h"
 
@@ -78,19 +80,119 @@ int get_block(int mpi_rank, int np, int pntCount, int pntLength, int *offsetx, i
 
 }
 
+/**
+ * Replace Character in string
+ */
+char* replace_char(char* str, char find, char replace) {
+	char *current_pos = strchr(str,find);
+	while (current_pos) {
+		*current_pos = replace;
+		current_pos = strchr(current_pos, find);
+	}
+	return str;
+}
+
+/** Replace last occurrence of character in string
+*/
+char* replace_last(char* str, char find, char replace) {
+	char *current_pos = strrchr(str,find);
+	*current_pos = replace;
+	return str;
+}
+
+
 int getDataStore(char* h5Path) {
-	char binPath[PATH_MAX];
+	char buf[PATH_MAX +1];
 	//char basePath[PATH_MAX];
-	char dataDir[10] = "/data";
-	char h5_name[15] = "/LME.h5\0";
-	getWorkingDir(&binPath[0]);
-	strcpy(h5Path, &binPath[0]);
-	strcat(h5Path, &dataDir[0]);
-	strcat(h5Path, &h5_name[0]);
+	//getWorkingDir(&binPath[0]);
+	readlink("/proc/self/exe", &buf[0], PATH_MAX -1);
+	replace_last(&buf[0], '/', '\0');
+	replace_last(&buf[0], '/', '\0');
+	strcat(&buf[0], "/data/LME.h5");
+	strcpy(h5Path, &buf[0]);
 	printf("DataStore Path: %s\n", h5Path);
 
 	return 0;
 }
+
+int openLME(hid_t* file_id) {
+	char buf[PATH_MAX +1];
+	getDataStore(&buf[0]);
+	hid_t plist_id;
+	// Check if file is valid
+	if (H5Fis_hdf5(&buf[0]) < 0) {
+		perror("Failed to check file\n");
+		return 0;
+	} else if (H5Fis_hdf5(&buf[0]) == 0) {
+		fprintf(stderr,"File is not valid HDF5 format\n");
+		return 0;
+	} else {
+		plist_id = H5Pcreate(H5P_FILE_ACCESS);
+		*file_id = H5Fopen(&buf[0], H5F_ACC_RDWR | H5F_ACC_DEBUG, plist_id);
+		H5Pclose(plist_id);
+		return 1;
+	}
+}
+
+int createArrDataset(hid_t parent_id, char* dset_name, hsize_t *const dims, hsize_t rank, hid_t datatype) {
+	
+	hid_t dataset_id, dataspace_id, plist_id;
+	hsize_t max_dims[rank];
+	hsize_t chunk_dims[rank];
+	herr_t status;
+	int i;
+	/** Configure the space for the dataset **/
+	for (i = 0; i < rank; i++) {
+		max_dims[i] = H5S_UNLIMITED;
+		chunk_dims[i] = 1000;
+	}
+	dataspace_id = H5Screate_simple(rank, dims, &max_dims[0]);
+
+	/* Set the chunking definitions for the dataset */
+	plist_id = H5Pcreate(H5P_DATASET_CREATE);
+	H5Pset_chunk(plist_id, rank, &chunk_dims[0]);
+
+	/** Create the dataset **/
+	dataset_id = H5Dcreate(parent_id, dset_name, datatype, dataspace_id, H5P_DEFAULT, plist_id, H5P_DEFAULT);
+
+	/** Clean up **/
+	status = H5Pclose(plist_id);
+	status = H5Dclose(dataset_id);
+	status = H5Sclose(dataspace_id);
+
+	return 1;
+
+}
+/** createTableDataset: Create a HDF5 table dataset in the LME datastore
+ * @brief Create a table formatted dataset in hdf5.
+ * @param parent_id (hid_t) Identifier for the parent dataset
+ * @param dset_name (char*) Name of the dataset to create
+ * @param n_fields (hsize_t) Number of fields to include in the table
+ * @param field_types (hid_t *) HDF5T types to include in the table
+ * @param field_offsets (size_t *) The byte offsets of the datatypes in the source struct
+ * @param field_names (char **) Names for the table fields
+ * @param dst_size (size_t) Output datatype size
+ * @param n_records (hsize_t) Number of records to write
+ * @param data (void *) The data to write to the table
+ * @return 1 if successful
+ */
+int createTableDataset(hid_t parent_id, char* dset_name, hsize_t n_fields, hid_t * const field_types, size_t * const field_offsets, const char **  field_names, size_t dst_size, hsize_t n_records, void * data){
+	hid_t plist_id;
+	herr_t status;
+
+
+	hsize_t chunk_size = 1000;
+	int *fill_data = NULL;
+	int compress = 0;
+	plist_id = H5Pcreate(H5P_DATASET_ACCESS);
+	
+	status = H5TBmake_table(dset_name, parent_id, dset_name, n_fields, n_records, dst_size, field_names, field_offsets, field_types, chunk_size, fill_data, compress, data);
+	H5Pclose(plist_id);
+	return 1;
+}
+
+
+
 
 void MPI_check_error(int mpi_err) {
 	int mpi_err_class, resultlen;
@@ -135,6 +237,23 @@ int divide_tasks(int count, int mpi_size, int* offsets, int* blocks) {
 		}
 	}
 	return remainder;
+}
+
+/*
+ * Generate random string, useful for creating unique names for datasets 
+ */
+
+char *rand_string(char* dest, size_t size) 
+{
+	// Seed random number
+	srand((unsigned int) time(0) + getpid());
+	const char charset[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
+	while (size-- > 0) {
+		size_t index = (double) rand() / RAND_MAX * (sizeof charset - 1);
+		*dest++ = charset[index];		
+	}
+	*dest = '\0';
+	return dest;
 }
 
 

@@ -14,7 +14,8 @@
 
 
 #include "mpi.h"
-#include <hdf5.h>
+#include "hdf5.h"
+#include "hdf5_hl.h"
 #include "header.h"
 #include "point.h"
 #include "file_util.h"
@@ -154,6 +155,70 @@ int MPI_HeaderType_create(MPI_Datatype *mpi_headertype) {
     return 0;
 }
 */
+int LMEheaderSet_createDataset(hid_t group_id, LMEheader* headers, uint32_t n_headers) 
+{
+	hid_t plist_id, id_type, count_type, code_type, bound_type, crs_type, path_type;	
+	hsize_t n_records = (hsize_t) n_headers;
+	herr_t status;
+
+	const hsize_t n_fields = 5;
+	hid_t field_types[5];
+	int i;
+	/* Calculate the size and offsets for the header struct;*/
+	size_t dst_size = sizeof(LMEheader);
+	printf("Header size %zu\n", dst_size);
+	size_t dst_offsets[5] = { HOFFSET(LMEheader, id),
+							HOFFSET(LMEheader, pnt_count),
+							HOFFSET(LMEheader, bounds),
+							HOFFSET(LMEheader, crs),
+							HOFFSET(LMEheader, path)};
+
+	const char *field_names[5] = {"id", "pointCount", "bounds", "projection", "filepath"};
+
+	id_type = H5Tcopy( H5T_STD_U64LE);
+	count_type = H5Tcopy( H5T_STD_U32LE);
+	code_type = H5Tcopy(H5T_STD_U32LE);
+	H5Tset_size(code_type, 3);
+	bound_type = H5Tcopy(code_type);
+	H5Tset_size(bound_type, 2);
+	path_type = H5Tcopy(H5T_NATIVE_CHAR);
+	H5Tset_size(path_type, 4096);
+	printf("CRS size: %zu\n", sizeof(LMEcrs));
+	crs_type = H5Tcreate(H5T_COMPOUND, sizeof(LMEcrs));
+	status = H5Tinsert(crs_type, "type", HOFFSET(LMEcrs, type), H5T_NATIVE_INT);
+	status = H5Tinsert(crs_type, "projStr", HOFFSET(LMEcrs, projStr), path_type);
+	// Set the field types
+	field_types[0] = id_type;
+	field_types[1] = count_type;
+	field_types[2] = bound_type;
+	field_types[3] = crs_type;
+	field_types[4] = path_type;
+	
+	for (i =0; i < 5; i++) {
+		printf("Type %i: size %zu\n", i, H5Tget_size(field_types[i]));
+	}
+	/** Table specific properties **/
+	hsize_t chunk_size = 1000;
+	int *fill_data = NULL;
+	int compress = 0;
+	plist_id = H5Pcreate(H5P_DATASET_ACCESS);
+	char* dataset_name = malloc(sizeof(char) * 32);
+	rand_string(dataset_name, 32);
+	printf("Dataset name: %s\n", dataset_name);
+
+	/** Generate table **/
+	status = H5TBmake_table("Test Headers", group_id, dataset_name, n_fields, n_records, dst_size, field_names, dst_offsets, field_types, chunk_size, fill_data, compress, headers);
+	H5Tclose(path_type);
+	H5Tclose(crs_type);
+	H5Tclose(bound_type);
+	H5Tclose(code_type);
+	H5Tclose(count_type);
+	H5Tclose(id_type);
+	H5Pclose(plist_id);
+	return 1;
+
+	//ROGER uses little endian encoding
+}
 
 int createHeaderDataset(char* file, char* dataset, hsize_t* dims)
 {
@@ -219,14 +284,14 @@ int Header_read(char* path, LMEheader* header, uint32_t id) {
 	header->id = id;
         
 	//printf("[%i] Filepath set for file id %i\n", mpi_rank, id);
-	//printf("Opening LASReader for file %s\n", header->path);
+	printf("Opening LASReader for file %s\n", header->path);
 	LASreader = LASReader_Create(path);
 	if (!LASreader) {
 		fprintf(stderr,"Could not open file: %s\n", path);
 		// TODO: NEED A WAY TO HANDLE IO ERRORS
 		return 0;
 	}
-	//printf("Opening LASHeader\n");
+	printf("Opening LASHeader\n");
 	LASheader = LASReader_GetHeader(LASreader);
 	if (!LASheader) {
 		fprintf(stderr, "Could not fetch header for file %s\n", path);
@@ -246,9 +311,9 @@ int Header_read(char* path, LMEheader* header, uint32_t id) {
 		}
 		return 0;
 	}
-	//printf("Bounds set for idx: %i \n", id);
+	printf("Bounds set for idx: %i \n", id);
 	LMEcrs_fromLAS(&header->crs, &LASheader);
-	//printf("Projection set for id: %i \n", id);
+	printf("Projection set for id: %i \n", id);
 	if (LASheader != NULL) {
 		LASHeader_Destroy(LASheader);
 		LASheader = NULL;
@@ -351,7 +416,8 @@ int LMEheaderBlock_write(hid_t file_id, char* dataset, hsize_t* offset, hsize_t*
     
     // Open the header dataset 
     dset_id = H5Dopen(file_id, dataset, plist_id);
-    // Get the id for the header data space 
+    
+	// Get the id for the header data space 
     fspace_id = H5Dget_space(dset_id);
     memspace_id = H5Screate_simple(rank, block, NULL);
 

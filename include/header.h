@@ -26,7 +26,7 @@ typedef struct proj_t {
 
 
 typedef struct LMEheader {
-	uint32_t id;
+	uint64_t id;
 	uint32_t pnt_count;
 	LMEboundCode bounds;
 	LMEcrs crs;
@@ -34,8 +34,13 @@ typedef struct LMEheader {
 	
 } LMEheader;
 
+/**
+ * @deprecated: This function has been deprecated in order to utilize table
+ * datasets for headers. Please use LMEheaderSet_createDataset.
+ */
 int createHeaderDataset(char* file, char* dataset, hsize_t* dims);
 
+int LMEheaderSet_createDataset(hid_t group_id, LMEheader* header, uint32_t n_headers);
 
 hid_t HeaderType_create(herr_t* status);
 

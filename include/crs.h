@@ -10,7 +10,7 @@
 
 typedef struct LMEcrs {
 	int type;
-	char* projStr;
+	char projStr[4096];
 } LMEcrs;
 
 int LMEcrs_set(LMEcrs* crs, char* projStr);

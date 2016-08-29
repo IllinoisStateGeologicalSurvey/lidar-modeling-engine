@@ -15,7 +15,10 @@
 #define PROJ_LEN  4096
 
 int LMEcrs_set(LMEcrs* crs, char* projStr) {
-	strcpy(crs->projStr, projStr);
+	printf("Setting projection\n");
+	printf("%s\n", projStr);//strcpy(crs->projStr, projStr);
+	sprintf(&crs->projStr, projStr);
+	printf("Finished setting projection\n");
 	return 0;
 }
 
@@ -63,7 +66,9 @@ int LMEcrs_setWGS(LMEcrs* crs) {
 int LMEcrs_fromLAS(LMEcrs* crs, LASHeaderH* header) {
 	LASSRSH srs = LASHeader_GetSRS(*header);
 	int out;
+	printf("Reading the Projection\n");
 	char* projStr = LASSRS_GetProj4(srs);
+	printf("Checking Projection\n");
 	if (LMEcrs_check(projStr)) {
 		LMEcrs_set(crs, projStr);
 		out = 1;
@@ -72,6 +77,7 @@ int LMEcrs_fromLAS(LMEcrs* crs, LASHeaderH* header) {
 		out = 0; 
 		// Find the closest UTM projection and assign it
 	}
+	printf("Projection Set\n");
 	//TODO: Check the validity of this string so nulls don't crash the program
 	return out;	
 }

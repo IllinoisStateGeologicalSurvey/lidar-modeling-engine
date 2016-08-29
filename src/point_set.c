@@ -35,16 +35,16 @@ int LMEpointSet_Create(size_t count, LMEbound extent, LMEcrs crs, LMEpointCode* 
 
 int LMEpointSet_createDataset(hid_t group_id, LMEpointCode* points, uint32_t n_points)
 {
-	hid_t file_id, plist_id;
+	hid_t plist_id;
 	hid_t code_type, retn_type, color_type;
 	hsize_t  n_records = (hsize_t) n_points;
 	herr_t status;
 	/** Get the filename of the datastore **/
-	char* h5_file = (char *)malloc(sizeof(char)* PATH_LEN);
-	getDataStore(h5_file);
+	//char* h5_file = (char *)malloc(sizeof(char)* PATH_LEN);
+	//getDataStore(h5_file);
 	/** Open the datastore **/
-	plist_id = H5Pcreate(H5P_FILE_ACCESS);
-	file_id = H5Fopen(h5_file, H5F_ACC_RDWR | H5F_ACC_DEBUG, plist_id);
+	//plist_id = H5Pcreate(H5P_FILE_ACCESS);
+	//file_id = H5Fopen(h5_file, H5F_ACC_RDWR | H5F_ACC_DEBUG, plist_id);
 	/** Setup table configuration parameters **/
 	const hsize_t n_fields = 6;	
 	hid_t field_types[n_fields];
@@ -61,7 +61,9 @@ int LMEpointSet_createDataset(hid_t group_id, LMEpointCode* points, uint32_t n_p
 		{"index","coordinates", "intensity", "returns", "classification", "color"};
 
 	// ROGER uses little endian encoding
-	code_type = H5Tcopy( H5T_IEEE_F32LE);
+	//code_type = H5Tcopy( H5T_IEEE_F32LE);
+	/* Coordinate codes are 32bit unsigned integers */
+	code_type = H5Tcopy( H5T_STD_U32LE);
 	H5Tset_size( code_type, 3);
 	retn_type = H5Tcopy( H5T_STD_I16LE);
 	H5Tset_size( retn_type, 2);
@@ -81,14 +83,14 @@ int LMEpointSet_createDataset(hid_t group_id, LMEpointCode* points, uint32_t n_p
 	int *fill_data = NULL;
 	int compress = 0;
 	plist_id = H5Pcreate(H5P_DATASET_ACCESS);
-	char* dataset_name = "test_points";
+	char* dataset_name = "points";
 	/** Make table **/
-	status = H5TBmake_table("Test Points", file_id, dataset_name, n_fields, n_records, dst_size, field_names, dst_offsets, field_types, chunk_size, fill_data, compress, points);
+	status = H5TBmake_table("Test Points", group_id, dataset_name, n_fields, n_records, dst_size, field_names, dst_offsets, field_types, chunk_size, fill_data, compress, points);
 	H5Tclose(code_type);
 	H5Tclose(color_type);
 	H5Tclose(retn_type);
 	H5Pclose(plist_id);
-	H5Fclose(file_id);
+	//H5Fclose(file_id);
 	return 1;	
 }
 /*

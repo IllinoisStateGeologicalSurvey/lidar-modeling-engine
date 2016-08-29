@@ -60,21 +60,27 @@ int main(int argc, char* argv[]) {
 
 	double res[2] = {0.0,0.0};
 	int verbose;
-	char* h5_file = (char *)malloc(sizeof(char)* 4096);
-	getDataStore(h5_file);
+	//char* h5_file = (char *)malloc(sizeof(char)* 4096);
+	//getDataStore(h5_file);
+	hid_t file_id;
+	openLME(&file_id);
 	parseArgs(argc, argv, &res[0], &res[1], &verbose);
 	LMEcoord ll, ur;
 	LMEcoord_set(&ll, -88.26681, 41.98540, -1000);
 	LMEcoord_set(&ur, -88.25840, 41.99156, 5000);
 	LMEbound bounds;
 	LMEbound_set(&bounds, &ll, &ur);
-	int dims[2] = {1000,1000};
+	hsize_t rows = 5000;
+	hsize_t cols = 5000;
+	int dims[2] = {rows,cols};
+	//printf("Opening LME dataset at %s\n", h5_file);
 	LMEgrid* grid = Grid_Create(&bounds, dims, res);
-
 	printf("Grid created.\n");
+	//generateGridDataset(h5_file, "testGrid",&cols, &rows);
+	LMEgrid_createDataset(file_id, grid);
 	printf("Cleaning up\n");
 	Grid_Destroy(grid);
-	free(h5_file);
+	H5Fclose(file_id);
 	printf("Exiting\n");
 	return 0;
 	//Bounds: -88.26681 41.98540 -88.25840 41.99156
