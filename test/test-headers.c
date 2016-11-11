@@ -115,9 +115,9 @@ int main(int argc, char* argv[]) {
 	int i;
 	/* Initialize variables used to read headers */
 	LASReaderH lasReader = NULL;
-	char* pathBuf = malloc(sizeof(char)* (PATH_LEN));
+	char* pathBuf = malloc(sizeof(char)* (PATH_SIZE));
 	LMEheader* headers;
-	char* filePaths =  malloc(sizeof(char) * ((size_t)arguments.n_files * PATH_LEN));
+	char* filePaths =  malloc(sizeof(char) * ((size_t)arguments.n_files * PATH_SIZE));
 	
 	headers = malloc(sizeof(LMEheader) * arguments.n_files);
 	/** Get the list of files **/

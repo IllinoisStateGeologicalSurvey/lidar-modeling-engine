@@ -48,4 +48,9 @@ int createTableDataset(hid_t parent_id, char* dset_name, hsize_t n_fields, hid_t
  */
 char *rand_string(char* str, size_t size);
 
+/**
+ * Create a region within the LME data store
+ */
+int h5_user_region_init(char * const rName, hid_t *plist_id, hid_t *file_id, hid_t *user_region_id, hid_t *user_id, MPI_Comm comm, MPI_Info info);
+
 #endif

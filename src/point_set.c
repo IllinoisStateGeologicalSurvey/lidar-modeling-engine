@@ -21,7 +21,7 @@
 #include "header.h"
 #include "point_set.h"
 #include "util.h"
-
+#include "grid.h"
 /** 
  * @brief LMEpointSet_create: Creates an HDF5 dataset to hold the points
  */
@@ -40,7 +40,7 @@ int LMEpointSet_createDataset(hid_t group_id, LMEpointCode* points, uint32_t n_p
 	hsize_t  n_records = (hsize_t) n_points;
 	herr_t status;
 	/** Get the filename of the datastore **/
-	//char* h5_file = (char *)malloc(sizeof(char)* PATH_LEN);
+	//char* h5_file = (char *)malloc(sizeof(char)* PATH_SIZE);
 	//getDataStore(h5_file);
 	/** Open the datastore **/
 	//plist_id = H5Pcreate(H5P_FILE_ACCESS);
@@ -186,6 +186,54 @@ int LMEpointSet_writeFromLAS(char* LASpath, char* dataset_name, hsize_t* pointBl
 	free(points);
 	return 1;
 }
+/**
+ * LMEpointSet_read: will read all the points in a point set into memory
+ */
+int LMEpointSet_read(hid_t group_id, char* dataset_name, hsize_t pointCount, LMEpointCode* points) {
+	hid_t plist_id;
+	herr_t status;
+	
+	plist_id = H5Pcreate(H5P_DATASET_ACCESS);
+	// Open the dataset
+	size_t dst_size = sizeof(LMEpointCode);
+	size_t dst_offsets[6] = { HOFFSET(LMEpointCode, idx),
+									HOFFSET(LMEpointCode, code),
+									HOFFSET(LMEpointCode, i),
+									HOFFSET(LMEpointCode, retns),
+									HOFFSET(LMEpointCode, clss),
+									HOFFSET(LMEpointCode, color)};
+	// Note: Need to calculate this
+	size_t sizes[6] = { sizeof(points[0].idx),
+						sizeof(points[0].code),
+						sizeof(points[0].i),
+						sizeof(points[0].retns),
+						sizeof(points[0].clss),
+						sizeof(points[0].color)};
+
+	status = H5TBread_table(group_id, dataset_name, dst_size, dst_offsets, sizes, points);
+	printf("Point set read successfully");
+	return 0;
+	
+
+}
+
+int LMEpointSet_grid(hid_t group_id, hid_t dset_id, hsize_t pointBlock, LMEgrid* grid) {
+	//Get Upper left corner, and interpolate points into cells
+	
+	int i = 0;
+	LMEpointCode* points = malloc(sizeof(LMEpointCode) * pointBlock);
+	//Note should use Vicenty's inverse algorithm to calculate distance if we are using
+	//WGS84 for our base projection
+	LMEpointSet_read(group_id, "testGrid", pointBlock, points);
+	for (i = 0; i < pointBlock; i++) {
+		// Unscale back to WGS84
+		// Find the distance from raster origin
+		// interpolate to raster based on distance and grid resolution
+		printf("TEST");
+	}
+	return 0;
+}
+	
 
 // TODO: Finish methods for outputting points
 // TODO: GET SOME VISUALS!!

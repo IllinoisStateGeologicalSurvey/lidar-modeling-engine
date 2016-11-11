@@ -9,12 +9,12 @@
 #include <limits.h>
 #include <liblas/capi/liblas.h>
 
-#define PATH_LEN 4096
+#define PATH_SIZE 1024
 
 typedef struct task_t{
     size_t offset;
     size_t size;
-    char fname[PATH_LEN];
+    char fname[PATH_SIZE];
 } task_t;
 
 

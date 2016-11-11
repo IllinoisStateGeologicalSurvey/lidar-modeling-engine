@@ -15,8 +15,10 @@
 #include "bound.h"
 #include "crs.h"
 
+#define PATH_SIZE 1024
+
 typedef struct proj_t {
-    char proj4[4096];
+    char proj4[PATH_SIZE];
 } proj_t;
 
 //typedef struct bound_t {
@@ -30,7 +32,7 @@ typedef struct LMEheader {
 	uint32_t pnt_count;
 	LMEboundCode bounds;
 	LMEcrs crs;
-	char path[4096];
+	char path[PATH_SIZE];
 	
 } LMEheader;
 

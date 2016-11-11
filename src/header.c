@@ -19,6 +19,7 @@
 #include "header.h"
 #include "point.h"
 #include "file_util.h"
+#include "util.h"
 #include <time.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -46,7 +47,7 @@
     //printf("SRS has length %zd\n", projLen);
     //printf("Projection received\n");
 	//strcpy(&proj->proj4[0], proj4_text);
-	strncpy(&proj->proj4[0], proj4_text, PATH_LEN);
+	strncpy(&proj->proj4[0], proj4_text, PATH_SIZE);
 	
 	//printf("Cleaning up\n");
 	//LASString_Free(proj4_text);
@@ -96,7 +97,7 @@ void HeaderType_destroy(hid_t headertype, herr_t* status) {
 /*
 int MPI_HeaderType_create(MPI_Datatype *mpi_headertype) {
     int nitems=5;
-    int strLen = PATH_LEN;
+    int strLen = PATH_SIZE;
     LMEheader header;
     //int blocklengths[5] = { 1, 1, 1, strLen, 1};
     int blocklengths[5] = {1, 1, 6, strLen, strLen};
@@ -182,7 +183,7 @@ int LMEheaderSet_createDataset(hid_t group_id, LMEheader* headers, uint32_t n_he
 	bound_type = H5Tcopy(code_type);
 	H5Tset_size(bound_type, 2);
 	path_type = H5Tcopy(H5T_NATIVE_CHAR);
-	H5Tset_size(path_type, 4096);
+	H5Tset_size(path_type, PATH_SIZE);
 	printf("CRS size: %zu\n", sizeof(LMEcrs));
 	crs_type = H5Tcreate(H5T_COMPOUND, sizeof(LMEcrs));
 	status = H5Tinsert(crs_type, "type", HOFFSET(LMEcrs, type), H5T_NATIVE_INT);
@@ -280,7 +281,7 @@ int Header_read(char* path, LMEheader* header, uint32_t id) {
 	LASHeaderH LASheader = NULL;
 	//zero-fill the path buffer to get rid of any remaining paths
 	// Copy the path 
-	strncpy(header->path, path, PATH_LEN);
+	strncpy(header->path, path, PATH_SIZE);
 	header->id = id;
         
 	//printf("[%i] Filepath set for file id %i\n", mpi_rank, id);
@@ -328,7 +329,7 @@ int Header_read(char* path, LMEheader* header, uint32_t id) {
 int LMEheaderBlock_read(char paths[], int offset, int block, LMEheader* headers)
 {
     int i; // counter
-    int strLen = PATH_LEN;
+    int strLen = PATH_SIZE;
     char fpath[strLen];
 
     int blockInt = block;
@@ -336,10 +337,10 @@ int LMEheaderBlock_read(char paths[], int offset, int block, LMEheader* headers)
     //fprintf(stderr, "Reading %i files\n", blockInt);
     for (i = 0; i < (blockInt); i++) {
         /* Set reader and header null to allow for error checking */
-        //printf("[%i]Last file is %s\n", mpi_rank, &paths[(blockInt - 1) * PATH_LEN]);
-        memset(&fpath[0], 0, PATH_LEN);
-        strncpy(&fpath[0], &paths[PATH_LEN * i], PATH_LEN);
-	//snprintf(&fpath[0], PATH_LEN, &paths[PATH_LEN * i]);
+        //printf("[%i]Last file is %s\n", mpi_rank, &paths[(blockInt - 1) * PATH_SIZE]);
+        memset(&fpath[0], 0, PATH_SIZE);
+        strncpy(&fpath[0], &paths[PATH_SIZE * i], PATH_SIZE);
+	//snprintf(&fpath[0], PATH_SIZE, &paths[PATH_SIZE * i]);
     //    printf("Reading file %i/%i: %s \n", i, blockInt, &fpath[0]);
         
         headerId = offset + i;

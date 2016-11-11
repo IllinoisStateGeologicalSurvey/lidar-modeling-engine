@@ -47,6 +47,8 @@ uint32_t LMEcoordCode_getZ(LMEcoordCode * const coord) {
 	return coord->dims[2];
 }
 
+
+
 void LMEcoordCode_setX(LMEcoordCode* coord, uint32_t x) {
 	coord->dims[0] = x;
 }
@@ -94,6 +96,18 @@ void LMEcoord_setY(LMEcoord* coord, double y) {
 void LMEcoord_setZ(LMEcoord* coord, double z) {
 	coord->dims[2] = z;
 }
+
+double LMEcoord_distance(LMEcoord* coord1, LMEcoord* coord2) {
+	double delta[3];
+	int i = 0;
+	double dist;
+	for (i = 0; i < 3; i++) {
+		delta[i] = pow(coord2->dims[i] - coord1->dims[i], 2);
+	}
+	dist = sqrt(delta[0] + delta[1] + delta[2]);
+	return dist;
+}
+
 /**
  * @brief LMEcoord_set: Set all dims to a coordinate at once
  * @param coord (LMEcoord*) The coordinate to update

@@ -109,11 +109,11 @@ int h5_region_prepare(hid_t *region_id, int lasCount, hid_t* headertype, hid_t* 
 int main(int argc, char* argv[]) {
 
 	//Variables to hold user arguments
-	char* h5_file = (char *)malloc(sizeof(char)* PATH_LEN);
+	char* h5_file = (char *)malloc(sizeof(char)* PATH_SIZE);
 	// Get the path to HDF5 file
 	getDataStore(h5_file);
-	char* rName = (char *)malloc(sizeof(char)* PATH_LEN);
-	char* rPath = (char *)malloc(sizeof(char)* PATH_LEN);
+	char* rName = (char *)malloc(sizeof(char)* PATH_SIZE);
+	char* rPath = (char *)malloc(sizeof(char)* PATH_SIZE);
 	int verbose;
 	// Parse user arguments
 	parseArgs(argc, argv, rName, rPath, &verbose);
@@ -148,31 +148,31 @@ int main(int argc, char* argv[]) {
 	h5_region_prepare(&region_id, lasCount, &headertype, &plist_id, &dataspace_id, &dataset_id, &h5_status);
 	// READ
 	// Allocate space for headers
-	char* subPaths = malloc(sizeof(char) * t_blocks[mpi_rank]* PATH_LEN);
+	char* subPaths = malloc(sizeof(char) * t_blocks[mpi_rank]* PATH_SIZE);
 	//Allocate space for headers
 	LMEheader* headers = (LMEheader *) malloc(sizeof(LMEheader) * t_blocks[mpi_rank]);
 
 	// Read the filenames
 	if (mpi_rank == 0) {
 		// Allocate memory for headers
-		char *outPaths = malloc(sizeof(char) * ((size_t)lasCount * PATH_LEN));
+		char *outPaths = malloc(sizeof(char) * ((size_t)lasCount * PATH_SIZE));
 		// Read file paths from folder path
 		buildArray(rPath, outPaths, lasCount);
 		printf("Gathered %i paths, send paths to processes\n", lasCount);
 		// Send the headers to the processes
 		for (i =1; i < mpi_size; i++) {
 			printf("Sending paths to %i\n", i);
-			mpi_err = MPI_Send(&outPaths[t_offsets[i] * PATH_LEN], t_blocks[i] * PATH_LEN, MPI_CHAR, i, 1, comm);
+			mpi_err = MPI_Send(&outPaths[t_offsets[i] * PATH_SIZE], t_blocks[i] * PATH_SIZE, MPI_CHAR, i, 1, comm);
 			MPI_check_error(mpi_err);
 			printf("Sent paths[%i]-[%i] to %i\n", t_offsets[i], (t_offsets[i] + t_blocks[i]), i);
 		}
 		for (i = 0; i < t_blocks[0]; i++) {
-			strcpy(&subPaths[i*PATH_LEN], &outPaths[i * PATH_LEN]);
-			//subPaths[i] = outPaths[(i) * PATH_LEN];
+			strcpy(&subPaths[i*PATH_SIZE], &outPaths[i * PATH_SIZE]);
+			//subPaths[i] = outPaths[(i) * PATH_SIZE];
 		}
 		free(outPaths);
 	} else {
-		mpi_err = MPI_Recv(&subPaths[0], t_blocks[mpi_rank] * PATH_LEN, MPI_CHAR, 0, 1, MPI_COMM_WORLD, &status);
+		mpi_err = MPI_Recv(&subPaths[0], t_blocks[mpi_rank] * PATH_SIZE, MPI_CHAR, 0, 1, MPI_COMM_WORLD, &status);
 		MPI_check_error(mpi_err);
 	}
 		MPI_Barrier(comm);

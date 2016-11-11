@@ -109,11 +109,11 @@ int h5_region_prepare(hid_t *region_id, int lasCount, hid_t* headertype, hid_t* 
 int main(int argc, char* argv[]) {
 
 	//Variables to hold user arguments
-	char* h5_file = (char *)malloc(sizeof(char)* PATH_LEN);
+	char* h5_file = (char *)malloc(sizeof(char)* PATH_SIZE);
 	// Get the path to HDF5 file
 	getDataStore(h5_file);
-	char* rName = (char *)malloc(sizeof(char)* PATH_LEN);
-	char* rPath = (char *)malloc(sizeof(char)* PATH_LEN);
+	char* rName = (char *)malloc(sizeof(char)* PATH_SIZE);
+	char* rPath = (char *)malloc(sizeof(char)* PATH_SIZE);
 	int verbose;
 	// Parse user arguments
 	parseArgs(argc, argv, rName, rPath, &verbose);
@@ -153,7 +153,7 @@ int main(int argc, char* argv[]) {
 	// Read the filenames
 	if (mpi_rank == 0) {
 		// Allocate memory for headers
-		char *outPaths = malloc(sizeof(char) * ((size_t)lasCount * PATH_LEN));
+		char *outPaths = malloc(sizeof(char) * ((size_t)lasCount * PATH_SIZE));
 		LMEheader* headers = malloc(sizeof(LMEheader) * lasCount);
 		// Read file paths from folder path
 		buildArray(rPath, outPaths, lasCount);

@@ -60,9 +60,19 @@ int main(int argc, char* argv[]) {
 
 	double res[2] = {0.0,0.0};
 	int verbose;
+	//Only needed for parallel testing
+	int mpi_size, mpi_rank, mpi_err;
+	MPI_Comm comm = MPI_COMM_WORLD;
+	MPI_Info info = MPI_INFO_NULL;
+	MPI_Status status;
+	/** Init MPI **/
+	MPI_Init(&argc, &argv);
+	MPI_Comm_size(comm, &mpi_size);
+	MPI_Comm_rank(comm, &mpi_rank);
+	MPI_Errhandler_set(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
 	//char* h5_file = (char *)malloc(sizeof(char)* 4096);
 	//getDataStore(h5_file);
-	hid_t file_id;
+	hid_t file_id, group_id;
 	openLME(&file_id);
 	parseArgs(argc, argv, &res[0], &res[1], &verbose);
 	LMEcoord ll, ur;
@@ -76,12 +86,21 @@ int main(int argc, char* argv[]) {
 	//printf("Opening LME dataset at %s\n", h5_file);
 	LMEgrid* grid = Grid_Create(&bounds, dims, res);
 	printf("Grid created.\n");
+	group_id = H5Gopen(file_id, "grids", H5P_DEFAULT);
 	//generateGridDataset(h5_file, "testGrid",&cols, &rows);
 	LMEgrid_createDataset(file_id, grid);
+	char LASfile = "/projects/isgs/lidar/mclean/LAS/882_1448.las";
+	char pointSetName = "testSet";
+	hsize_t pointBlock = 1000;
+	
+	LMEpointSet_writeFromLAS(LASfile, pointSetName, &pointBlock, group_id, comm, info);
 	printf("Cleaning up\n");
 	Grid_Destroy(grid);
+	H5Gclose(group_id);
 	H5Fclose(file_id);
+
 	printf("Exiting\n");
+	MPI_Finalize();
 	return 0;
 	//Bounds: -88.26681 41.98540 -88.25840 41.99156
 	// Create a bound object

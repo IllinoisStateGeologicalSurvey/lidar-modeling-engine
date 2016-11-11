@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include <stdio.h>
-
+#include <coord.h>
 #define DIM 2
 #define ORDER 32
 
@@ -31,7 +31,20 @@ Hpoint H_decode (Hcode H);
 
 Hcode H_encode(Hpoint pt);
 
+uint32_t swapEndian(uint32_t num);
+
 int combineIndices(uint64_t* idxfull, uint32_t high, uint32_t low);
+
+int splitIndex(uint64_t fullIndex, uint32_t * high, uint32_t * low);
+
+uint64_t encodeIndex(LMEcoordCode * code);
+
+void decodeIndex(uint64_t fullidx, LMEcoordCode * code);
+
+unsigned createMask(unsigned start, unsigned stop);
+
+int less_than(uint64_t a, uint64_t b);
+
 
 void printBits(size_t const size, void const * const ptr);
 

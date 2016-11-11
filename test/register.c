@@ -74,8 +74,8 @@ void parseArgs(int argc, char* argv[], char *lasPath, char* h5_file, int* verbos
 
 int main(int argc, char* argv[])
 {
-    char dirname[PATH_LEN];
-    char h5_file[PATH_LEN];
+    char dirname[PATH_SIZE];
+    char h5_file[PATH_SIZE];
     hid_t file_id, plist_id;
     int i;
     int verbose;
@@ -94,7 +94,7 @@ int main(int argc, char* argv[])
     // Should get the count of existing headers here
     //offset = header_count(file_id);
     //
-    char *out_paths = malloc(sizeof(char)* (size_t)(file_count * PATH_LEN));
+    char *out_paths = malloc(sizeof(char)* (size_t)(file_count * PATH_SIZE));
     headers = malloc(sizeof(header_t) * file_count);
     // Get the paths for the LAS files 
     buildArray(dirname, out_paths, file_count);

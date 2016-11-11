@@ -21,120 +21,155 @@
 /** TODO FIND the reason that Y coordinates are sometimes offset by +/- 90 degrees. **/
 
 /** Function to test whether the encoding is functioning properly **/
-int checkCoding(double x, double y, double z)
+int checkCoding(LMEcoord * coordIn)
 {
-    double coords[3];
-    coord_dbl_t *coordIn, *coordOut;
-    coord_t *ccIn, *ccOut;
-    Hpoint *pt;
+    LMEcoord  coordOut;
+    LMEcoordCode ccIn, ccOut;
+    Hpoint pt;
     Hcode idx;
-    uint64_t *idxFull;
-    coordIn = malloc(sizeof(coord_dbl_t));
-    coordOut = malloc(sizeof(coord_dbl_t));
-    printf("Input coordinates:[ %f, %f, %f ]\n", x, y, z);
-    Coord_Set(coordIn, x, y, z);
-    ccIn = malloc(sizeof(coord_t));
-    ccOut = malloc(sizeof(coord_t));
-    Coord_Encode(ccIn, coordIn);
-    pt = malloc(sizeof(Hpoint));
-    pt->hcode[0] = ccIn->x;
-    pt->hcode[1] = ccIn->y;
-    idx = H_encode(*pt);
-    idxFull = malloc(sizeof(uint64_t));
-    combineIndices(idxFull, idx.hcode[0], idx.hcode[1]);
-    *pt = H_decode(idx);
-    ccOut->x = pt->hcode[0];
-    ccOut->y = pt->hcode[1];
-    ccOut->z = ccIn->z;
-    Coord_Decode(coordOut, ccOut);
-    printf("Output coordinates:[ %f, %f, %f ]\n", coordOut->x, coordOut->y, coordOut->z);
-    printf("YCodeDiff is %u\n", (coordIn->y - coordOut->y));
-    printf("YDiff is %f\n", (ccIn->y - ccOut->y));
+    uint64_t idxFull;
+    //coordOut = malloc(sizeof(LMEcoord));
+    //ccIn = malloc(sizeof(LMEcoordCode));
+    //ccOut = malloc(sizeof(LMEcoordCode));
+    LMEcoord_encode(&ccIn, coordIn);
+    //pt = malloc(sizeof(Hpoint));
+    pt.hcode[0] = LMEcoordCode_getX(&ccIn);
+    pt.hcode[1] = LMEcoordCode_getY(&ccIn);
+	printf("Pre-encoding: %"PRIu32" %"PRIu32"\n", pt.hcode[0], pt.hcode[1]);
+    idx = H_encode(pt);
+	printf("Post-encoding: %"PRIu32" %"PRIu32"\n", idx.hcode[0], idx.hcode[1]);
+    combineIndices(&idxFull, idx.hcode[0], idx.hcode[1]);
+	printf("Full index: %" PRIu64 "\n", idxFull);
+	//splitIndex(idxFull, &idx.hcode[0], &idx.hcode[1]);
+	printf("Pre-decode: %"PRIu32" %"PRIu32"\n", idx.hcode[0], idx.hcode[1]);
+    //NOTE THE y coordinate is occaisionally coming back 90degrees off 
+	pt = H_decode(idx);
+	printf("Post-decode: %"PRIu32" %"PRIu32"\n", pt.hcode[0], pt.hcode[1]);
+    LMEcoordCode_setX(&ccOut, pt.hcode[0]);
+    LMEcoordCode_setY(&ccOut, pt.hcode[1]);
+    LMEcoordCode_setZ(&ccOut, LMEcoordCode_getZ(&ccIn));
+    LMEcoord_decode(&coordOut, &ccOut);
+    //printf("Output coordinates:[ %f, %f, %f ]\n", coordOut->x, coordOut->y, coordOut->z);
+    double dist = LMEcoord_distance(coordIn, &coordOut);
+	if (dist > 1) {
+		printf("Distance is : %f\n", dist);
+	//printf("YCodeDiff is %u\n", (LMEcoord_getY(coordIn) - LMEcoord_getY(&coordOut)));
+		printf("In: ");
+		LMEcoord_print(coordIn);
+		printf("Out: ");
+		LMEcoord_print(&coordOut);
+		printf("YDiff is %f\n", (LMEcoordCode_getY(&ccIn) - LMEcoordCode_getY(&ccOut)));
+	}
 
-    free(coordIn);
-    free(coordOut);
-    free(ccIn);
-    free(ccOut);
-    free(idxFull);
-    free(pt);
+    //free(ccIn);
+    //free(ccOut);
+    //free(pt);
     return 0;
 }
 
-uint64_t getCode(double x, double y, double z) {
-    
-    double coords[3];
-    coord_dbl_t *coordIn;
-    coord_t *ccIn;
-    Hpoint *pt;
-    Hcode idx;
-    uint64_t *idxFull;
-    coordIn = malloc(sizeof(coord_dbl_t));
-    printf("Input coordinates:[ %f, %f, %f ]\n", x, y, z);
-    Coord_Set(coordIn, x, y, z);
-    ccIn = malloc(sizeof(coord_t));
-    Coord_Encode(ccIn, coordIn);
-    pt = malloc(sizeof(Hpoint));
-    pt->hcode[0] = ccIn->x;
-    pt->hcode[1] = ccIn->y;
-    idx = H_encode(*pt);
-    idxFull = malloc(sizeof(uint64_t));
-    combineIndices(idxFull, idx.hcode[0], idx.hcode[1]);
-    free(coordIn);
-    free(ccIn);
-    free(pt);
 
-    return *idxFull;
+uint64_t getCode(LMEcoord * coordIn) {
+    
+    LMEcoordCode ccIn;
+    Hpoint pt;
+    Hcode idx;
+    uint64_t idxFull;
+    //ccIn = malloc(sizeof(LMEcoordCode));
+    LMEcoord_encode(&ccIn, coordIn);
+    //pt = malloc(sizeof(Hpoint));
+    pt.hcode[0] = LMEcoordCode_getX(&ccIn);
+    pt.hcode[1] = LMEcoordCode_getY(&ccIn);
+    idx = H_encode(pt);
+    //idxFull = malloc(sizeof(uint64_t));
+    combineIndices(&idxFull, idx.hcode[0], idx.hcode[1]);
+    //free(ccIn);
+
+    return idxFull;
 }
+
+double randomDouble(double min, double max) {
+	assert(max > min);
+	// Create a random coefficient to use
+	double random = ((double) rand()) / (double) RAND_MAX;
+	// Generate a double within the given range
+	double range = max - min;
+	return (random * range) + min;
+}
+
+int randomCoord(LMEcoord * coord) {
+	double mins[3] = {-180.0, -90.0, -12300.0};
+	double maxs[3] = {180.0, 90.0, 12300.0};
+	double args[3];
+	int i = 0;
+	for (i = 0; i < 3; i++) {
+		args[i] = randomDouble(mins[i], maxs[i]);
+	}
+
+	LMEcoord_set(coord, args[0], args[1], args[2]);
+	return 0;
+}
+
 
 int main(int argc, char** argv[])
 {
     double coords[3];
     //coord_dbl_t *coord1, *coord2, *coord3;
     //coord1 = malloc(sizeof(coord_dbl_t));
-    coords[0] = -180.0000;
-    coords[1] = -90.0000;
-    coords[2] = -12300.0;
-    uint64_t test1 = getCode(coords[0], coords[1], coords[2]);
-    checkCoding(coords[0], coords[1], coords[2]);
+    LMEcoord coordTest;
+	LMEcoordCode code;
+	uint64_t cache[100];
+	int i =0;
+	for (i = 0; i < 100; i++) {
+		randomCoord(&coordTest);
+		LMEcoord_encode(&code, &coordTest);
+		cache[i] = encodeIndex(&code);
+		printf("Testing point: %i\n", i);
+		printf("Code: %"PRIu64 "\n", cache[i]);
+		checkCoding(&coordTest);
+	}
+	//coords[0] = -180.0000;
+    //coords[1] = -90.0000;
+    //coords[2] = -12300.0;
+    //checkCoding(coords[0], coords[1], coords[2]);
 
     //Coord_Set(coord1, coords[0], coords[1], coords[2]);
     //printf("%lf, %lf\n", coord1->x, coord1->y);
 
     //coord2 = malloc(sizeof(coord_dbl_t));
-    coords[0] = 180.0000;
-    coords[1] = 90.0000;
-    coords[2] = 12300.0;
-    checkCoding(coords[0], coords[1], coords[2]);
-    //Coord_Set(coord2, coords[0], coords[1], coords[2]);
+    //coords[0] = 180.0000;
+    //coords[1] = 90.0000;
+    //coords[2] = 12300.0;
+    //checkCoding(coords[0], coords[1], coords[2]);
+    ///Coord_Set(coord2, coords[0], coords[1], coords[2]);
     //printf("%lf, %lf\n", coord2->x, coord2->y);
 
     //coord3 = malloc(sizeof(coord_dbl_t));
-    coords[0] = 0.000000657;
-    coords[1] = 0.000000657;
-    coords[2] = 0.0;
-    checkCoding(coords[0], coords[1], coords[2]);
+    //coords[0] = 0.000000657;
+    //coords[1] = 0.000000657;
+    //coords[2] = 0.0;
+    //checkCoding(coords[0], coords[1], coords[2]);
 
-    coords[0] = -50.0000;
-    coords[1] = -50.0000;
-    coords[2] = 1500;
-    checkCoding(coords[0], coords[1], coords[2]);
+    //coords[0] = -50.0000;
+    //coords[1] = -50.0000;
+    //coords[2] = 1500;
+    //checkCoding(coords[0], coords[1], coords[2]);
 
-    coords[0] = -1.0000;
-    coords[1] = -1.0000;
-    coords[2] = -1.0000;
-    checkCoding(coords[0], coords[1], coords[2]);
+    //coords[0] = -1.0000;
+    //coords[1] = -1.0000;
+    //coords[2] = -1.0000;
+    //checkCoding(coords[0], coords[1], coords[2]);
 
-    coords[0] = 1.0000;
-    coords[1] = 1.00000;
-    coords[2] = 1.0000;
-    checkCoding(coords[0], coords[1], coords[2]);
+    //coords[0] = 1.0000;
+    //coords[1] = 1.00000;
+    //coords[2] = 1.0000;
+    //checkCoding(coords[0], coords[1], coords[2]);
 
-    coords[0] = -89.0000;
-    coords[1] = -89.00000;
-    coords[2] = 1.0000;
-    checkCoding(coords[0], coords[1], coords[2]);
+    //coords[0] = -89.0000;
+    //coords[1] = -89.00000;
+    //coords[2] = 1.0000;
+    //checkCoding(coords[0], coords[1], coords[2]);
 
-
+	printf("Finished Hilbert test\n");
 
     return 0;
 }

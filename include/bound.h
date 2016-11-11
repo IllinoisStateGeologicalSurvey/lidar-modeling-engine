@@ -54,6 +54,8 @@ int LMEbound_fromLASSRS(LMEbound* bounds, LASSRSH srs);
 
 void LMEbound_print(LMEbound * const bounds);
 
+LMEcoord LMEbound_Centroid(LMEbound * const bounds);
+
 
 #endif
 

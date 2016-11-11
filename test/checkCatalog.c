@@ -72,7 +72,7 @@ int main(int argc, char* argv[])
 	struct opdata	od;
 
 	/* Open file and initialize operator data structure */
-	char* h5_file = (char *)malloc(sizeof(char)* PATH_LEN);
+	char* h5_file = (char *)malloc(sizeof(char)* PATH_SIZE);
 	getDataStore(h5_file);
 	
    

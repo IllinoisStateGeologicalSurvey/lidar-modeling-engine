@@ -20,7 +20,7 @@ LMEgrid* Grid_Create(LMEbound *extent, int dims[], double res[]);
 
 int LMEgrid_createDataset(hid_t group_id, LMEgrid* grid);
 
-int LMEgrid_write(hid_t group_id, LMEgrid* grid, int colStart, int rowStart, int colCount, int rowCount);
+int LMEgrid_write(hid_t group_id, int colStart, int rowStart, int colCount, int rowCount, LMEgrid* grid);
 
 int generateGridDataset(char* file, char* dataset_name, hsize_t* cols, hsize_t* rows);
 

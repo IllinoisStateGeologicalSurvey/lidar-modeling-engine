@@ -22,9 +22,11 @@
 #include <string.h>
 #include "util.h"
 
+#define PATH_SIZE 1024
+
 int main(int argc, char* argv[]) {
-	char buf[PATH_MAX+1];
-	getDataStore(&buf);
+	char buf[PATH_SIZE];
+	getDataStore(&buf[0]);
 	
 	hid_t file_id;
 	/** Fetch the file id if it exists **/

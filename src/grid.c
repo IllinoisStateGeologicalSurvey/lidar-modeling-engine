@@ -88,8 +88,36 @@ int LMEgrid_createDataset(hid_t group_id, LMEgrid* grid) {
  */
 
 
-int LMEgrid_write(hid_t group_id, LMEgrid*, int colStart, int rowStart, int colCount, int rowCount, )
+int LMEgrid_write(hid_t group_id, int colStart, int rowStart, int colCount, int rowCount, LMEgrid* grid)
 {
+	hid_t dset_id, fspace_id, pixeltype, memspace_id, plist_id;
+	herr_t status;
+	int rank = 2;
+	hsize_t stride[] = {1,1};
+	hsize_t offset[] = {colStart, rowStart};
+	hsize_t block[] ={colCount, rowCount};
+	hsize_t count[] = {1,1};
+	//Open Dataset
+	char grid_name[] = "testgrid";
+	plist_id = H5Pcreate(H5P_DATASET_ACCESS);
+	// Open the header dataset
+	dset_id = H5Dopen(group_id, grid_name, plist_id);
+	// get the id for the header dataspace
+	fspace_id = H5Dget_space(dset_id);
+	memspace_id = H5Screate_simple(rank, &block[0], NULL);
+
+	pixeltype = H5Tcopy(H5T_IEEE_F64LE);
+	status = H5Sselect_hyperslab(fspace_id, H5S_SELECT_SET, &offset[0], &stride[0], &count[0], &block[0]);
+
+	plist_id = H5Pcreate(H5P_DATASET_XFER);
+	// Check the data
+	printf("Writing grid data\n");
+	status = H5Dwrite(dset_id, pixeltype, memspace_id, fspace_id, plist_id, &grid->data->data);
+	status = H5Dclose(dset_id);
+	status = H5Sclose(fspace_id);
+	status = H5Sclose(memspace_id);
+	status = H5Pclose(plist_id);
+	status = H5Tclose(pixeltype);
 	return 0;
 }
 

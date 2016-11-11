@@ -104,30 +104,12 @@ void parse_args(int argc, char* argv[], char* file_list, LMEbound* bounds, int* 
 	}
 }
 
-int h5_user_region_init(char * const rName, hid_t *plist_id, hid_t *file_id, hid_t *user_region_id, hid_t *user_id, MPI_Comm comm, MPI_Info info) {
-	char *h5_file = (char *)malloc(sizeof(char) * PATH_LEN);
-	getDataStore(h5_file);
-	*plist_id = H5Pcreate(H5P_FILE_ACCESS);
-	H5Pset_fapl_mpio(*plist_id, comm, info);
-	*file_id = H5Fopen(h5_file, H5F_ACC_RDWR |
-		H5F_ACC_DEBUG, *plist_id);
-	
-	*user_region_id = H5Gopen(*file_id, "users", H5P_DEFAULT);
-	// Check if group exists
-	if(H5Lexists(*user_region_id, rName, H5P_DEFAULT)) {
-		*user_id = H5Gopen(*user_region_id, rName, H5P_DEFAULT);
-	} else {
-		*user_id = H5Gcreate(*user_region_id, rName, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-	}
-	free(h5_file);
-	return 0;
-}
 
 int main(int argc, char* argv[])
 {
 	int i;
 	int verbose = FALSE;
-	char* file_list = (char *)malloc(sizeof(char) * PATH_LEN);
+	char* file_list = (char *)malloc(sizeof(char) * PATH_SIZE);
 	LMEbound* bounds =  (LMEbound *)malloc(sizeof(LMEbound));
 
 	// MPI Related variables
@@ -150,7 +132,7 @@ int main(int argc, char* argv[])
 
 
 	parse_args(argc, argv, file_list, bounds, &verbose);
-	char line[PATH_LEN];
+	char line[PATH_SIZE];
 	//LAS variables
 	LASReaderH reader;
 	LASHeaderH header;
@@ -173,7 +155,7 @@ int main(int argc, char* argv[])
 		}
 	}
 	printf("Reading %i files\n", fileCount);
-	char paths[fileCount][PATH_LEN];
+	char paths[fileCount][PATH_SIZE];
 	fseek(fp, 0, SEEK_SET);
 	for (i = 0; i < (fileCount -1); i++) {
 		fgets(line, sizeof(line), fp);
@@ -191,7 +173,7 @@ int main(int argc, char* argv[])
 	 * would be nice to have some intelligent file
 	 * organization/management.
 	 */
-	char* rName = (char *)malloc(sizeof(char)*PATH_LEN);
+	char* rName = (char *)malloc(sizeof(char)*PATH_SIZE);
 	rName = "test";
 	hid_t plist_id, file_id, user_region_id, user_id;
 	h5_user_region_init(rName, &plist_id, &file_id, &user_region_id, &user_id, comm, info);

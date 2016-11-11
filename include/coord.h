@@ -47,6 +47,8 @@ void LMEcoord_decode(LMEcoord* coord, LMEcoordCode * const coord_coded);
 hid_t CoordType_create(herr_t* status);
 void CoordType_destroy(hid_t coordtype, herr_t* status);
 
+double LMEcoord_distance(LMEcoord* coord1, LMEcoord* coord2);
+
 void LMEcoord_toRadians(LMEcoord* coord);
 void LMEcoord_toDegrees(LMEcoord* coord);
 

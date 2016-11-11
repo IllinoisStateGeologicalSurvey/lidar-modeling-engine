@@ -133,7 +133,9 @@ int openLME(hid_t* file_id) {
 		return 1;
 	}
 }
-
+/**
+ * \brief createArrDataset: Create and array-based dataset
+ */
 int createArrDataset(hid_t parent_id, char* dset_name, hsize_t *const dims, hsize_t rank, hid_t datatype) {
 	
 	hid_t dataset_id, dataspace_id, plist_id;
@@ -254,6 +256,36 @@ char *rand_string(char* dest, size_t size)
 	}
 	*dest = '\0';
 	return dest;
+}
+
+
+/** 
+ * h5_user_region_init: Create a region within the LME data store
+*/
+int h5_user_region_init(char * const rName, hid_t *plist_id, hid_t *file_id, hid_t *user_region_id, hid_t *user_id, MPI_Comm comm, MPI_Info info) {
+	char *h5_file = (char *)malloc(sizeof(char) * PATH_SIZE);
+	getDataStore(h5_file);
+	*plist_id = H5Pcreate(H5P_FILE_ACCESS);
+	H5Pset_fapl_mpio(*plist_id, comm, info);
+	*file_id = H5Fopen(h5_file, H5F_ACC_RDWR |
+		H5F_ACC_DEBUG, *plist_id);
+	
+	*user_region_id = H5Gopen(*file_id, "users", H5P_DEFAULT);
+	// Check if group exists
+	if(H5Lexists(*user_region_id, rName, H5P_DEFAULT)) {
+		*user_id = H5Gopen(*user_region_id, rName, H5P_DEFAULT);
+	} else {
+		*user_id = H5Gcreate(*user_region_id, rName, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+	}
+	free(h5_file);
+	return 0;
+}
+
+uint64_t swap_uint64(uint64_t val) 
+{
+	val = ((val << 8) & 0xFF00FF00FF00FF00ULL ) | ((val >> 8) & 0x00FF00FF00FF00FFULL );
+	val = ((val << 16) & 0xFFFF0000FFFF0000ULL) | ((val >> 16) & 0x0000FFFF0000FFFFULL );
+	return (val << 32) | (val >> 32);
 }
 
 

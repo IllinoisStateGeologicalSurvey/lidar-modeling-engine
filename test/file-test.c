@@ -79,8 +79,8 @@ void parseArgs(int argc, char* argv[], char *lasPath, char* h5_file, int* verbos
 
 int main(int argc, char* argv[])
 {
-	char dirname[PATH_LEN];
-	char h5_file[PATH_LEN];
+	char dirname[PATH_SIZE];
+	char h5_file[PATH_SIZE];
 	hid_t file_id, plist_id;
 	size_t size;
 	int i;
@@ -122,7 +122,7 @@ TODO: BREAK OUT THE TASK DIVISION TO SEPARATE
 FUNCTION
 	 ****************************************************/
 	//divide_tasks(file_count, mpi_size, &blockOffs[0], &blockSizes[0]);
-	//char* sub_paths = malloc(sizeof(char) * (blockSizes[mpi_rank] *  (PATH_LEN)));
+	//char* sub_paths = malloc(sizeof(char) * (blockSizes[mpi_rank] *  (PATH_SIZE)));
 
 	/** Scatter the filepaths to be read **/
 	printf("Scattering paths\n");
@@ -131,7 +131,7 @@ FUNCTION
 	if (mpi_rank == 0) {
 		int blockCounter;
 		// Send the data to the other processes
-		char* outPaths = malloc(sizeof(char) * ((size_t)file_count * PATH_LEN));
+		char* outPaths = malloc(sizeof(char) * ((size_t)file_count * PATH_SIZE));
                 header_t* headers = malloc(sizeof(header_t) * file_count);
                 
 		buildArray(dirname, outPaths, file_count);
@@ -139,8 +139,8 @@ FUNCTION
                 free(outPaths);
 /*                for (i = 1; i < mpi_size; i++) {
 			blockCounter = blockOffs[i];
-			printf("Sending %i paths starting from idx: %i %s to %i\n", blockSizes[i], blockCounter, &outPaths[blockCounter * PATH_LEN], i);
-			mpi_err = MPI_Send(&outPaths[blockCounter * PATH_LEN], (blockSizes[i] * PATH_LEN), MPI_CHAR, i, 1, comm);
+			printf("Sending %i paths starting from idx: %i %s to %i\n", blockSizes[i], blockCounter, &outPaths[blockCounter * PATH_SIZE], i);
+			mpi_err = MPI_Send(&outPaths[blockCounter * PATH_SIZE], (blockSizes[i] * PATH_SIZE), MPI_CHAR, i, 1, comm);
 			MPI_check_error(mpi_err);
 			printf("Sent %i paths starting from idx: %i to %i\n", blockSizes[i], blockCounter, i);
 		}
@@ -152,7 +152,7 @@ FUNCTION
 		free(outPaths);
 	} else {
 		printf("[%i] Receiving %i paths\n", mpi_rank, blockSizes[mpi_rank]);
-		mpi_err = MPI_Recv(&sub_paths[0], (blockSizes[mpi_rank] * PATH_LEN), MPI_CHAR, 0, 1, MPI_COMM_WORLD, &status);
+		mpi_err = MPI_Recv(&sub_paths[0], (blockSizes[mpi_rank] * PATH_SIZE), MPI_CHAR, 0, 1, MPI_COMM_WORLD, &status);
 		MPI_check_error(mpi_err);
 	}
 	printf("[%i] Creating tasks\n", mpi_rank);

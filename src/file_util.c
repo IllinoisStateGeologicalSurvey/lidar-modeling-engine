@@ -26,7 +26,7 @@
 #include <liblas/capi/liblas.h>
 #include "file_util.h"
 
-//#define PATH_LEN=4096
+//#define PATH_SIZE=4096
 
 /** 
  * @brief dump_entry: Check the name and type of a filesystem entry
@@ -85,11 +85,11 @@ int buildArray( char  dirPath[], char outPaths[], int file_count) {
     struct stat statbuf;
     char * ext;
     size_t counter = 0;
-    //char buf[PATH_LEN + 1];
+    //char buf[PATH_SIZE + 1];
     //int i = 0;
     //char *fptr;
-    //char fullPath[PATH_LEN];
-    char fname[PATH_LEN];
+    //char fullPath[PATH_SIZE];
+    char fname[PATH_SIZE];
     //fptr = fname;
     printf("Reading files from %s\n", dirPath);
     //char *ptr = realpath(dirPath, fullPath); 
@@ -141,10 +141,10 @@ int buildArray( char  dirPath[], char outPaths[], int file_count) {
                                 exit(1);
                             }*/
                             //** TODO: Figure out how to write to string array **/
-                            //snprintf(&outPaths[counter * PATH_LEN], PATH_LEN, fname);
-                            strncpy(&outPaths[counter * (PATH_LEN)], fname, PATH_LEN);
+                            //snprintf(&outPaths[counter * PATH_SIZE], PATH_SIZE, fname);
+                            strncpy(&outPaths[counter * (PATH_SIZE)], fname, PATH_SIZE);
                             
-                            //printf("Copied to path list %s.\n", &outPaths[counter * PATH_LEN]);
+                            //printf("Copied to path list %s.\n", &outPaths[counter * PATH_SIZE]);
                             counter++;
                         }
                         else
@@ -178,7 +178,7 @@ int listFiles(char dirPath[], int depth)
     struct stat statbuf;
     char  * ext;
     
-    char buf[PATH_LEN];
+    char buf[PATH_SIZE];
     //int i = 0;
     if ((dir = opendir(dirPath)) == NULL)
     {
@@ -233,7 +233,7 @@ int countLAS(char dirPath[])
     struct dirent *entry;
     char * ext;
 
-    //char buf[PATH_LEN+1];
+    //char buf[PATH_SIZE+1];
     int i = 0;
     if ((dir = opendir(dirPath)) ==  NULL)
     {
@@ -310,7 +310,7 @@ void taskType_Destroy(task_t *task) {
 int getWorkingDir(char* pathBuf)
 {
     int len;
-	getcwd(pathBuf, PATH_LEN);
+	getcwd(pathBuf, PATH_SIZE);
 	//MIN(readlink(szTmp,pathTmp,len),len -1);
     //int bytes = MIN(readlink(szTmp, pathTmp, len), len - 1);
     //if (bytes >= 0)
@@ -333,7 +333,7 @@ int getWorkingDir(char* pathBuf)
  * @return Pointer to resolve filepath
  */
 char* resolvePath(char* path, int verbose) {
-	char actualPath[PATH_LEN];
+	char actualPath[PATH_SIZE];
 	char *ptr;
 	if (verbose) {
 		printf("Checking for non-printable characters\n");
@@ -363,7 +363,7 @@ char* resolvePath(char* path, int verbose) {
 	if (access (actualPath, F_OK) == -1)
 		printf("File Stat failed: %s\n", strerror(errno));
 	// Zero-fill path
-	memset(path, 0, PATH_LEN);
+	memset(path, 0, PATH_SIZE);
 	// Copy resolved path into original buffer
 	strcpy(path, actualPath);
 	return ptr;

@@ -133,8 +133,8 @@ int main(int argc, char* argv[]) {
 	int i, intcount = 0;
 	uint32_t pntCounter = 0;
 	int verbose;
-	char* rName = (char *)malloc(sizeof(char)* PATH_LEN);
-	char* h5_file = (char *)malloc(sizeof(char)* PATH_LEN);
+	char* rName = (char *)malloc(sizeof(char)* PATH_SIZE);
+	char* h5_file = (char *)malloc(sizeof(char)* PATH_SIZE);
 	getDataStore(h5_file);
 	parseArgs(argc, argv, &bound_1, rName, &verbose);
 	hid_t file_id, region_group_id, region_id, plist_id;

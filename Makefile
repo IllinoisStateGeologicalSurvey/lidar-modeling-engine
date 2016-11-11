@@ -62,7 +62,11 @@ all: $(BUILDDIR)/initLME \
 	$(BUILDDIR)/testRange \
 	$(BUILDDIR)/checkCatalog \
 	$(BUILDDIR)/getGrid \
+	$(BUILDDIR)/hilbertTest \
 	$(BUILDDIR)/fileCheck \
+
+$(BUILDDIR)/hilbertTest: $(TESTDIR)/hilbert-test.c
+	$(CC) $(CFlAGS) -o $@ $(TESTDIR)/hilbert-test.c $(SOURCES) $(EXTINCLUDE) $(EXTLIBS)
 
 $(BUILDDIR)/fileCheck: $(TESTDIR)/test-file.c
 	$(CC) $(CFLAGS) -o $@ $(TESTDIR)/test-file.c $(SOURCES) $(EXTINCLUDE) $(EXTLIBS)

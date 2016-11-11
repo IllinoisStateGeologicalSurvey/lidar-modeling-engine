@@ -93,12 +93,12 @@ int main(int argc, char* argv[])
     // Flag to determine logging level
     int verbose;
     // Placeholder to test different files in the future
-    char* file_name_in = malloc(sizeof(char) * (PATH_LEN)); // Holds HDF5 filename
+    char* file_name_in = malloc(sizeof(char) * (PATH_SIZE)); // Holds HDF5 filename
     int fileCount; // Holds the number of LAS files to read
     /* LAS Specific variables */
     LASReaderH lasReader = NULL; // Used to read points from a LAS file
     /* Header related variables */
-    char* pathBuf = malloc(sizeof(char)* (PATH_LEN)); // Buffer to hold las file paths
+    char* pathBuf = malloc(sizeof(char)* (PATH_SIZE)); // Buffer to hold las file paths
     /* HDF5 variables */
     hid_t file_id, group_id, plist_id;
     

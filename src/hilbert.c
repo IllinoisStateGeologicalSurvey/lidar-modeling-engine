@@ -48,6 +48,7 @@
 #include <inttypes.h>
 #include <math.h>
 #include <hilbert.h>
+#include <coord.h>
 #define DIM 2
 
 //#if DIM == 4 const uint32_t g_mask[] = {8, 4, 2, 1}; #endif
@@ -308,12 +309,36 @@ void printBits(size_t const size, void const * const  ptr)
 }
 
 int combineIndices(uint64_t *outIdx, uint32_t high, uint32_t low) {
-    uint64_t idx = (uint64_t) high << 32;
+    uint32_t low_le, high_le;
+	//Create little endian versions of inputs
+	low_le = swapEndian(low);
+	high_le = swapEndian(high);
+	uint64_t idx = (uint64_t) high_le << 32;
     //printBits(sizeof(uint64_t), &idx);
-    *outIdx = idx | low;
+    *outIdx = idx | low_le;
     //printf("%"PRIu64"\n", outIdx);
     //printBits(sizeof(uint64_t), outIdx);
     return 0;
+}
+
+int splitIndex(uint64_t fullIndex, uint32_t * high, uint32_t * low) {
+	uint32_t tmp;
+	tmp = (uint32_t) fullIndex & 0x0000ffff;
+	// Change to big endian for decryption 
+	*low = swapEndian(tmp);
+	tmp =  (fullIndex  & 0xffff0000) >> 32;
+	*high = swapEndian(tmp);
+	return 0;
+}
+
+uint32_t swapEndian(uint32_t num) {
+	// Swap big to little endian
+	uint32_t swap;
+	swap = ((num>>24)&0xff) | // move byte 3 to byte 0
+		((num<<8)&0xff0000) | // move byte 1 to byte 2
+		((num>>8)&0xff00)   | // move byte 2 to byte 1
+		((num<<24)&0xff000000); // move byte 0 to byte 3
+	return swap;
 }
 /**
 // TODO: MAKE THE SCALE CONVERSION WORK FOR FLOAT ARRAY
@@ -358,4 +383,31 @@ unsigned createMask(unsigned start, unsigned stop)
     mask = ((1 << stop) - 1) << start;
     return mask;
 }
+
+uint64_t encodeIndex(LMEcoordCode * code) {
+	Hpoint pt;
+	Hcode idx;
+	uint64_t fullIndex;
+	pt.hcode[0] = LMEcoordCode_getX(code);
+	pt.hcode[1] = LMEcoordCode_getY(code);
+	// Encode the indexes
+	idx = H_encode(pt);
+	// Swap encoding and join into 64 bit uint
+	combineIndices(&fullIndex, idx.hcode[0], idx.hcode[1]);
+	return fullIndex;
+
+}
+
+void decodeIndex(uint64_t fullIdx, LMEcoordCode * code)  {
+	Hpoint pt;
+	Hcode idx;
+	// Break up 64 bit uint and swap encoding 
+	splitIndex(fullIdx, &idx.hcode[0], &idx.hcode[1]);
+	// Decode index
+	pt = H_decode(idx);
+	// Apply to encoded coord
+	LMEcoordCode_setX(code, pt.hcode[0]);
+	LMEcoordCode_setY(code, pt.hcode[1]);
+}
+
 #endif

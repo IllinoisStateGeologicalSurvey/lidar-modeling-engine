@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <gsl/gsl_math.h>
 #include <inttypes.h>
+#include "coord.h"
 #include "bound.h"
 #include "qtree.h"
 /**typedef struct LMEquadNode {
@@ -55,4 +56,31 @@ int LMEquadNode_init(LMEquadNode** node, int k, LMEbound* bounds, int depth) {
 	return 1;
 }
 
+int LMEquadTree_getRoot(LMEquadTree* tree, LMEquadNode* root) {
+	root = tree->root;	
+	return 0;
+}
+
+// Get the center point of a quad node, useful for splitting
+int LMEquadNode_getCenter(LMEquadNode* node, LMEcoord* centroid) {
+	
+	*centroid =  LMEbound_Centroid(&node->bounds);
+	return 0;
+	
+}
+
+// Generate child nodes for quadNode and move points to children
+int LMEquadNode_split(LMEquadNode* node) {
+
+	return 0;
+}
+
+// Add a point to a quadtree, this will add the point to a 
+// node based on tree depth, number of points in node and 
+// point location
+int LMEquadTree_add(LMEquadTree* tree, LMEcoord* coord) {
+	// NEED to check which the depth of the tree and 
+	// find the leaf which the point fits into
+	return 0;
+}
 

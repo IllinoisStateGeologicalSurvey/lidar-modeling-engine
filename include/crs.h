@@ -8,9 +8,11 @@
 #include <liblas/capi/liblas.h>
 #include "coord.h"
 
+#define PATH_SIZE 1024
+
 typedef struct LMEcrs {
 	int type;
-	char projStr[4096];
+	char projStr[1024];
 } LMEcrs;
 
 int LMEcrs_set(LMEcrs* crs, char* projStr);

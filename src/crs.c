@@ -12,12 +12,12 @@
 #include <string.h>
 #include "crs.h"
 
-#define PROJ_LEN  4096
+#define PATH_SIZE  1024
 
 int LMEcrs_set(LMEcrs* crs, char* projStr) {
 	printf("Setting projection\n");
 	printf("%s\n", projStr);//strcpy(crs->projStr, projStr);
-	sprintf(&crs->projStr, projStr);
+	sprintf(&crs->projStr[0], projStr);
 	printf("Finished setting projection\n");
 	return 0;
 }
@@ -49,7 +49,7 @@ int LMEcrs_check(char* projStr) {
 }
 
 int LMEcrs_setWGS(LMEcrs* crs) {
-	char * projStr = (char *)malloc(sizeof(char) * PROJ_LEN);
+	char * projStr = (char *)malloc(sizeof(char) * PATH_SIZE);
 	sprintf(projStr, "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs");
 	int out;
 	if (LMEcrs_check(projStr)) {

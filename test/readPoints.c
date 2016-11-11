@@ -104,7 +104,7 @@ int main(int argc, char* argv[])
 {
 	int i, j;
 	int verbose = FALSE;
-	char* file_list = (char *)malloc(sizeof(char) * PATH_LEN);
+	char* file_list = (char *)malloc(sizeof(char) * PATH_SIZE);
 	LMEbound* bounds =  (LMEbound *)malloc(sizeof(LMEbound));
 
 	// MPI Related variables
@@ -125,7 +125,7 @@ int main(int argc, char* argv[])
 	double starttime, endtime;
 
 	parse_args(argc, argv, file_list, bounds, &verbose);
-	char line[PATH_LEN];
+	char line[PATH_SIZE];
 	LASReaderH reader;
 	LASHeaderH header;
 	LASSRSH srs;
@@ -147,7 +147,7 @@ int main(int argc, char* argv[])
 		}
 	}
 	printf("Reading %i files\n", fileCount);
-	char paths[fileCount][PATH_LEN];
+	char paths[fileCount][PATH_SIZE];
 	fseek(fp, 0, SEEK_SET);
 	for (i = 0; i < fileCount; i++) {
 		fgets(line, sizeof(line), fp);
